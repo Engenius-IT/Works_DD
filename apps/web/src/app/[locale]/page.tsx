@@ -23,7 +23,6 @@ export default function HomePage() {
       <Navbar />
 
       <main className="flex-1">
-        {/* --- [1] HERO SECTION & LOGIN BANNER --- */}
         {isEmployer ? (
           <div className="bg-[#020263] py-16 text-center text-white">
             <h1 className="text-3xl font-bold">

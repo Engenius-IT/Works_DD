@@ -85,7 +85,7 @@ export function LoginBanner() {
           <div className="w-full md:w-1/2 flex justify-center md:justify-end relative">
             <div className="relative w-full max-w-[600px] aspect-4/3 lg:aspect-auto lg:h-[550px]">
               <Image
-                src="/images/Hero1_Img_JobDD.png"
+                src="/images/Hero1.png"
                 alt="Job Seeker"
                 fill
                 sizes="(max-width: 768px) 100vw, 50vw"

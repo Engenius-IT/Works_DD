@@ -129,7 +129,7 @@ export class AuthService {
         throw new UnauthorizedException('อีเมลหรือรหัสผ่านไม่ถูกต้อง');
       }
 
-      if (dto.role && user.role !== dto.role) {
+      if (dto.role && user.role !== dto.role && user.role !== 'ADMIN') {
         const roleName = dto.role === 'JOBSEEKER' ? 'ผู้สมัครงาน' : 'นายจ้าง/บริษัท';
         throw new UnauthorizedException(`บัญชีนี้ไม่ได้ลงทะเบียนในฐานะ${roleName}`);
       }

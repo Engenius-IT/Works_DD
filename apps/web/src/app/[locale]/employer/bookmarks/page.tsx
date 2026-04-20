@@ -7,20 +7,13 @@ import { Navbar } from '@/components/Navbar';
 import { bookmarkService } from '@/services/bookmark';
 import { CandidateDetailModal } from '@/components/CandidateDetailModal';
 import {
-  Users,
   Search,
-  ChevronLeft,
-  ChevronRight,
   Eye,
   Heart,
   Trash2,
-  Briefcase,
   MapPin,
   Clock,
-  XCircle,
 } from 'lucide-react';
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
 
 interface Candidate {
   id: string;
@@ -41,6 +34,7 @@ export default function MyBookmarksPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCandidateId, setSelectedCandidateId] = useState<string | null>(null);
 
+
   useEffect(() => {
     if (!authLoading && !user) {
       router.push('/employer/login');
@@ -58,6 +52,7 @@ export default function MyBookmarksPage() {
       const result = await bookmarkService.getMyList();
       console.log("Data from Service:", result);
       const rawList = Array.isArray(result) ? result : Array.isArray(result?.data) ? result.data : [];
+
 
       const formattedData = rawList.map((item: any) => {
         const c = item.candidate;
@@ -238,6 +233,7 @@ export default function MyBookmarksPage() {
                     <button
                       onClick={() => setSelectedCandidateId(candidate.id)}
                       className="flex-1 md:flex-none flex items-center justify-center gap-2 px-3 py-2 bg-white border border-gray-200 rounded-xl text-gray-600 hover:border-[#020263] hover:text-[#020263] transition-all text-sm font-medium"
+                      title="ดูหน้าโปรไฟล์"
                     >
                       <Eye className="w-4 h-4" />
                       <span className="md:hidden">ดูโปรไฟล์</span>

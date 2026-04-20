@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from '@/i18n/routing';
 import { useAuth } from '@/context/AuthContext';
 import { bookmarkService } from '@/services/bookmark';
+import { useTranslations, useLocale } from 'next-intl';
 import {
   Briefcase,
   GraduationCap,
@@ -71,6 +72,7 @@ type CandidateDetail = {
   educationHistory: EducationHistory[];
   workHistory: WorkHistory[];
   resumeFileUrl: string | null;
+  avatarUrl?: string | null;
 };
 
 type ContactData = {
@@ -96,28 +98,47 @@ function getErrorMessage(error: unknown, fallback: string) {
   return fallback;
 }
 
-function timeAgo(dateStr: string) {
+function timeAgo(dateStr: string, locale: string) {
   const diff = Date.now() - new Date(dateStr).getTime();
   const mins = Math.floor(diff / 60000);
-  if (mins < 1) return 'เพิ่งโพสต์';
-  if (mins < 60) return `${mins} นาทีที่แล้ว`;
   const hrs = Math.floor(mins / 60);
-  if (hrs < 24) return `${hrs} ชั่วโมงที่แล้ว`;
-  return `${Math.floor(hrs / 24)} วันที่แล้ว`;
+  const days = Math.floor(hrs / 24);
+  const weeks = Math.floor(days / 7);
+  const months = Math.floor(days / 30);
+  const years = Math.floor(days / 365);
+
+  const isEn = locale === 'en';
+
+  if (years > 0) return isEn ? `${years} ${years === 1 ? 'year' : 'years'} ago` : `${years} ปีที่แล้ว`;
+  if (months > 0) return isEn ? `${months} ${months === 1 ? 'month' : 'months'} ago` : `${months} เดือนที่แล้ว`;
+  if (weeks > 0 && days >= 14) return isEn ? `${weeks} ${weeks === 1 ? 'week' : 'weeks'} ago` : `${weeks} สัปดาห์ที่แล้ว`;
+  if (days > 0) return isEn ? `${days} ${days === 1 ? 'day' : 'days'} ago` : `${days} วันที่แล้ว`;
+  if (hrs > 0) return isEn ? `${hrs} ${hrs === 1 ? 'hour' : 'hours'} ago` : `${hrs} ชั่วโมงที่แล้ว`;
+  if (mins > 0) return isEn ? `${mins} ${mins === 1 ? 'min' : 'mins'} ago` : `${mins} นาทีที่แล้ว`;
+
+  return isEn ? 'Just now' : 'เพิ่งโพสต์';
 }
 
-function GenderBadge({ gender }: { gender: string }) {
+function GenderBadge({ avatarUrl }: { avatarUrl: string | null | undefined }) {
+  const imageSrc = avatarUrl || "/images/Proflie_SeekJobDD.webp";
   return (
     <div className="w-24 h-24 rounded-full overflow-hidden border border-slate-200 shadow-inner relative bg-slate-100">
       <Image
-        src="/images/Proflie_SeekJobDD.webp"
+        src={imageSrc}
         alt="Profile"
         fill
+        sizes="96px"
+        priority
         className="object-cover"
+        onError={(e) => {
+          const target = e.target as HTMLImageElement;
+          target.src = "/images/Proflie_SeekJobDD.webp";
+        }}
       />
     </div>
   );
 }
+
 
 export function CandidateDetailModal({ candidateId, onClose, isBookmarked, onBookmarkToggle }: CandidateDetailModalProps) {
   const router = useRouter();
@@ -128,6 +149,8 @@ export function CandidateDetailModal({ candidateId, onClose, isBookmarked, onBoo
   const [contactLoading, setContactLoading] = useState(false);
   const [error, setError] = useState('');
   const [contactError, setContactError] = useState('');
+  const t = useTranslations('CandidateDirectory');
+  const locale = useLocale();
 
 
   useEffect(() => {
@@ -139,12 +162,12 @@ export function CandidateDetailModal({ candidateId, onClose, isBookmarked, onBoo
         const json = await res.json();
 
         if (!res.ok) {
-          throw new Error(json.message || 'ไม่สามารถโหลดข้อมูลผู้หางานได้');
+          throw new Error(json.message || t('detailModal.errorFetchDetail'));
         }
 
         setData(json);
       } catch (error: unknown) {
-        setError(getErrorMessage(error, 'เกิดข้อผิดพลาด'));
+        setError(getErrorMessage(error, t('detailModal.errorDefault')));
       } finally {
         setLoading(false);
       }
@@ -160,7 +183,7 @@ export function CandidateDetailModal({ candidateId, onClose, isBookmarked, onBoo
     }
 
     if (user.role !== 'EMPLOYER') {
-      setContactError('เฉพาะบัญชีนายจ้างเท่านั้นที่สามารถดูข้อมูลติดต่อได้');
+      setContactError(t('detailModal.employerOnlyError'));
       return;
     }
 
@@ -176,12 +199,12 @@ export function CandidateDetailModal({ candidateId, onClose, isBookmarked, onBoo
       const json = await res.json();
 
       if (!res.ok) {
-        throw new Error(json.message || 'ไม่สามารถโหลดข้อมูลติดต่อได้');
+        throw new Error(json.message || t('detailModal.errorFetchContact'));
       }
 
       setContact(json);
     } catch (error: unknown) {
-      setContactError(getErrorMessage(error, 'ไม่สามารถโหลดข้อมูลติดต่อได้'));
+      setContactError(getErrorMessage(error, t('detailModal.errorFetchContact')));
     } finally {
       setContactLoading(false);
     }
@@ -194,7 +217,7 @@ export function CandidateDetailModal({ candidateId, onClose, isBookmarked, onBoo
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
         <div className="bg-white rounded-3xl p-8 shadow-2xl w-full max-w-sm text-center">
           <div className="w-10 h-10 border-4 border-[#020263] border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-slate-500 font-medium">กำลังโหลดข้อมูลผู้หางาน...</p>
+          <p className="text-slate-500 font-medium">{t('detailModal.loading')}</p>
         </div>
       </div>
     );
@@ -213,13 +236,13 @@ export function CandidateDetailModal({ candidateId, onClose, isBookmarked, onBoo
           <div className="w-14 h-14 rounded-full bg-red-50 text-red-500 flex items-center justify-center mx-auto mb-4">
             <BadgeInfo className="w-7 h-7" />
           </div>
-          <h3 className="text-xl font-bold text-slate-900 mb-2">ไม่สามารถโหลดข้อมูลได้</h3>
-          <p className="text-sm text-slate-500 mb-6">{error || 'เกิดข้อผิดพลาดบางอย่าง'}</p>
+          <h3 className="text-xl font-bold text-slate-900 mb-2">{t('detailModal.errorTitle')}</h3>
+          <p className="text-sm text-slate-500 mb-6">{error || t('detailModal.errorDefault')}</p>
           <button
             onClick={onClose}
             className="w-full py-3 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-semibold transition-colors"
           >
-            ปิดหน้าต่าง
+            {t('detailModal.closeBtn')}
           </button>
         </div>
       </div>
@@ -233,10 +256,12 @@ export function CandidateDetailModal({ candidateId, onClose, isBookmarked, onBoo
           <div>
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-50 text-indigo-700 text-xs font-bold border border-indigo-100 mb-3">
               <Briefcase className="w-4 h-4" />
-              {data.candidateType}
+              {data.candidateType ? t(`list.${data.candidateType.toLowerCase()}`) : t('list.jobSeeker')}
             </div>
-            <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900">ตำแหน่งที่สนใจ</h2>
-            <p className="text-sm text-slate-500 mt-2">โพสต์เมื่อ {timeAgo(data.postedAt)}</p>
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900">{t('detailModal.desiredPosition')}</h2>
+            <p className="text-sm text-slate-500 mt-2">
+              {t('detailModal.postedAt', { time: timeAgo(data.postedAt, locale) })}
+            </p>
           </div>
           <div className="flex items-center gap-2">
             {user?.role === 'EMPLOYER' && (
@@ -276,29 +301,31 @@ export function CandidateDetailModal({ candidateId, onClose, isBookmarked, onBoo
         <div className="grid grid-cols-1 lg:grid-cols-[320px_minmax(0,1fr)] gap-0">
           <aside className="bg-[#0f172a] text-white p-6 sm:p-8 space-y-6">
             <div className="flex flex-col items-center text-center gap-4">
-              <GenderBadge gender={data.gender} />
+              <GenderBadge avatarUrl={data.avatarUrl} />
               <div>
                 <h3 className="text-xl font-bold">{data.fullName}</h3>
-                <p className="text-slate-300 text-sm mt-1">ประเภท {data.candidateType}</p>
+                <p className="text-slate-300 text-sm mt-1">{t('list.lookingFor')}: {data.candidateType
+                  ? t(`list.${data.candidateType.toLowerCase()}`)
+                  : '-'}</p>
               </div>
             </div>
 
             <div className="space-y-3 text-sm">
               <div className="rounded-2xl bg-white/5 border border-white/10 px-4 py-3">
-                <div className="text-slate-300 mb-1">เพศ</div>
-                <div className="font-semibold">{data.gender || '-'}</div>
+                <div className="text-slate-300 mb-1"> {t('filters.genderAll')} </div>
+                <div className="font-semibold">{data.gender ? t(`filters.gender.${data.gender}`) : t('list.noGender')}</div>
               </div>
               <div className="rounded-2xl bg-white/5 border border-white/10 px-4 py-3">
-                <div className="text-slate-300 mb-1">อายุ</div>
-                <div className="font-semibold">{data.age ? `${data.age} ปี` : '-'}</div>
+                <div className="text-slate-300 mb-1">{t('list.age')}</div>
+                <div className="font-semibold">{data.age ? `${data.age} ${t('list.ageUnit')}` : '-'}</div>
               </div>
               <div className="rounded-2xl bg-white/5 border border-white/10 px-4 py-3">
-                <div className="text-slate-300 mb-1">ศาสนา</div>
+                <div className="text-slate-300 mb-1">{t('detailModal.religion')}</div>
                 <div className="font-semibold">{data.religion || '-'}</div>
               </div>
               <div className="rounded-2xl bg-white/5 border border-white/10 px-4 py-3">
-                <div className="text-slate-300 mb-1">สัญชาติ</div>
-                <div className="font-semibold">{data.nationality || '-'}</div>
+                <div className="text-slate-300 mb-1">{t('detailModal.nationality')}</div>
+                <div className="font-semibold">{data.nationality ? (t(`detailModal.nationalityValue.${data.nationality.toLowerCase()}`) || data.nationality) : '-'}</div>
               </div>
             </div>
 
@@ -308,7 +335,7 @@ export function CandidateDetailModal({ candidateId, onClose, isBookmarked, onBoo
                 disabled={contactLoading}
                 className="w-full py-3 rounded-2xl bg-[#020263] hover:bg-[#11117c] disabled:opacity-60 text-white font-bold transition-colors"
               >
-                {contactLoading ? 'กำลังโหลดข้อมูลติดต่อ...' : 'แสดงข้อมูลติดต่อ'}
+                {contactLoading ? `${t('detailModal.loadingContact')}` : `${t('detailModal.showContactBtn')}`}
               </button>
 
               {contactError && <p className="mt-3 text-sm text-red-500">{contactError}</p>}
@@ -318,21 +345,21 @@ export function CandidateDetailModal({ candidateId, onClose, isBookmarked, onBoo
                   <div className="flex items-start gap-3 rounded-2xl bg-slate-50 px-4 py-3 border border-slate-100">
                     <Mail className="w-4 h-4 mt-0.5 text-slate-400" />
                     <div>
-                      <div className="text-slate-500">อีเมล</div>
+                      <div className="text-slate-500">{t('detailModal.contactEmail')}</div>
                       <div className="font-semibold break-all">{contact.email}</div>
                     </div>
                   </div>
                   <div className="flex items-start gap-3 rounded-2xl bg-slate-50 px-4 py-3 border border-slate-100">
                     <Phone className="w-4 h-4 mt-0.5 text-slate-400" />
                     <div>
-                      <div className="text-slate-500">เบอร์โทร</div>
+                      <div className="text-slate-500">{t('detailModal.contactPhone')}</div>
                       <div className="font-semibold">{contact.phone}</div>
                     </div>
                   </div>
                   <div className="flex items-start gap-3 rounded-2xl bg-slate-50 px-4 py-3 border border-slate-100">
                     <MessageCircle className="w-4 h-4 mt-0.5 text-slate-400" />
                     <div>
-                      <div className="text-slate-500">LINE ID</div>
+                      <div className="text-slate-500">{t('detailModal.contactLine')}</div>
                       <div className="font-semibold">{contact.lineId}</div>
                     </div>
                   </div>
@@ -348,14 +375,14 @@ export function CandidateDetailModal({ candidateId, onClose, isBookmarked, onBoo
                 <div className="flex items-start gap-3 rounded-2xl bg-slate-50 px-4 py-3 border border-slate-100">
                   <Briefcase className="w-4 h-4 mt-0.5 text-indigo-500" />
                   <div>
-                    <div className="text-slate-500">เรทเงินเดือนที่ต้องการ</div>
+                    <div className="text-slate-500">{t('detailModal.expectedSalary')}</div>
                     <div className="font-semibold">{data.expectedSalaryText}</div>
                   </div>
                 </div>
                 <div className="flex items-start gap-3 rounded-2xl bg-slate-50 px-4 py-3 border border-slate-100">
                   <MapPin className="w-4 h-4 mt-0.5 text-indigo-500" />
                   <div>
-                    <div className="text-slate-500">จังหวัดที่สนใจทำงาน</div>
+                    <div className="text-slate-500">{t('detailModal.workProvince')}</div>
                     <div className="font-semibold">{data.workProvince}</div>
                   </div>
                 </div>
@@ -365,7 +392,7 @@ export function CandidateDetailModal({ candidateId, onClose, isBookmarked, onBoo
             <div className="bg-white rounded-3xl border border-slate-100 p-6 shadow-sm">
               <div className="flex items-center gap-3 mb-4">
                 <Briefcase className="w-5 h-5 text-indigo-600" />
-                <h3 className="text-lg font-extrabold text-black">ทักษะและความสามารถ</h3>
+                <h3 className="text-lg font-extrabold text-black">{t('detailModal.skillsTitle')}</h3>
               </div>
               <div className="flex flex-wrap gap-2">
                 {data.skills.length > 0 ? (
@@ -378,7 +405,7 @@ export function CandidateDetailModal({ candidateId, onClose, isBookmarked, onBoo
                     </span>
                   ))
                 ) : (
-                  <span className="text-sm text-slate-500">ไม่ระบุทักษะ</span>
+                  <span className="text-sm text-slate-500">{t('list.noSkills')}</span>
                 )}
               </div>
             </div>
@@ -386,7 +413,7 @@ export function CandidateDetailModal({ candidateId, onClose, isBookmarked, onBoo
             <div className="bg-white rounded-3xl border border-slate-100 p-6 shadow-sm">
               <div className="flex items-center gap-3 mb-4">
                 <Languages className="w-5 h-5 text-indigo-600" />
-                <h3 className="text-lg font-extrabold text-black">ระดับภาษาอังกฤษ</h3>
+                <h3 className="text-lg font-extrabold text-black">{t('detailModal.englishLevel')}</h3>
               </div>
               <div className="flex items-center gap-2 mb-3">
                 {starList.map((filled, index) => (
@@ -403,7 +430,7 @@ export function CandidateDetailModal({ candidateId, onClose, isBookmarked, onBoo
             <div className="bg-white rounded-3xl border border-slate-100 p-6 shadow-sm">
               <div className="flex items-center gap-3 mb-4">
                 <GraduationCap className="w-5 h-5 text-indigo-600" />
-                <h3 className="text-lg font-extrabold text-black">ประวัติการศึกษา</h3>
+                <h3 className="text-lg font-extrabold text-black">{t('detailModal.educationTitle')}</h3>
               </div>
               <div className="space-y-4">
                 {data.educationHistory.length > 0 ? (
@@ -412,16 +439,16 @@ export function CandidateDetailModal({ candidateId, onClose, isBookmarked, onBoo
                       <div className="font-bold text-slate-900">
                         {education.educationLevel} {education.degreeName !== '-' ? `· ${education.degreeName}` : ''}
                       </div>
-                      <div className="text-sm text-slate-700 mt-1">สาขาวิชา {education.major}</div>
-                      <div className="text-sm text-slate-700">ชื่อสถานศึกษา {education.institution}</div>
+                      <div className="text-sm text-slate-700 mt-1">{t('detailModal.majorPrefix')} {education.major}</div>
+                      <div className="text-sm text-slate-700">{t('detailModal.institutionPrefix')} {education.institution}</div>
                       <div className="flex flex-wrap items-center gap-3 text-xs text-slate-500 mt-2">
-                        <span>ปีที่จบ {education.graduationYear}</span>
+                        <span>{t('list.updated')} {education.graduationYear}</span>
                         <span>GPA {education.gpa ?? '-'}</span>
                       </div>
                     </div>
                   ))
                 ) : (
-                  <p className="text-sm text-slate-500">ยังไม่มีข้อมูลประวัติการศึกษา</p>
+                  <p className="text-sm text-slate-500">{t('detailModal.noEducation')}</p>
                 )}
               </div>
             </div>
@@ -429,7 +456,7 @@ export function CandidateDetailModal({ candidateId, onClose, isBookmarked, onBoo
             <div className="bg-white rounded-3xl border border-slate-100 p-6 shadow-sm">
               <div className="flex items-center gap-3 mb-4">
                 <CalendarDays className="w-5 h-5 text-indigo-600" />
-                <h3 className="text-lg font-extrabold text-black">ประวัติการทำงาน</h3>
+                <h3 className="text-lg font-extrabold text-black">{t('detailModal.workHistoryTitle')}</h3>
               </div>
               <div className="space-y-4">
                 {data.workHistory.length > 0 ? (
@@ -439,12 +466,12 @@ export function CandidateDetailModal({ candidateId, onClose, isBookmarked, onBoo
                       <div className="text-sm text-slate-700 mt-1">{work.company}</div>
                       <div className="text-xs text-slate-500 mt-2">
                         {work.startMonth}/{work.startYear} -{' '}
-                        {work.isCurrent ? 'ปัจจุบัน' : `${work.endMonth}/${work.endYear}`}
+                        {work.isCurrent ? t('detailModal.present') : `${work.endMonth}/${work.endYear}`}
                       </div>
                     </div>
                   ))
                 ) : (
-                  <p className="text-sm text-slate-500">ยังไม่มีข้อมูลประวัติการทำงาน</p>
+                  <p className="text-sm text-slate-500">{t('detailModal.noWork')}</p>
                 )}
               </div>
             </div>
@@ -462,7 +489,7 @@ export function CandidateDetailModal({ candidateId, onClose, isBookmarked, onBoo
                   className="inline-flex items-center gap-2 px-4 py-3 rounded-2xl bg-indigo-50 text-indigo-700 border border-indigo-100 font-semibold hover:bg-indigo-100 transition-colors"
                 >
                   <FileText className="w-4 h-4" />
-                  เปิดดูไฟล์ Resume
+                  {t('detailModal.viewResume')}
                 </a>
               </div>
             )}

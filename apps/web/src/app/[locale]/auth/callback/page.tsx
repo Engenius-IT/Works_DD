@@ -33,8 +33,16 @@ function OAuthCallbackInner() {
       const user = JSON.parse(userRaw);
       login(token, user);
       const locale = window.location.pathname.split('/')[1] || 'th';
-      const targetPath = user.role === 'EMPLOYER' ? 'employer/dashboard' : 'profilefull';
-      
+      let targetPath = '';
+
+      if (user.role === 'ADMIN') {
+        targetPath = 'admin/companies/verify';
+      } else if (user.role === 'EMPLOYER') {
+        targetPath = 'employer/dashboard';
+      } else {
+        targetPath = 'profilefull';
+      }
+
       window.location.href = `/${locale}/${targetPath}`;
 
     } catch {

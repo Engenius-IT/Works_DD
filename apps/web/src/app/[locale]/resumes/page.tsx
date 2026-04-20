@@ -22,7 +22,7 @@ import {
   Briefcase,
   RefreshCw,
   Languages,
-  FileText,
+  //FileText,
   ArrowRight,
   Heart,
 } from 'lucide-react';
@@ -115,11 +115,16 @@ function getMatchedSnippet(candidate: CandidateCard, searchQuery: string | null)
   return null;
 }
 
-function GenderAvatar({ gender }: { gender: string }) {
+function GenderAvatar({ gender, avatarUrl }: { gender: string, avatarUrl: string | null }) {
+  const defaultAvatar = gender === 'male'
+    ? '/images/avatar_male.webp'
+    : gender === 'female'
+      ? '/images/avatar_female.webp'
+      : '/images/Proflie_SeekJobDD.webp';
   return (
     <div className="w-14 h-14 rounded-2xl overflow-hidden border border-slate-200 shadow-inner relative bg-slate-100">
       <Image
-        src="/images/Proflie_SeekJobDD.webp"
+        src={avatarUrl || defaultAvatar}
         alt="Profile"
         fill
         className="object-cover"
@@ -244,7 +249,6 @@ export default function ResumeDirectoryPage() {
       }
     });
 
-    // สั่งเปลี่ยน URL -> เมื่อ URL เปลี่ยน searchParams จะเปลี่ยน -> fetchCandidates จะทำงาน
     router.push(`${pathname}?${params.toString()}`);
   };
 
@@ -360,8 +364,8 @@ export default function ResumeDirectoryPage() {
                 >
 
                   <option value="">{t('filters.genderAll')}</option>
-                  <option value="ชาย">{t('filters.gender.male') || 'ชาย'}</option>
-                  <option value="หญิง">{t('filters.gender.female') || 'หญิง'}</option>
+                  <option value="male">{t('filters.gender.male') || 'ชาย'}</option>
+                  <option value="female">{t('filters.gender.female') || 'หญิง'}</option>
                 </select>
                 <input
                   value={filters.ageMin}
@@ -472,7 +476,7 @@ export default function ResumeDirectoryPage() {
 
                       <div className="flex items-start justify-between gap-3 mb-5">
                         <div className="flex items-center gap-4 min-w-0">
-                          <GenderAvatar gender={candidate.gender} />
+                          <GenderAvatar gender={candidate.gender} avatarUrl={candidate.avatarUrl} />
                           <div className="min-w-0">
                             <div className="text-xs font-bold text-slate-400 uppercase tracking-wide">
                               {candidate.candidateType}

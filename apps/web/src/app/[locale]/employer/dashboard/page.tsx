@@ -1,9 +1,11 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from '@/i18n/routing';
 import { useAuth } from '@/context/AuthContext';
 import { Navbar } from '@/components/Navbar';
+import { bookmarkService } from '@/services/bookmark';
+import { CandidateDetailModal } from '@/components/CandidateDetailModal';
 import {
   Building2,
   FileText,
@@ -18,7 +20,6 @@ import {
   Trash2,
   Heart,
 } from 'lucide-react';
-import { ApplicantDetailModal } from '@/components/ApplicantDetailModal';
 import { EmployerVerificationModal } from '@/components/EmployerVerificationModal';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
@@ -36,6 +37,7 @@ const getAccountStatusDisplay = (verificationStatus?: Company['verificationStatu
       return { label: 'ยังไม่ได้ยืนยันบัญชี', iconClassName: 'text-amber-500', textClassName: 'text-amber-700' };
   }
 };
+
 
 const VerificationStatusBanner = ({
   company,
@@ -679,6 +681,17 @@ function CompanyEditModal({
   );
 }
 
+interface Candidate {
+  id: string;
+  fullName: string;
+  email: string;
+  avatarUrl?: string;
+  position?: string;
+  title?: string;
+  location?: string;
+  updatedAt: string;
+}
+
 export default function EmployerDashboard() {
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
@@ -686,70 +699,57 @@ export default function EmployerDashboard() {
   const [loadingJobs, setLoadingJobs] = useState(true);
   const [company, setCompany] = useState<Company | null>(null);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [candidates, setCandidates] = useState<Candidate[]>([]);
   const [showVerifyModal, setShowVerifyModal] = useState(false);
   const [recentApplicants, setRecentApplicants] = useState<RecentApplicantItem[]>([]);
-  const [bookmarkedCandidates, setBookmarkedCandidates] = useState<any[]>([]);
   const [loadingBookmarks, setLoadingBookmarks] = useState(true);
+  const [selectedCandidateId, setSelectedCandidateId] = useState<string | null>(null);
   const [loadingApplicants, setLoadingApplicants] = useState(true);
-  const [selectedApplicantId, setSelectedApplicantId] = useState<string | null>(null);
+  const [, setSelectedApplicantId] = useState<string | null>(null);
   const [interviews, setInterviews] = useState<InterviewItem[]>([]);
   const accountStatusDisplay = getAccountStatusDisplay(company?.verificationStatus);
 
+
   const handleUnbookmark = async (candidateId: string) => {
-    if (!confirm('คุณต้องการยกเลิกการบันทึกผู้สมัครคนนี้ใช่หรือไม่?')) return;
-
+    if (!confirm('ยืนยันการลบออกจากรายการที่บันทึกไว้?')) return;
     try {
-      const token = localStorage.getItem('accessToken');
-      const res = await fetch(`${API_URL}/bookmarks/${candidateId}`, {
-        method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      if (res.ok) {
-        // อัปเดต UI ทันที
-        setBookmarkedCandidates(prev => prev.filter(c => c.id !== candidateId));
-      }
+      await bookmarkService.toggle(candidateId);
+      // ลบออกจาก candidates เพราะเราเปลี่ยนมาใช้ตัวนี้ตัวเดียว
+      setCandidates((prev) => prev.filter((c) => c.id !== candidateId));
     } catch (err) {
-      console.error('Failed to unbookmark:', err);
-      alert('เกิดข้อผิดพลาดในการลบรายการ');
+      alert('ไม่สามารถลบรายการได้ กรุณาลองใหม่อีกครั้ง');
     }
   };
 
-  const fetchBookmarks = async () => {
+  const fetchBookmarks = useCallback(async () => {
     try {
-      const token = localStorage.getItem('accessToken');
-      if (!token) return;
+      setLoadingBookmarks(true); // ใช้ loading สำหรับ bookmark โดยเฉพาะ
+      const result = await bookmarkService.getMyList();
+      const rawList = Array.isArray(result) ? result : (result?.data || []);
 
-      setLoadingBookmarks(true);
-      const res = await fetch(`${API_URL}/bookmarks/my-list`, {
-        headers: { Authorization: `Bearer ${token}` }
+      const formattedData = rawList.map((item: any) => {
+        const c = item.candidate;
+        const p = c?.profile;
+
+        return {
+          id: item.candidateId || c?.id,
+          fullName: c?.firstName ? `${c.firstName} ${c.lastName || ''}` : 'ไม่ระบุชื่อ',
+          email: c?.email || 'ไม่ระบุอีเมล',
+          avatarUrl: c?.avatarUrl || null,
+          position: c?.jobPreferences?.[0]?.position || 'ไม่ได้ระบุตำแหน่ง',
+          location: p?.province || 'ไม่ระบุพื้นที่',
+          updatedAt: item.createdAt || new Date().toISOString()
+        };
       });
 
-      if (res.ok) {
-        const data = await res.json();
-        const list = data.map((item: any) => {
-          const can = item.candidate;
-          const p = can?.profile;
-
-          return {
-            bookmarkId: item.id,
-            id: can?.id,
-            fullName: can?.firstName ? `${can.firstName} ${can.lastName || ''}` : 'ไม่ระบุชื่อ',
-            email: can?.email || 'ไม่ระบุอีเมล',
-            avatarUrl: can?.avatarUrl || null,
-            position: can?.jobPreferences?.[0]?.position || 'ไม่ได้ระบุตำแหน่ง',
-            location: p?.province || 'ไม่ระบุพื้นที่',
-            updatedAt: item.createdAt || new Date().toISOString()
-          };
-        });
-        setBookmarkedCandidates(list);
-      }
-    } catch (err) {
-      console.error("Error mapping bookmarks:", err);
+      setCandidates(formattedData);
+    } catch (err: any) {
+      console.error('Fetch error details:', err);
     } finally {
       setLoadingBookmarks(false);
     }
-  };
+  }, []);
+
   useEffect(() => {
     if (!authLoading && !user) {
       router.push('/login');
@@ -1249,7 +1249,7 @@ export default function EmployerDashboard() {
         </div>
 
 
-        {/* --- Card: Bookmarked Candidates (เวอร์ชันปรับปรุงใหม่: แสดง Email และ Layout เดียวกับผู้สมัครล่าสุด) --- */}
+        {/* Card 6: Bookmarked Candidates */}
         <div className="lg:col-span-3 bg-white rounded-2xl border border-gray-300 shadow-lg p-6 flex flex-col h-full">
           {/* Header Section */}
           <div className="flex items-center justify-between mb-5">
@@ -1262,7 +1262,7 @@ export default function EmployerDashboard() {
                   ผู้สมัครที่บันทึกไว้
                 </h3>
                 <p className="text-[10px] text-gray-400 font-medium">
-                  {bookmarkedCandidates.length} รายการทั้งหมด
+                  {candidates.length} รายการทั้งหมด
                 </p>
               </div>
             </div>
@@ -1275,7 +1275,6 @@ export default function EmployerDashboard() {
             </button>
           </div>
 
-          {/* Table Header: ปรับเป็น 12 Columns ตามมาตรฐานที่คุณชอบ */}
           <div className="grid grid-cols-12 text-[11px] text-gray-400 font-bold pb-2 border-b border-gray-50 px-2 uppercase tracking-wider">
             <div className="col-span-5">ข้อมูลผู้สมัคร / อีเมล</div>
             <div className="col-span-5">ตำแหน่งที่สนใจ</div>
@@ -1289,18 +1288,17 @@ export default function EmployerDashboard() {
                 <div className="w-6 h-6 border-2 border-pink-500 border-t-transparent rounded-full animate-spin mx-auto mb-2" />
                 <p className="text-xs text-gray-400">กำลังโหลด...</p>
               </div>
-            ) : bookmarkedCandidates.length === 0 ? (
+            ) : candidates.length === 0 ? (
               <div className="py-10 text-center">
                 <Heart className="w-10 h-10 text-gray-100 mx-auto mb-2" />
                 <p className="text-xs text-gray-400 font-medium">ยังไม่มีรายการที่บันทึกไว้</p>
               </div>
             ) : (
-              bookmarkedCandidates.slice(0, 5).map((candidate) => (
+              candidates.slice(0, 5).map((candidate) => (
                 <div
                   key={candidate.id}
                   className="grid grid-cols-12 items-center py-4 px-2 hover:bg-gray-50 rounded-xl transition-all group"
                 >
-                  {/* 1. ข้อมูลผู้สมัคร + อีเมล */}
                   <div className="col-span-5 flex items-center gap-3 min-w-0">
                     <div className="relative shrink-0">
                       <div className="w-9 h-9 rounded-full bg-pink-100 flex items-center justify-center text-pink-700 text-xs font-bold border border-pink-200 overflow-hidden shadow-sm">
@@ -1322,28 +1320,28 @@ export default function EmployerDashboard() {
                     </div>
                   </div>
 
-                  {/* 2. ตำแหน่งงาน */}
                   <div className="col-span-5 min-w-0 pr-4">
                     <div className="text-xs text-gray-600 truncate bg-gray-100/50 px-2 py-1 rounded-md inline-block">
                       {candidate.position || 'ไม่ได้ระบุตำแหน่ง'}
                     </div>
                   </div>
 
-                  {/* 3. ปุ่มจัดการ */}
-                  <div className="col-span-2 flex justify-end gap-1">
+                  <div className="md:col-span-2 w-full flex items-center md:justify-end gap-2 border-t md:border-0 pt-3 md:pt-0">
                     <button
-                      onClick={() => router.push(`/candidate/${candidate.id}`)}
-                      className="p-2 rounded-lg text-gray-400 hover:text-[#020263] hover:bg-white hover:shadow-sm border border-transparent hover:border-gray-200 transition-all"
-                      title="ดูโปรไฟล์"
+                      onClick={() => setSelectedCandidateId(candidate.id)}
+                      className="flex-1 md:flex-none flex items-center justify-center gap-2 px-3 py-2 bg-white border border-gray-200 rounded-xl text-gray-600 hover:border-[#020263] hover:text-[#020263] transition-all text-sm font-medium"
+                      title="ดูหน้าโปรไฟล์"
                     >
-                      <Eye className="w-4.5 h-4.5" />
+                      <Eye className="w-4 h-4" />
+                      <span className="md:hidden">ดูโปรไฟล์</span>
                     </button>
                     <button
                       onClick={() => handleUnbookmark(candidate.id)}
-                      className="p-2 rounded-lg text-gray-300 hover:text-red-500 hover:bg-white hover:shadow-sm border border-transparent hover:border-gray-200 transition-all"
-                      title="ลบออก"
+                      className="flex-1 md:flex-none flex items-center justify-center gap-2 px-3 py-2 bg-red-50 border border-red-100 rounded-xl text-red-600 hover:bg-red-600 hover:text-white transition-all text-sm font-medium"
+                      title="ลบออกจากรายการที่บันทึก"
                     >
-                      <Trash2 className="w-4.5 h-4.5" />
+                      <Trash2 className="w-4 h-4" />
+                      <span className="md:hidden">ลบออก</span>
                     </button>
                   </div>
                 </div>
@@ -1359,6 +1357,42 @@ export default function EmployerDashboard() {
           </div>
         </div>
       </div>
+
+      {showVerifyModal && company && (
+        <EmployerVerificationModal
+          companyId={company.id}
+          onClose={() => setShowVerifyModal(false)}
+          onSuccess={() => {
+            setShowVerifyModal(false);
+            const token = localStorage.getItem('accessToken');
+            fetch(`${API_URL}/companies/mine`, { headers: { Authorization: `Bearer ${token}` } })
+              .then(r => r.json())
+              .then(data => { if (data) setCompany(data); });
+          }}
+        />
+      )}
+
+      {showEditModal && company && (
+        <CompanyEditModal
+          company={company}
+          onClose={() => setShowEditModal(false)}
+          onSaved={(updated) => {
+            setCompany(updated);
+            setShowEditModal(false);
+          }}
+        />
+      )}
+
+      {selectedCandidateId && (
+        <CandidateDetailModal
+          candidateId={selectedCandidateId}
+          onClose={() => setSelectedCandidateId(null)}
+          isBookmarked={true}
+          onBookmarkToggle={() => {
+            fetchBookmarks();
+          }}
+        />
+      )}
     </div>
   );
 }

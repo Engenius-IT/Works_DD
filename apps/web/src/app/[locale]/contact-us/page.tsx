@@ -1,7 +1,7 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import { Mail, Phone, MapPin, Clock, Send, MessageSquare, Building2, User } from 'lucide-react';
+import { Mail, Phone, MapPin, Clock, Send, MessageSquare, User } from 'lucide-react';
 import { Navbar } from '@/components/Navbar';
 import { Footer } from '@/components/Footer';
 
