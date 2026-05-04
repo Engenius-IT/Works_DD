@@ -166,7 +166,7 @@ function GenderBadge({ avatarUrl }: { avatarUrl: string | null | undefined }) {
         sizes="96px"
         priority
         className="object-cover"
-        onError={(e) => {
+        onError={(e: any) => {
           const target = e.target as HTMLImageElement;
           target.src = "/images/Proflie_SeekJobDD.webp";
         }}
