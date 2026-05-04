@@ -27,17 +27,17 @@ model User {
   certificates      Certificate[]
   companies         Company[]
   cookieConsents    CookieConsentLog[]
+  drivingSkills     DrivingSkill[]
   educations        Education[]
   jobPreferences    JobPreference[]
   languageTests     LanguageTest[]
   notifications     Notification[]
   resumes           Resume[]
   savedJobs         SavedJob[]
+  desiredProvinces  DesiredProvince[]
   languages         UserLanguage[]
   profile           UserProfile?
   workHistories     WorkHistory[]
-  drivingSkills     DrivingSkill[]
-  desiredProvinces  DesiredProvince[]
 
   @@map("users")
 }
@@ -46,10 +46,10 @@ model JobPreference {
   id        String   @id @default(uuid()) @db.Uuid
   userId    String   @map("user_id") @db.Uuid
   position  String
-  jobType    String  @default("") @map("job_type")
   order     Int      @default(0)
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
+  jobType   String   @default("") @map("job_type")
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
@@ -157,8 +157,6 @@ model Resume {
   userId         String        @map("user_id") @db.Uuid
   title          String
   fileUrl        String?       @map("file_url")
-  parsedData     Json?         @map("parsed_data")
-  fileHash       String?       @map("file_hash")  
   summary        String?
   experience     Json          @default("[]")
   education      Json          @default("[]")
@@ -166,6 +164,8 @@ model Resume {
   certifications Json          @default("[]")
   isPrimary      Boolean       @default(false) @map("is_primary")
   createdAt      DateTime      @default(now()) @map("created_at")
+  fileHash       String?       @map("file_hash")
+  parsedData     Json?         @map("parsed_data")
   applications   Application[]
   user           User          @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -369,12 +369,12 @@ model Bookmark {
 }
 
 model DrivingSkill {
-  id          String   @id @default(uuid()) @db.Uuid
-  userId      String   @map("user_id") @db.Uuid
-  skillType   String   @map("skill_type") 
-  category    String   
-  createdAt   DateTime @default(now()) @map("created_at")
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  skillType String   @map("skill_type")
+  category  String
+  createdAt DateTime @default(now()) @map("created_at")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@map("driving_skills")
@@ -429,5 +429,3 @@ enum NotificationType {
   INTERVIEW_SCHEDULED
   GENERAL
 }
-
-
