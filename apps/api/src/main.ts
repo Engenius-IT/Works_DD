@@ -48,8 +48,9 @@ async function bootstrap() {
     SwaggerModule.setup('api/docs', app, document);
 
     const port = process.env.PORT || 3001;
-    await app.listen(port);
-    console.log(`🚀 JobSabuy API running on http://localhost:${port}`);
-    console.log(`📚 Swagger Docs: http://localhost:${port}/api/docs`);
+    await app.listen(port, '0.0.0.0');
+    const url = await app.getUrl();
+    console.log(`🚀 JobSabuy API running on http://localhost:${url}`);
+    console.log(`📚 Swagger Docs: http://localhost:${url}/api/docs`);
 }
 bootstrap();
