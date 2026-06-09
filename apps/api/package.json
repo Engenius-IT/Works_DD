@@ -4,7 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "nest start --watch",
-    "build": "prisma generate && tsc -p tsconfig.json",
+    "build": "prisma generate && prisma db push && tsc -p tsconfig.json",
+    "postinstall": "prisma generate",
     "start": "node dist/main",
     "start:prod": "node dist/main",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
