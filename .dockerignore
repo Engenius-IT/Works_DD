@@ -3,4 +3,5 @@ dist
 .env
 .git
 .turbo
-apps/web
+apps/web/.next
+apps/web/node_modules
