@@ -1,12 +1,15 @@
 {
   "version": 2,
-  "framework": "nestjs",
-  "buildCommand": "npx prisma generate --schema=./prisma/schema.prisma && tsc -p tsconfig.json",
-  "outputDirectory": "dist",
+  "builds": [
+    {
+      "src": "dist/main.js",
+      "use": "@vercel/node"
+    }
+  ],
   "rewrites": [
     {
       "source": "/(.*)",
-      "destination": "/"
+      "destination": "dist/main.js"
     }
   ]
 }
