@@ -381,50 +381,46 @@ model DrivingSkill {
 }
 
 model CompanyPackage {
-  id           String   @id @default(uuid())
-  companyId    String   @unique
-  name         String   @default("Free") 
-  type         String   @default("trial")
-  lastReset    DateTime @default(now())
-  
-  ccQuotaUsed  Int      @default(0)
-  ccQuotaTotal Int      @default(10)
-  acQuotaUsed  Int      @default(0)
-  acQuotaTotal Int      @default(5)
-
-  bonusQuotaCC    Int       @default(0) 
-  bonusQuotaAC    Int       @default(0)
-  bonusEndsAt     DateTime?
-  
+  id           String    @id @default(uuid())
+  companyId    String    @unique
+  name         String    @default("Free")
+  type         String    @default("trial")
+  ccQuotaUsed  Int       @default(0)
+  ccQuotaTotal Int       @default(10)
+  acQuotaUsed  Int       @default(0)
+  acQuotaTotal Int       @default(5)
   startDate    DateTime?
   endDate      DateTime?
-  
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  lastReset    DateTime  @default(now())
+  bonusEndsAt  DateTime?
+  bonusQuotaAC Int       @default(0)
+  bonusQuotaCC Int       @default(0)
 }
 
 model Transaction {
-  id           String   @id @default(uuid())
-  companyId    String
-  amount       Float
-  status       String   @default("PENDING") 
-  packageType  String
-  createdAt    DateTime @default(now())
+  id          String   @id @default(uuid())
+  companyId   String
+  amount      Float
+  status      String   @default("PENDING")
+  packageType String
+  createdAt   DateTime @default(now())
 }
 
 model CompanySpending {
-  companyId    String   @id
-  totalSpent   Float    @default(0)
-  updatedAt    DateTime @updatedAt
+  companyId  String   @id
+  totalSpent Float    @default(0)
+  updatedAt  DateTime @updatedAt
 }
 
 model PaymentTransaction {
   id        String   @id @default(cuid())
-  chargeId  String   @unique // สำคัญมาก: เอาไว้ map กับ Omise
+  chargeId  String   @unique
   companyId String
   planName  String
   amount    Float
-  status    String   @default("PENDING") // PENDING, SUCCESS, FAILED
+  status    String   @default("PENDING")
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -432,10 +428,10 @@ model PaymentTransaction {
 }
 
 model UnlockedCandidate {
-  id           String   @id @default(uuid())
-  employerId   String   
-  candidateId  String   
-  unlockedAt   DateTime @default(now())
+  id          String   @id @default(uuid())
+  employerId  String
+  candidateId String
+  unlockedAt  DateTime @default(now())
 
   @@unique([employerId, candidateId])
 }
@@ -489,5 +485,3 @@ enum NotificationType {
   INTERVIEW_SCHEDULED
   GENERAL
 }
-
-
