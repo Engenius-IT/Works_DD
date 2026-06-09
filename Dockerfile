@@ -20,4 +20,4 @@ RUN bun run build:api
 EXPOSE 3000
 
 # Command to run the API application
-CMD ["bun", "run", "start", "--filter", "@worksdd/api"]
+CMD ["node", "apps/api/dist/main.js"]
