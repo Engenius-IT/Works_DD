@@ -20,27 +20,27 @@ export async function generateMetadata({
   const isEn = locale === 'en';
 
   const titleDefault = isEn
-    ? 'JobDD — Find Jobs, Apply Easily'
-    : 'JobDD — หางาน สมัครงาน ง่ายๆ สบายๆ';
+    ? 'WorksDD — Find Jobs, Apply Easily'
+    : 'WorksDD — หางาน สมัครงาน ง่ายๆ สบายๆ';
 
   const description = isEn
     ? 'Thailand\'s leading job platform. Find jobs from top companies, apply easily, get hired faster. Full-time, Part-time, Remote, Freelance.'
     : 'เว็บหางานอันดับ 1 ของไทย ค้นหางานจากบริษัทชั้นนำ สมัครง่าย ได้งานไว Full-time, Part-time, Remote, Freelance';
 
   return {
-    metadataBase: new URL('https://jobdd.com'),
+    metadataBase: new URL('https://worksdd.com'),
     title: {
       default: titleDefault,
-      template: '%s | JobDD',
+      template: '%s | WorksDD',
     },
     description,
-    keywords: ['หางาน', 'สมัครงาน', 'งาน', 'job', 'career', 'ประกาศงาน', 'JobDD'],
-    authors: [{ name: 'JobDD Team' }],
+    keywords: ['หางาน', 'สมัครงาน', 'งาน', 'job', 'career', 'ประกาศงาน', 'WorksDD'],
+    authors: [{ name: 'WorksDD Team' }],
     openGraph: {
       type: 'website',
       locale: isEn ? 'en_US' : 'th_TH',
-      url: 'https://jobdd.com',
-      siteName: 'JobDD',
+      url: 'https://worksdd.com',
+      siteName: 'WorksDD',
       title: titleDefault,
       description: isEn
         ? 'Thailand\'s leading job platform. Find jobs from top companies, apply easily, get hired faster.'
