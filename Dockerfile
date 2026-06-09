@@ -8,6 +8,7 @@ COPY apps/api/package.json apps/api/
 COPY apps/web/package.json apps/web/
 COPY packages/shared-types/package.json packages/shared-types/
 COPY packages/validators/package.json packages/validators/
+COPY apps/api/prisma apps/api/prisma
 RUN bun install
 
 COPY . .
