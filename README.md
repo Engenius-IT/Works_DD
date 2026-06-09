@@ -1,3 +1,4 @@
+
 # JobSabuy — Job Board Platform
 
 เว็บไซต์หางานสัญชาติไทยแบบ Monorepo ที่ประกอบด้วย Frontend บน Next.js และ Backend บน NestJS โดยปัจจุบันใช้ Supabase ทั้งฝั่งฐานข้อมูล PostgreSQL และไฟล์บน Storage
