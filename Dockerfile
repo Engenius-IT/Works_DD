@@ -8,8 +8,7 @@ COPY apps/api/package.json apps/api/
 COPY apps/web/package.json apps/web/
 COPY packages/shared-types/package.json packages/shared-types/
 COPY packages/validators/package.json packages/validators/
-
-RUN bun install --frozen-lockfile
+RUN bun install
 
 COPY . .
 
