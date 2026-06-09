@@ -20,4 +20,4 @@ RUN bun run build:api
 EXPOSE 3000
 
 # Command to run the API application
-CMD ["bun", "run", "start", "--filter", "@jobsabuy/api"]
+CMD ["bun", "run", "start", "--filter", "@worksdd/api"]
