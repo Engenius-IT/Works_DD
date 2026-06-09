@@ -262,7 +262,7 @@ export function Navbar() {
 
       {/* Mobile Menu Dropdown (Simple) */}
       {isMenuOpen && (
-        <div className="md:hidden border-t border-gray-100 p-4 space-y-2 bg-white shadow-lg">
+        <div className="md:hidden border-t border-gray-100 p-4 space-y-2 bg-white shadow-lg max-h-[80vh] overflow-y-auto">
           {/* Mobile Language Switcher */}
           <div className="px-4 py-2 flex items-center justify-between">
             <span className="text-sm font-medium text-gray-500">{t('languageSwitcher')}</span>
@@ -308,65 +308,72 @@ export function Navbar() {
 
           {/* Mobile Main Navigation Links */}
           <div className="py-2 space-y-1">
-            <Link
-              href="/jobs"
-              className="block px-4 py-2 text-gray-700 hover:bg-gray-50 rounded-lg font-medium"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              {tSub('findJobs')}
-            </Link>
 
-            {/* Regional Jobs Submenu (Flat for mobile) */}
-            <div className="px-4 py-2 text-xs font-bold text-gray-400 uppercase tracking-wider">
-              {tSub('regionalJobs')}
-            </div>
-            <div className="grid grid-cols-2 gap-1 px-2">
-              <Link
-                href="/all_group_job/central"
-                className="px-3 py-2 text-sm text-gray-600 hover:bg-gray-50 rounded-lg"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                {tSub('regionalJobsSub.central')}
-              </Link>
-              <Link
-                href="/all_group_job/east"
-                className="px-3 py-2 text-sm text-gray-600 hover:bg-gray-50 rounded-lg"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                {tSub('regionalJobsSub.east')}
-              </Link>
-              <Link
-                href="/all_group_job/north"
-                className="px-3 py-2 text-sm text-gray-600 hover:bg-gray-50 rounded-lg"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                {tSub('regionalJobsSub.north')}
-              </Link>
-              <Link
-                href="/all_group_job/northeast"
-                className="px-3 py-2 text-sm text-gray-600 hover:bg-gray-50 rounded-lg"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                {tSub('regionalJobsSub.northeast')}
-              </Link>
-              <Link
-                href="/all_group_job/south"
-                className="px-3 py-2 text-sm text-gray-600 hover:bg-gray-50 rounded-lg"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                {tSub('regionalJobsSub.south')}
-              </Link>
-              <Link
-                href="/all_group_job/west"
-                className="px-3 py-2 text-sm text-gray-600 hover:bg-gray-50 rounded-lg"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                {tSub('regionalJobsSub.west')}
-              </Link>
-            </div>
+            {/* ส่วนนี้ดึง Logic มาจาก SubNavbar */}
+            {user?.role === 'EMPLOYER' ? (
+              /* --- เมนูสำหรับนายจ้าง (EMPLOYER) --- */
+              <>
+                <Link
+                  href="/"
+                  className="block px-4 py-2 text-gray-700 hover:bg-gray-50 rounded-lg font-medium"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  {tSub('home')}
+                </Link>
+                <Link
+                  href="/resumes"
+                  className="block px-4 py-2 text-gray-700 hover:bg-gray-50 rounded-lg font-medium"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  {tSub('searchResumes')}
+                </Link>
+              </>
+            ) : (
+              /* --- เมนูสำหรับผู้สมัคร (JOBSEEKER) และ Guest --- */
+              <>
+                <Link
+                  href="/"
+                  className="block px-4 py-2 text-gray-700 hover:bg-gray-50 rounded-lg font-medium"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  {tSub('home')}
+                </Link>
+                <Link
+                  href="/jobs"
+                  className="block px-4 py-2 text-gray-700 hover:bg-gray-50 rounded-lg font-medium"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  {tSub('quickSearch')}
+                </Link>
+                <Link
+                  href="/jobs"
+                  className="block px-4 py-2 text-gray-700 hover:bg-gray-50 rounded-lg font-medium"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  {tSub('findJobs')}
+                </Link>
 
-            {/* Contact Us (Added for mobile) */}
-            <div className="px-2 space-y-1">
+                {/* ส่วนงานตามภูมิภาค (เฉพาะผู้สมัคร/Guest) */}
+                <div className="px-4 py-2 text-xs font-bold text-gray-400 uppercase tracking-wider">
+                  {tSub('regionalJobs')}
+                </div>
+                <div className="grid grid-cols-2 gap-1 px-2">
+                  {['central', 'east', 'north', 'northeast', 'south', 'west'].map((region) => (
+                    <Link
+                      key={region}
+                      href={`/all_group_job/${region}`}
+                      className="px-3 py-2 text-sm text-gray-600 hover:bg-gray-50 rounded-lg"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      {tSub(`regionalJobsSub.${region}`)}
+                    </Link>
+                  ))}
+                </div>
+              </>
+            )}
+
+            {/* เมนูที่มีทั้งสอง Role (ติดต่อเรา) */}
+            <div className="px-2 pt-2 border-t border-gray-50 mt-2">
               <Link
                 href="/contact-us"
                 className="block px-3 py-2 text-sm text-gray-600 hover:bg-gray-50 rounded-lg"

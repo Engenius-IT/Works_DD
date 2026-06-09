@@ -16,9 +16,13 @@ const nextConfig: NextConfig = {
     typescript: {
         ignoreBuildErrors: true,
     },
-    
+
     // Enable React strict mode for better development experience
     reactStrictMode: true,
+
+    experimental: {
+        allowedDevOrigins: ['192.168.1.33:3000']
+    } as any,
 
     // Transpile workspace packages
     transpilePackages: ['@jobsabuy/shared-types', '@jobsabuy/validators'],

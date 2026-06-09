@@ -76,19 +76,18 @@ export class ResumesController {
         return this.resumesService.uploadFile(req.user.sub, file);
     }
 
-    @Public()
     @Get()
     async findAll(
-        @Query('categoryId') categoryId?: string, // 🚩 ระบุชื่อ query parameter ชัดเจน
+        @Request() req: any,
+        @Query('categoryId') categoryId?: string,
         @Query('search') search?: string
     ) {
-        console.log('API Hit with categoryId:', categoryId); // ลองดูใน Terminal ว่า tech โผล่มาไหม
-        return this.resumesService.findAll({ categoryId, search });
+        return this.resumesService.findAll(req.user.sub, { categoryId, search });
     }
 
     @Public()
     @Get('homepage-categories')
-    @SetMetadata('isPublic', true) // หรือ @Public() ขึ้นอยู่กับว่าคุณเซ็ตระบบไว้ยังไง
+    @SetMetadata('isPublic', true)
     async getHomepageCategories() {
         return this.resumesService.getHomepageCategories();
     }

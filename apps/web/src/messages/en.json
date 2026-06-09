@@ -376,7 +376,8 @@
       "genderAll": "All Genders",
       "gender": {
         "male": "Male",
-        "female": "Female"
+        "female": "Female",
+        "not_specified": "Not Specified"
       },
       "ageMin": "Min Age",
       "ageMax": "Max Age",
@@ -463,13 +464,16 @@
         "จีน": "Chinese",
         "japanese": "Japanese",
         "ญี่ปุ่น": "Japanese",
-        "korean": "Korean",
-        "เกาหลี": "Korean",
+        "south_korean": "South Korean",
+        "เกาหลีใต้": "South Korean",
+        "North_korean": "North Korean",
+        "เกาหลีเหนือ": "North Korean",
         "american": "American",
         "british": "British",
         "other": "Other",
         "อื่นๆ": "Other",
-        "not_specified": "Not Specified"
+        "not_specified": "Not Specified",
+        "ไม่ระบุ": "Not Specified"
       },
       "contactTitle": "Contact Information",
       "showContactBtn": "Show Contact Info",
@@ -637,7 +641,7 @@
       "jobFunction": "Job Function",
       "workingDays": "Working Days and Hours",
       "support": "Support",
-      "notsuppot": "Not support",
+      "notsupport": "Not support",
       "workingDaysOptions": {
         "fiveDays": "5 Days/Week",
         "sixDays": "6 Days/Week",
@@ -725,7 +729,8 @@
     },
     "footerActions": {
       "saveDraft": "Save as Draft",
-      "publish": "Publish Job Posting"
+      "publish": "Publish Job Posting",
+      "saving": "Saving"
     }
   }
 }

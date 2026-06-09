@@ -641,7 +641,7 @@ export default function CreateJobPage() {
                     onChange={() => setForm((p) => ({ ...p, canOnlineInterview: false }))}
                     className="w-4 h-4 text-blue-600 focus:ring-blue-500 border-gray-300"
                   />
-                  <span className="text-sm text-gray-700">{tt('basicinfo.support')}</span>
+                  <span className="text-sm text-gray-700">{tt('basicInfo.support')}</span>
                 </label>
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input
@@ -651,7 +651,7 @@ export default function CreateJobPage() {
                     onChange={() => setForm((p) => ({ ...p, canOnlineInterview: true }))}
                     className="w-4 h-4 text-blue-600 focus:ring-blue-500 border-gray-300"
                   />
-                  <span className="text-sm text-gray-700">{tt('basicinfo.notsupport')}</span>
+                  <span className="text-sm text-gray-700">{tt('basicInfo.notsupport')}</span>
                 </label>
               </div>
             </div>
@@ -1244,7 +1244,7 @@ export default function CreateJobPage() {
             disabled={saving}
             className="flex-1 py-3 rounded-xl border-2 border-gray-300 text-gray-700 font-semibold hover:border-gray-400 hover:bg-gray-50 transition-all disabled:opacity-60 text-sm"
           >
-            {saving ? tt('saving') : `💾 ${tt('footerActions.saveDraft')}`}
+            {saving ? tt('footerActions.saving') : `💾 ${tt('footerActions.saveDraft')}`}
           </button>
           <button
             type="button"

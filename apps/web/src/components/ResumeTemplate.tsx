@@ -163,13 +163,11 @@ export const ResumeTemplate = ({ data }: { data: any }) => {
 
     const profile = data.profile || data;
 
-    // เช็ค targetPosition ที่เราเพิ่งเพิ่มเข้าไปใน fullUserData
     const targetPosition =
         data.targetPosition ||
         (data.jobPreferences && data.jobPreferences[0]?.position) ||
         "พร้อมเริ่มงาน";
 
-    // เช็ค totalExperienceYear ที่เราส่งมา
     const expYears = data.totalExperienceYear || 0;
     const expDisplay = expYears > 0 ? `${expYears} ปี` : "แรกเข้า / นักศึกษาจบใหม่";
     const isBKK = profile.province?.includes('กรุงเทพ');

@@ -6,11 +6,14 @@ import { useAuth } from '@/context/AuthContext';
 import { Navbar } from '@/components/Navbar';
 import { bookmarkService } from '@/services/bookmark';
 import { CandidateDetailModal } from '@/components/CandidateDetailModal';
+import { ApplicantDetailModal } from '@/components/ApplicantDetailModal';
+import axios from 'axios';
 import {
   Building2,
   FileText,
   Package,
   CalendarDays,
+  Calendar,
   Users,
   ChevronRight,
   ChevronLeft,
@@ -19,6 +22,7 @@ import {
   CheckCircle2,
   Trash2,
   Heart,
+  Star,
 } from 'lucide-react';
 import { EmployerVerificationModal } from '@/components/EmployerVerificationModal';
 
@@ -360,6 +364,7 @@ function CompanyEditModal({
   const [form, setForm] = useState<Company>({ ...company });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+
 
   const set = (field: keyof Company, value: string) =>
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -705,10 +710,11 @@ export default function EmployerDashboard() {
   const [loadingBookmarks, setLoadingBookmarks] = useState(true);
   const [selectedCandidateId, setSelectedCandidateId] = useState<string | null>(null);
   const [loadingApplicants, setLoadingApplicants] = useState(true);
-  const [, setSelectedApplicantId] = useState<string | null>(null);
   const [interviews, setInterviews] = useState<InterviewItem[]>([]);
   const accountStatusDisplay = getAccountStatusDisplay(company?.verificationStatus);
-
+  const [packageInfo, setPackageInfo] = useState<any>(null);
+  const [now, setNow] = useState(new Date());
+  const [selectedApplicantId, setSelectedApplicantId] = useState<string | null>(null);
 
   const handleUnbookmark = async (candidateId: string) => {
     if (!confirm('ยืนยันการลบออกจากรายการที่บันทึกไว้?')) return;
@@ -750,6 +756,62 @@ export default function EmployerDashboard() {
     }
   }, []);
 
+  const getPackageData = useCallback(async () => {
+    if (!company?.id) return;
+    const token = localStorage.getItem('accessToken');
+    if (!token) return;
+
+    try {
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+      const res = await axios.get(`${baseUrl}/packages/status/${company.id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setPackageInfo(res.data.data || res.data);
+    } catch (err: any) {
+      console.error("❌ Package API Error:", err.message);
+      setPackageInfo(false);
+    }
+  }, [company?.id]);
+
+  const getTimeLeftLabel = (endDate: string | Date | null, currentTime: Date) => {
+    if (!endDate) return "ไม่ระบุ";
+
+    const total = new Date(endDate).getTime() - currentTime.getTime();
+    if (total <= 0) return "(หมดอายุแล้ว)";
+
+    const seconds = Math.floor((total / 1000) % 60);
+    const minutes = Math.floor((total / 1000 / 60) % 60);
+    const hours = Math.floor((total / (1000 * 60 * 60)) % 24);
+    const days = Math.floor(total / (1000 * 60 * 60 * 24));
+
+    // Logic: ยิ่งใกล้ยิ่งโชว์ละเอียด
+    if (days > 7) return `(ใช้งานได้ ${days} วัน)`;
+    if (days >= 1) return `(ใช้งานได้ ${days} วัน ${hours} ชม.)`;
+    if (hours >= 1) return `(ใช้งานได้ ${hours} ชม. ${minutes} นาที)`;
+    return `(ใช้งานได้ ${minutes} นาที ${seconds} วินาที)`; // นาทีสุดท้าย
+  };
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      const currentTime = new Date();
+      setNow(currentTime);
+
+      if (packageInfo?.endDate && packageInfo.name !== 'Free Plan') {
+        const end = new Date(packageInfo.endDate).getTime();
+        const current = currentTime.getTime();
+
+        // ถ้าหมดเวลา ให้ดึงข้อมูลใหม่ทันที
+        if (current >= end) {
+          console.log("⏰ Package expired! Updating status...");
+          getPackageData(); // เรียกใช้ฟังก์ชันที่เราสร้างไว้
+          clearInterval(timer);
+        }
+      }
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [packageInfo?.endDate, packageInfo?.name, getPackageData]);
+
   useEffect(() => {
     if (!authLoading && !user) {
       router.push('/login');
@@ -765,6 +827,20 @@ export default function EmployerDashboard() {
     if (!user || user.role !== 'EMPLOYER') return;
     const token = localStorage.getItem('accessToken');
     if (!token) return;
+
+    // 2. ดึงข้อมูลบริษัท (ทำทีเดียว ได้ทั้งข้อมูลบริษัทและเอา ID ไปดึง Package ต่อ)
+    fetch(`${API_URL}/companies/mine`, { headers: { Authorization: `Bearer ${token}` } })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (data && data.id) {
+          setCompany(data);
+        } else {
+          setPackageInfo(false);
+        }
+      })
+      .catch(() => setPackageInfo(false));
+
+    // 3. ดึงรายการงาน (Jobs)
     fetch(`${API_URL}/companies/mine/jobs`, { headers: { Authorization: `Bearer ${token}` } })
       .then((r) => r.json())
       .then((data) => {
@@ -774,22 +850,9 @@ export default function EmployerDashboard() {
       })
       .catch(() => setLoadingJobs(false));
 
-
-    const fetchCompanyData = () => {
-      fetch(`${API_URL}/companies/mine`, { headers: { Authorization: `Bearer ${token}` } })
-        .then((r) => (r.ok ? r.json() : null))
-        .then((data) => {
-          if (data) setCompany(data);
-        })
-        .catch(() => { });
-    };
-
-    fetchCompanyData();
-
+    // 4. ดึงข้อมูลอื่นๆ
     setLoadingApplicants(true);
-    fetch(`${API_URL}/applications/employer/recent`, {
-      headers: { Authorization: `Bearer ${token}` },
-    })
+    fetch(`${API_URL}/applications/employer/recent`, { headers: { Authorization: `Bearer ${token}` } })
       .then((r) => (r.ok ? r.json() : []))
       .then((data) => {
         setRecentApplicants(Array.isArray(data) ? data : []);
@@ -797,16 +860,28 @@ export default function EmployerDashboard() {
       })
       .catch(() => setLoadingApplicants(false));
 
-    fetch(`${API_URL}/applications/employer/interviews`, {
-      headers: { Authorization: `Bearer ${token}` },
-    })
+    fetch(`${API_URL}/applications/employer/interviews`, { headers: { Authorization: `Bearer ${token}` } })
       .then((r) => (r.ok ? r.json() : []))
-      .then((data) => {
-        setInterviews(Array.isArray(data) ? data : []);
-      })
+      .then((data) => setInterviews(Array.isArray(data) ? data : []))
       .catch(() => { });
+
     fetchBookmarks();
+
+
   }, [user]);
+
+  useEffect(() => {
+    if (company?.id) {
+      getPackageData();
+
+      const interval = setInterval(() => {
+        console.log("🔄 Polling package status...");
+        getPackageData();
+      }, 30000);
+
+      return () => clearInterval(interval);
+    }
+  }, [company?.id, getPackageData]);
 
   const totalJobs = jobs.length;
   const activeJobs = jobs.filter((j) => j.status === 'PUBLISHED' || j.status === 'ACTIVE').length;
@@ -1084,53 +1159,273 @@ export default function EmployerDashboard() {
             </button>
           </div>
 
-          {/* Card 3: Package */}
-          <div className="bg-white rounded-2xl border border-gray-300 shadow-lg p-6 flex flex-col gap-4">
+          {/* Card 3: Package - รองรับ VIP ธีม Rose Red */}
+          <div className={`bg-white rounded-2xl border shadow-lg p-6 flex flex-col gap-4 transition-all duration-500 ${packageInfo?.name === 'VIP' ? 'border-rose-200 shadow-rose-100' : 'border-gray-300'}`}>
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center">
-                <Package className="w-5 h-5 text-amber-500" />
+              {/* Icon Container: ปรับตามระดับแพ็คเกจ */}
+              <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${!packageInfo ? 'bg-gray-50' :
+                packageInfo.name === 'VIP' ? 'bg-rose-50 border border-rose-100 shadow-sm' :
+                  packageInfo.name === 'Premium' ? 'bg-amber-100 border border-amber-200' :
+                    packageInfo.name === 'Pro' ? 'bg-indigo-50' : 'bg-orange-50'
+                }`}>
+                <Package className={`w-5 h-5 ${!packageInfo ? 'text-gray-400' :
+                  packageInfo.name === 'VIP' ? 'text-rose-600' :
+                    packageInfo.name === 'Premium' ? 'text-amber-600' :
+                      packageInfo.name === 'Pro' ? 'text-indigo-600' : 'text-orange-500'
+                  }`} />
               </div>
-              <div>
-                <div className="font-bold text-gray-800">แพ็คเกจปัจจุบัน</div>
+
+              <div className="flex-1">
+                {/* แถวชื่อ Package และ Bonus */}
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    {!packageInfo ? (
+                      <span className="font-bold text-gray-800">
+                        {packageInfo === false ? 'ดึงข้อมูลไม่สำเร็จ' : 'กำลังโหลด...'}
+                      </span>
+                    ) : packageInfo.name === 'VIP' ? (
+                      <span className="px-2 py-0.5 rounded-lg bg-gradient-to-r from-rose-600 via-red-600 to-red-800 text-white text-[10px] font-black shadow-sm tracking-wider uppercase">
+                        VIP ACCOUNT
+                      </span>
+                    ) : packageInfo.name === 'Premium' ? (
+                      <span className="px-2 py-0.5 rounded-lg bg-gradient-to-r from-amber-500 to-yellow-400 text-white text-[10px] font-bold shadow-sm">
+                        PREMIUM
+                      </span>
+                    ) : packageInfo.name === 'Pro' ? (
+                      <span className="px-2 py-0.5 rounded-lg bg-indigo-600 text-white text-[10px] font-bold shadow-sm">
+                        PRO ACCOUNT
+                      </span>
+                    ) : (
+                      <span className="font-bold text-gray-800 text-xs">
+                        {packageInfo.name || 'Standard'}
+                      </span>
+                    )}
+                  </div>
+
+                  {/* ป้าย Bonus แบบกะทัดรัด (Compact) */}
+                  {(packageInfo?.bonusQuotaCC > 0 || packageInfo?.bonusQuotaAC > 0) && (
+                    <div className="flex items-center gap-1.5 bg-fuchsia-50/50 border border-fuchsia-100 px-1.5 py-0.5 rounded-md shadow-sm">
+                      <div className="w-1 h-1 bg-fuchsia-500 rounded-full animate-ping" />
+                      <span className="text-[9px] font-black text-fuchsia-600 italic uppercase tracking-tighter">
+                        Bonus
+                      </span>
+                      <span className="text-[9px] font-medium text-fuchsia-500/80 border-l border-fuchsia-200 pl-1.5">
+                        {getTimeLeftLabel(packageInfo.bonusEndsAt, now)}
+                      </span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Status Dot: ปรับขนาดลงเล็กน้อยให้เข้ากับดีไซน์ใหม่ */}
                 <div className="flex items-center gap-1.5 mt-0.5">
-                  <span className="w-2 h-2 rounded-full bg-green-400 inline-block" />
-                  <span className="text-xs text-gray-500">ฟรีทดลอง · ทดลองใช้</span>
+                  <span className={`w-1.5 h-1.5 rounded-full inline-block animate-pulse ${!packageInfo ? 'bg-gray-300' :
+                    packageInfo.name === 'VIP' ? 'bg-rose-500 shadow-[0_0_6px_rgba(225,29,72,0.6)]' :
+                      packageInfo.name === 'Premium' ? 'bg-amber-500' :
+                        'bg-blue-500'
+                    }`} />
+                  <span className="text-xs text-gray-500 font-medium">
+                    {packageInfo
+                      ? (packageInfo.name === 'VIP'
+                        ? 'สิทธิพิเศษขั้นสูงสุด · Active'
+                        : (packageInfo.name === 'Premium' ? 'สิทธิพิเศษขั้นสูง · Active' : (packageInfo.name === 'Pro' ? 'สิทธิพิเศษขั้นพื้นฐาน · Active' : 'ฟรีทดลอง · ทดลองใช้')))
+                      : 'สถานะการเชื่อมต่อ API'}
+                  </span>
                 </div>
               </div>
             </div>
 
-            {/* Quota bars */}
+            {/* Quota Progress: VIP จะเป็นสีแดง Rose */}
             <div className="space-y-3">
+              {/* CC Quota - คลีนกว่าเดิม โชว์โบนัสเฉพาะตอนมีค่าเท่านั้น */}
               <div>
                 <div className="flex justify-between text-xs mb-1">
-                  <span className="text-gray-600">โควต้า CC คงเหลือ</span>
-                  <span className="text-gray-400">0 / 10</span>
+                  <div className="flex items-center gap-1">
+                    <span className="text-gray-600 font-medium">โควต้า CC คงเหลือ</span>
+                  </div>
+                  <span className={packageInfo ? "text-gray-800 font-medium" : "text-red-400"}>
+                    {packageInfo ? (
+                      <>
+                        {/* 1. ตัวเลขคงเหลือรวม / ทั้งหมด */}
+                        {Math.max(0, (packageInfo.ccQuotaTotal || 0) - (packageInfo.ccQuotaUsed || 0))} / {packageInfo.ccQuotaTotal || 0}
+
+                        {/* 2. แสดงวงเล็บแยกยอด เฉพาะเมื่อมีโบนัสเท่านั้น */}
+                        {(packageInfo.bonusQuotaCC || 0) > 0 && (
+                          <span className="text-[10px] ml-1 font-normal text-gray-400">
+                            (
+                            <span className={packageInfo.name === 'VIP' ? 'text-rose-500' : 'text-blue-500'}>
+                              {(packageInfo.ccQuotaTotal || 0) - (packageInfo.bonusQuotaCC || 0)}
+                            </span>
+                            <span className="mx-0.5 text-gray-300">+</span>
+                            <span className="text-fuchsia-600 font-black">{packageInfo.bonusQuotaCC}</span>
+                            )
+                          </span>
+                        )}
+                      </>
+                    ) : "— / —"}
+                  </span>
                 </div>
-                <div className="h-2 bg-gray-100 rounded-full">
-                  <div className="h-full w-0 bg-blue-500 rounded-full" />
+
+                <div className="h-2 bg-gray-100 rounded-full overflow-hidden flex shadow-inner border border-gray-50">
+                  {packageInfo ? (() => {
+                    const total = packageInfo.ccQuotaTotal || 1;
+                    const used = packageInfo.ccQuotaUsed || 0;
+                    const bonusTotal = packageInfo.bonusQuotaCC || 0;
+                    const baseTotal = total - bonusTotal;
+                    const remainingTotal = Math.max(0, total - used);
+
+                    const baseWidth = (Math.min(remainingTotal, baseTotal) / total) * 100;
+                    const bonusWidth = (Math.max(0, remainingTotal - baseTotal) / total) * 100;
+
+                    return (
+                      <>
+                        <div
+                          className={`h-full transition-all duration-1000 ${packageInfo.name === 'VIP' ? 'bg-rose-600' : 'bg-blue-600'}`}
+                          style={{ width: `${baseWidth}%` }}
+                        />
+                        {/* หลอดโบนัสจะ Render เฉพาะเมื่อมีพื้นที่เหลือ (Width > 0) */}
+                        {bonusWidth > 0 && (
+                          <div
+                            className="h-full transition-all duration-1000 border-l border-white/30 bg-gradient-to-r from-fuchsia-400 via-fuchsia-500 to-fuchsia-600 relative"
+                            style={{ width: `${bonusWidth}%` }}
+                          >
+                            <div className="absolute inset-0 bg-white/10 h-[40%]" />
+                          </div>
+                        )}
+                      </>
+                    );
+                  })() : (
+                    <div className="h-full bg-gray-200 w-0" />
+                  )}
                 </div>
               </div>
+
+              {/* AC Quota - คลีนกว่าเดิม โชว์โบนัสเฉพาะตอนมีค่าเท่านั้น */}
               <div>
                 <div className="flex justify-between text-xs mb-1">
-                  <span className="text-gray-600">โควต้า AC คงเหลือ</span>
-                  <span className="text-gray-400">0 / 5</span>
+                  <div className="flex items-center gap-1">
+                    <span className="text-gray-600 font-medium">โควต้า AC คงเหลือ</span>
+                  </div>
+                  <span className={packageInfo ? "text-gray-800 font-medium" : "text-red-400"}>
+                    {packageInfo ? (
+                      <>
+                        {/* 1. ตัวเลขคงเหลือรวม / ทั้งหมด */}
+                        {Math.max(0, (packageInfo.acQuotaTotal || 0) - (packageInfo.acQuotaUsed || 0))} / {packageInfo.acQuotaTotal || 0}
+
+                        {/* 2. แสดงวงเล็บแยกยอด เฉพาะเมื่อมีโบนัสเท่านั้น */}
+                        {(packageInfo.bonusQuotaAC || 0) > 0 && (
+                          <span className="text-[10px] ml-1 font-normal text-gray-400">
+                            (
+                            <span className={packageInfo.name === 'VIP' ? 'text-rose-500' : 'text-blue-500'}>
+                              {(packageInfo.acQuotaTotal || 0) - (packageInfo.bonusQuotaAC || 0)}
+                            </span>
+                            <span className="mx-0.5 text-gray-300">+</span>
+                            <span className="text-fuchsia-600 font-black">{packageInfo.bonusQuotaAC}</span>
+                            )
+                          </span>
+                        )}
+                      </>
+                    ) : "— / —"}
+                  </span>
                 </div>
-                <div className="h-2 bg-gray-100 rounded-full">
-                  <div className="h-full w-0 bg-blue-500 rounded-full" />
+
+                <div className="h-2 bg-gray-100 rounded-full overflow-hidden flex shadow-inner border border-gray-50">
+                  {packageInfo ? (() => {
+                    const total = packageInfo.acQuotaTotal || 1;
+                    const used = packageInfo.acQuotaUsed || 0;
+                    const bonusTotal = packageInfo.bonusQuotaAC || 0;
+                    const baseTotal = total - bonusTotal;
+                    const remainingTotal = Math.max(0, total - used);
+
+                    const baseWidth = (Math.min(remainingTotal, baseTotal) / total) * 100;
+                    const bonusWidth = (Math.max(0, remainingTotal - baseTotal) / total) * 100;
+
+                    return (
+                      <>
+                        <div
+                          className={`h-full transition-all duration-1000 ${packageInfo.name === 'VIP' ? 'bg-red-700' : 'bg-indigo-500'}`}
+                          style={{ width: `${baseWidth}%` }}
+                        />
+                        {bonusWidth > 0 && (
+                          <div
+                            className="h-full transition-all duration-1000 border-l border-white/30 bg-gradient-to-r from-fuchsia-400 via-fuchsia-500 to-fuchsia-600 relative"
+                            style={{ width: `${bonusWidth}%` }}
+                          >
+                            <div className="absolute inset-0 bg-white/10 h-[40%]" />
+                          </div>
+                        )}
+                      </>
+                    );
+                  })() : (
+                    <div className="h-full bg-gray-200 w-0" />
+                  )}
                 </div>
               </div>
             </div>
 
+            {/* เช็คว่าถ้าไม่ใช่ Free Plan ถึงจะวาดส่วนระยะเวลาแพ็คเกจออกมา */}
+            {packageInfo?.name !== 'Free Plan' && (
+              <div className="pt-2 border-t border-gray-50 flex flex-col gap-1">
+                <div className="flex items-center justify-between text-[11px]">
+                  <div className="flex items-center gap-1.5 text-gray-400">
+                    <Calendar className="w-3 h-3" />
+                    <span>ระยะเวลาแพ็คเกจ</span>
+                  </div>
+                  <span className={`font-semibold ${packageInfo?.name === 'VIP' ? 'text-rose-600' : 'text-gray-600'}`}>
+                    {packageInfo?.startDate && packageInfo?.endDate
+                      ? `${new Date(packageInfo.startDate).toLocaleDateString('th-TH', { day: 'numeric', month: 'short' })} - ${new Date(packageInfo.endDate).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: '2-digit' })}`
+                      : 'ไม่ระบุ'}
+                  </span>
+                </div>
+
+                {/* ตัวนับถอยหลังแบบ Dynamic */}
+                {packageInfo?.endDate && (
+                  <div className={`text-[10px] text-right italic transition-colors duration-300 ${
+                    // ถ้าเหลือน้อยกว่า 1 วัน ให้ใช้สีแดง/Rose เพื่อเตือน
+                    (new Date(packageInfo.endDate).getTime() - new Date().getTime()) < 86400000
+                      ? 'text-rose-500 font-medium'
+                      : 'text-gray-400'
+                    }`}>
+                    {getTimeLeftLabel(packageInfo.endDate, now)}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Button Area */}
             <div className="flex gap-2 mt-auto">
-              <button
-                onClick={() => router.push('/employer/packages')}
-                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 rounded-xl transition-colors text-sm"
-              >
-                อัปเกรดแพ็คเกจ
-              </button>
-              <button className="w-10 h-10 flex items-center justify-center border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors">
-                <FileText className="w-4 h-4 text-gray-400" />
-              </button>
+              {packageInfo?.name === 'VIP' ? (
+                /* กรณีเป็น VIP: แสดงปุ่มระดับสูงสุด (คลิกไม่ได้หรือให้ไปหน้า Billing แทน) */
+                <button
+                  disabled
+                  className="flex-1 font-bold py-2.5 rounded-xl transition-all text-sm flex items-center justify-center gap-2 border border-rose-200 bg-rose-50 text-rose-600 cursor-default"
+                >
+                  <Star className="w-4 h-4 fill-red-500" /> {/* อย่าลืม import Crown จาก lucide-react */}
+                  บัญชีของท่านเป็นระดับสูงสุดแล้ว
+                </button>
+              ) : (
+                /* กรณีอื่นๆ (Pro, Premium, หรือ Free): แสดงปุ่มอัปเกรด */
+                <>
+                  <button
+                    onClick={() => router.push('/employer/packages')}
+                    disabled={!packageInfo}
+                    className={`flex-1 font-semibold py-2.5 rounded-xl transition-colors text-sm shadow-sm ${!packageInfo
+                      ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                      : 'bg-blue-600 hover:bg-blue-700 text-white'
+                      }`}
+                  >
+                    {packageInfo === false ? 'เซิร์ฟเวอร์ขัดข้อง' : 'อัปเกรดแพ็คเกจ'}
+                  </button>
+
+                  {/* ปุ่มดูรายละเอียด Billing เล็กๆ ด้านข้าง */}
+                  <button
+                    onClick={() => router.push('/employer/settings/billing')}
+                    className="w-10 h-10 flex items-center justify-center border border-gray-200 rounded-xl hover:bg-gray-50 text-gray-400 transition-colors"
+                    title="ประวัติการชำระเงิน"
+                  >
+                    <FileText className="w-4 h-4" />
+                  </button>
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -1169,7 +1464,7 @@ export default function EmployerDashboard() {
             </div>
 
             {/* Table header */}
-            <div className="grid grid-cols-4 text-xs text-gray-400 font-medium pb-2 border-b border-gray-50 px-2">
+            <div className="hidden md:grid md:grid-cols-4 text-xs text-gray-400 font-medium pb-2 border-b border-gray-50 px-2">
               <span>ผู้สมัคร</span>
               <span>ตำแหน่ง</span>
               <span>วันที่สมัคร</span>
@@ -1186,55 +1481,52 @@ export default function EmployerDashboard() {
                 recentApplicants.map((a) => (
                   <div
                     key={a.id}
-                    className="grid grid-cols-4 items-center py-3 px-2 hover:bg-gray-50 rounded-lg transition-colors"
+                    /* แก้จุดนี้: ใช้ flex-col บนมือถือ และ md:grid-cols-4 บนคอม */
+                    className="flex flex-col md:grid md:grid-cols-4 items-start md:items-center py-4 md:py-3 px-2 hover:bg-gray-50 rounded-lg transition-colors gap-3 md:gap-0"
                   >
-                    {/* Name + avatar */}
-                    <div className="flex items-center gap-2.5">
-                      <div
-                        className={`w-8 h-8 rounded-full bg-blue-500 overflow-hidden flex items-center justify-center text-white text-xs font-bold shrink-0`}
-                      >
+                    {/* 1. Name + avatar */}
+                    <div className="flex items-center gap-2.5 w-full">
+                      <div className="w-9 h-9 rounded-full bg-blue-500 overflow-hidden flex items-center justify-center text-white text-xs font-bold shrink-0">
                         {a.user?.avatarUrl ? (
-                          <img
-                            src={a.user.avatarUrl}
-                            alt="Avatar"
-                            className="w-full h-full object-cover"
-                          />
+                          <img src={a.user.avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
                         ) : (
-                          (a.user?.firstName || 'User').charAt(0)
+                          (a.user?.firstName || 'U').charAt(0)
                         )}
                       </div>
-                      <div>
-                        <div className="text-xs font-semibold text-gray-800 leading-tight">
+                      <div className="min-w-0">
+                        <div className="text-sm md:text-xs font-bold md:font-semibold text-gray-800 leading-tight truncate">
                           {a.user?.firstName} {a.user?.lastName}
                         </div>
-                        <div
-                          className={`text-[10px] font-medium ${a.status === 'SHORTLISTED' ? 'text-green-500' : a.status === 'REJECTED' ? 'text-red-500' : 'text-gray-400'}`}
-                        >
-                          {a.status === 'SHORTLISTED'
-                            ? 'นัดสัมภาษณ์'
-                            : a.status === 'REJECTED'
-                              ? 'ปฏิเสธ'
-                              : 'สมัครงานแล้ว'}
+                        <div className={`text-[10px] font-medium ${a.status === 'SHORTLISTED' ? 'text-green-500' : a.status === 'REJECTED' ? 'text-red-500' : 'text-gray-400'}`}>
+                          {a.status === 'SHORTLISTED' ? 'นัดสัมภาษณ์' : a.status === 'REJECTED' ? 'ปฏิเสธ' : 'สมัครงานแล้ว'}
                         </div>
                       </div>
                     </div>
 
-                    {/* Position */}
-                    <div className="text-xs text-gray-600">{a.job?.title}</div>
-
-                    {/* Date */}
-                    <div className="text-[11px] text-gray-500 whitespace-pre-line leading-tight">
-                      {formatAppliedAt(a.appliedAt)}
+                    {/* 2. Position - บนมือถือให้มีหัวข้อกำกับเล็กๆ */}
+                    <div className="w-full md:w-auto">
+                      <span className="md:hidden text-[10px] text-gray-400 font-bold block mb-0.5 uppercase">ตำแหน่ง</span>
+                      <div className="text-xs text-gray-600 truncate bg-gray-50 md:bg-transparent p-1.5 md:p-0 rounded">
+                        {a.job?.title}
+                      </div>
                     </div>
 
-                    {/* Actions */}
-                    <div className="flex justify-end gap-1">
+                    {/* 3. Date */}
+                    <div className="w-full md:w-auto">
+                      <span className="md:hidden text-[10px] text-gray-400 font-bold block mb-0.5 uppercase">วันที่สมัคร</span>
+                      <div className="text-[11px] text-gray-500">
+                        {formatAppliedAt(a.appliedAt)}
+                      </div>
+                    </div>
+
+                    {/* 4. Actions */}
+                    <div className="flex justify-end w-full md:w-auto border-t md:border-0 pt-2 md:pt-0">
                       <button
-                        onClick={() => setSelectedApplicantId(a.id)}
-                        title="ดูรายละเอียด"
-                        className="p-1.5 rounded-lg hover:bg-blue-50 text-[#E00016] hover:text-[#E00016]/80 transition-colors"
+                        onClick={() => setSelectedApplicantId(a.id)} // ส่ง ID ของการสมัครเข้าไป
+                        className="flex items-center justify-center gap-2 w-full md:w-auto px-4 py-2 md:p-1.5 rounded-xl md:rounded-lg bg-blue-50 md:bg-transparent text-[#E00016] hover:bg-blue-100 transition-colors"
                       >
                         <Eye className="w-4 h-4" />
+                        <span className="md:hidden text-xs font-bold text-[#E00016]">ดูรายละเอียด</span>
                       </button>
                     </div>
                   </div>
@@ -1275,7 +1567,8 @@ export default function EmployerDashboard() {
             </button>
           </div>
 
-          <div className="grid grid-cols-12 text-[11px] text-gray-400 font-bold pb-2 border-b border-gray-50 px-2 uppercase tracking-wider">
+          {/* Table Header - แก้ไข: ซ่อนบนมือถือ */}
+          <div className="hidden md:grid grid-cols-12 text-[11px] text-gray-400 font-bold pb-2 border-b border-gray-50 px-2 uppercase tracking-wider">
             <div className="col-span-5">ข้อมูลผู้สมัคร / อีเมล</div>
             <div className="col-span-5">ตำแหน่งที่สนใจ</div>
             <div className="col-span-2 text-right">จัดการ</div>
@@ -1295,13 +1588,15 @@ export default function EmployerDashboard() {
               </div>
             ) : (
               candidates.slice(0, 5).map((candidate) => (
+                /* แก้ไข: เปลี่ยน grid เป็น flex-col บนมือถือ */
                 <div
                   key={candidate.id}
-                  className="grid grid-cols-12 items-center py-4 px-2 hover:bg-gray-50 rounded-xl transition-all group"
+                  className="flex flex-col md:grid md:grid-cols-12 items-start md:items-center py-4 px-2 hover:bg-gray-50 rounded-xl transition-all group gap-3 md:gap-0"
                 >
-                  <div className="col-span-5 flex items-center gap-3 min-w-0">
+                  {/* 1. ข้อมูลผู้สมัคร */}
+                  <div className="md:col-span-5 flex items-center gap-3 min-w-0 w-full">
                     <div className="relative shrink-0">
-                      <div className="w-9 h-9 rounded-full bg-pink-100 flex items-center justify-center text-pink-700 text-xs font-bold border border-pink-200 overflow-hidden shadow-sm">
+                      <div className="w-10 h-10 rounded-full bg-pink-100 flex items-center justify-center text-pink-700 text-xs font-bold border border-pink-200 overflow-hidden shadow-sm">
                         {candidate.avatarUrl ? (
                           <img src={candidate.avatarUrl} className="w-full h-full object-cover" alt="" />
                         ) : (
@@ -1309,7 +1604,6 @@ export default function EmployerDashboard() {
                         )}
                       </div>
                     </div>
-
                     <div className="min-w-0">
                       <div className="text-sm font-bold text-gray-800 leading-tight truncate group-hover:text-blue-700 transition-colors">
                         {candidate.fullName}
@@ -1320,16 +1614,19 @@ export default function EmployerDashboard() {
                     </div>
                   </div>
 
-                  <div className="col-span-5 min-w-0 pr-4">
-                    <div className="text-xs text-gray-600 truncate bg-gray-100/50 px-2 py-1 rounded-md inline-block">
+                  {/* 2. ตำแหน่งที่สนใจ */}
+                  <div className="md:col-span-5 min-w-0 w-full md:pr-4">
+                    <span className="md:hidden text-[10px] text-gray-400 font-bold block mb-1 uppercase">ตำแหน่งที่สนใจ</span>
+                    <div className="text-xs text-gray-600 truncate bg-gray-100/50 md:bg-transparent px-2 py-1 md:p-0 rounded-md inline-block md:block">
                       {candidate.position || 'ไม่ได้ระบุตำแหน่ง'}
                     </div>
                   </div>
 
+                  {/* 3. ปุ่มจัดการ */}
                   <div className="md:col-span-2 w-full flex items-center md:justify-end gap-2 border-t md:border-0 pt-3 md:pt-0">
                     <button
                       onClick={() => setSelectedCandidateId(candidate.id)}
-                      className="flex-1 md:flex-none flex items-center justify-center gap-2 px-3 py-2 bg-white border border-gray-200 rounded-xl text-gray-600 hover:border-[#020263] hover:text-[#020263] transition-all text-sm font-medium"
+                      className="flex-1 md:flex-none flex items-center justify-center gap-2 px-3 py-2.5 md:py-2 bg-white border border-gray-200 rounded-xl text-gray-600 hover:border-[#020263] hover:text-[#020263] transition-all text-sm font-medium shadow-sm"
                       title="ดูหน้าโปรไฟล์"
                     >
                       <Eye className="w-4 h-4" />
@@ -1337,7 +1634,7 @@ export default function EmployerDashboard() {
                     </button>
                     <button
                       onClick={() => handleUnbookmark(candidate.id)}
-                      className="flex-1 md:flex-none flex items-center justify-center gap-2 px-3 py-2 bg-red-50 border border-red-100 rounded-xl text-red-600 hover:bg-red-600 hover:text-white transition-all text-sm font-medium"
+                      className="flex-1 md:flex-none flex items-center justify-center gap-2 px-3 py-2.5 md:py-2 bg-red-50 border border-red-100 rounded-xl text-red-600 hover:bg-red-600 hover:text-white transition-all text-sm font-medium shadow-sm"
                       title="ลบออกจากรายการที่บันทึก"
                     >
                       <Trash2 className="w-4 h-4" />
@@ -1391,6 +1688,13 @@ export default function EmployerDashboard() {
           onBookmarkToggle={() => {
             fetchBookmarks();
           }}
+        />
+      )}
+
+      {selectedApplicantId && (
+        <ApplicantDetailModal
+          applicationId={selectedApplicantId}
+          onClose={() => setSelectedApplicantId(null)}
         />
       )}
     </div>

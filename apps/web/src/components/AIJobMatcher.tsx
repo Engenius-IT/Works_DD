@@ -437,6 +437,7 @@ export default function AIJobMatcher({ works, certs, languages, resume }: Props)
       const currentPos = works.find(w => w.isCurrent)?.position || works[0]?.position || "";
       const matched = jobs
         .map((job) => computeMatch(job, skills, effectiveExpYears, salary, currentPos))
+        .filter((r) => r.totalScore >= 40)
         .sort((a, b) => b.totalScore - a.totalScore)
         .slice(0, 15);
 
@@ -523,7 +524,7 @@ export default function AIJobMatcher({ works, certs, languages, resume }: Props)
         <div className="flex items-center gap-2.5 bg-sky-50 rounded-2xl px-3 py-3 border border-sky-100">
           <Target className="w-4 h-4 text-sky-600 shrink-0" />
           <p className="text-[11px] lg:text-[12px] text-sky-700 font-semibold leading-tight">
-            ตำแหน่งงาน <span className="text-sky-900 font-bold block sm:inline">20%</span>
+            ตำแหน่งงานคิด <span className="text-sky-900 font-bold block sm:inline">20%</span>
           </p>
         </div>
 
@@ -670,19 +671,46 @@ export default function AIJobMatcher({ works, certs, languages, resume }: Props)
               {results.map((r, idx) => {
                 const colors = getScoreColor(r.totalScore);
                 const reqSkills = parseRequiredSkills(r.job.requiredSkills);
+
+                // 🚩 ตรวจสอบเงื่อนไขสำหรับแต่ละอันดับ
+                const isRank1 = idx === 0;
+                const isRank2 = idx === 1;
+                const isRank3 = idx === 2;
+
                 return (
                   <div
                     key={r.job.id}
-                    className={`relative rounded-3xl border p-5 transition-all hover:shadow-md ${idx < 3
-                      ? 'border-violet-100 bg-linear-to-r from-violet-50/60 to-white'
-                      : 'border-slate-100 bg-white'
+                    className={`relative rounded-3xl border p-5 transition-all hover:shadow-md ${isRank1
+                      ? 'border-amber-200 bg-linear-to-r from-amber-50/60 to-white'
+                      : isRank2
+                        ? 'border-slate-300 bg-linear-to-r from-slate-50 to-white'
+                        : isRank3
+                          ? 'border-orange-200 bg-linear-to-r from-orange-50/40 to-white'
+                          : 'border-slate-100 bg-white'
                       }`}
                   >
-                    {idx === 0 && (
+                    {/* 🚩 แสดงแท็กอันดับตามลำดับ */}
+                    {isRank1 && (
                       <div className="absolute -top-2.5 left-5">
                         <span className="inline-flex items-center gap-1 bg-linear-to-r from-amber-400 to-orange-400 text-white text-[10px] font-bold px-2.5 py-1 rounded-full shadow-sm">
                           <Trophy className="w-2.5 h-2.5" />
                           อันดับที่ 1
+                        </span>
+                      </div>
+                    )}
+                    {isRank2 && (
+                      <div className="absolute -top-2.5 left-5">
+                        <span className="inline-flex items-center gap-1 bg-linear-to-r from-slate-400 to-slate-500 text-white text-[10px] font-bold px-2.5 py-1 rounded-full shadow-sm">
+                          <Trophy className="w-2.5 h-2.5" />
+                          อันดับที่ 2
+                        </span>
+                      </div>
+                    )}
+                    {isRank3 && (
+                      <div className="absolute -top-2.5 left-5">
+                        <span className="inline-flex items-center gap-1 bg-linear-to-r from-amber-600 to-amber-700 text-white text-[10px] font-bold px-2.5 py-1 rounded-full shadow-sm">
+                          <Trophy className="w-2.5 h-2.5" />
+                          อันดับที่ 3
                         </span>
                       </div>
                     )}
@@ -765,49 +793,60 @@ export default function AIJobMatcher({ works, certs, languages, resume }: Props)
                         <div className="mb-6">
                           <div className="flex justify-between items-end mb-2">
                             <div>
-                              <p className="text-[11px] font-bold text-slate-700 uppercase tracking-wide">AI Scoring Breakdown</p>
-                              <p className="text-[10px] text-slate-400">Weighted: Title 20% | Skills 50% | Exp 30%</p>
+                              <p className="text-[11px] font-bold text-slate-700 uppercase tracking-wide">
+                                AI Scoring Breakdown
+                              </p>
+                              <p className="text-[10px] text-slate-400">
+                                Weighted: Title 20% | Skills 50% | Exp 30%
+                              </p>
                             </div>
                             <div className="text-right">
-                              <span className="text-lg font-black text-indigo-700">{r.totalScore}</span>
-                              <span className="text-[10px] font-bold text-slate-400 ml-1">/ 100</span>
+                              <span className="text-lg font-black text-indigo-700">
+                                {r.totalScore}
+                              </span>
+                              <span className="text-[10px] font-bold text-slate-400 ml-1">
+                                / 100
+                              </span>
                             </div>
                           </div>
 
                           <div className="h-3 w-full bg-slate-100 rounded-full overflow-hidden flex shadow-inner border border-slate-200/50">
                             <div
                               className="h-full bg-sky-400 transition-all duration-700 ease-out border-r border-white/30"
-                              style={{ width: `${(r.titleScore * 0.2)}%` }}
+                              style={{ width: `${r.titleScore * 0.2}%` }}
                             />
-
                             <div
                               className="h-full bg-red-500 transition-all duration-700 ease-out border-r border-white/30"
-                              style={{ width: `${(r.hardSkillScore * 0.5)}%` }}
+                              style={{ width: `${r.hardSkillScore * 0.5}%` }}
                             />
-
                             <div
                               className="h-full bg-blue-600 transition-all duration-700 ease-out"
-                              style={{ width: `${(r.expScore * 0.3)}%` }}
+                              style={{ width: `${r.expScore * 0.3}%` }}
                             />
                           </div>
 
                           <div className="flex flex-wrap gap-x-5 gap-y-2 mt-3">
                             <div className="flex items-center gap-2">
                               <div className="w-2.5 h-2.5 rounded-sm bg-sky-400" />
-                              <span className="text-[11px] font-medium text-slate-600">ตำแหน่ง ({Math.round(r.titleScore * 0.2)}/20)</span>
+                              <span className="text-[11px] font-medium text-slate-600">
+                                ตำแหน่ง ({Math.round(r.titleScore * 0.2)}/20)
+                              </span>
                             </div>
                             <div className="flex items-center gap-2">
                               <div className="w-2.5 h-2.5 rounded-sm bg-red-500" />
-                              <span className="text-[11px] font-medium text-slate-600">ทักษะ ({Math.round(r.hardSkillScore * 0.5)}/50)</span>
+                              <span className="text-[11px] font-medium text-slate-600">
+                                ทักษะ ({Math.round(r.hardSkillScore * 0.5)}/50)
+                              </span>
                             </div>
                             <div className="flex items-center gap-2">
                               <div className="w-2.5 h-2.5 rounded-sm bg-blue-600" />
-                              <span className="text-[11px] font-medium text-slate-600">ประสบการณ์ ({Math.round(r.expScore * 0.3)}/30)</span>
+                              <span className="text-[11px] font-medium text-slate-600">
+                                ประสบการณ์ ({Math.round(r.expScore * 0.3)}/30)
+                              </span>
                             </div>
                           </div>
                         </div>
 
-                        {/* Skills match */}
                         {reqSkills.length > 0 && (
                           <div className="flex flex-wrap gap-1.5">
                             {r.matchedSkills.map((sk) => (
@@ -837,7 +876,6 @@ export default function AIJobMatcher({ works, certs, languages, resume }: Props)
                         )}
                       </div>
 
-                      {/* View Job Button */}
                       <div className="flex items-center shrink-0">
                         <button
                           onClick={() => router.push(`/jobs/${r.job.slug}`)}

@@ -5,6 +5,8 @@ import { useParams } from 'next/navigation';
 import { useRouter } from '@/i18n/routing';
 import { useAuth } from '@/context/AuthContext';
 import { Navbar } from '@/components/Navbar';
+import th from '@/messages/th.json';
+import { useTranslations } from 'next-intl';
 import {
   X,
   Plus,
@@ -127,6 +129,8 @@ export default function EditJobPage() {
   const params = useParams();
   const jobId = params.id as string;
   const { user, loading: authLoading } = useAuth();
+  const t = useTranslations('HeroSearch.provinces');
+  const tt = useTranslations('jobcreate');
 
   const [companyId, setCompanyId] = useState('');
   const [companyName, setCompanyName] = useState('');
@@ -452,7 +456,7 @@ export default function EditJobPage() {
                 </div>
                 <div>
                   <h1 className="font-bold text-gray-900 text-2xl tracking-tight mb-1">
-                    แก้ไขประกาศงาน
+                    {tt('header')}
                   </h1>
                   <div className="flex items-center gap-2">
                     <span className="relative flex h-2 w-2">
@@ -478,12 +482,12 @@ export default function EditJobPage() {
         {/* Section: ข้อมูลพื้นฐาน */}
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 space-y-5">
           <h2 className="font-bold text-gray-700 text-base border-b border-gray-100 pb-3">
-            ข้อมูลพื้นฐาน
+            {tt('basicInfo.title')}
           </h2>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1.5">
-              ชื่อตำแหน่งงาน <span className="text-red-500">*</span>
+              {tt('basicInfo.jobTitle')} <span className="text-red-500">*</span>
             </label>
             <input
               type="text"
@@ -499,7 +503,7 @@ export default function EditJobPage() {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                ประเภทงาน <span className="text-red-500">*</span>
+                {tt('basicInfo.jobType')} <span className="text-red-500">*</span>
               </label>
               <select
                 name="jobType"
@@ -516,7 +520,7 @@ export default function EditJobPage() {
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                รูปแบบการทำงาน <span className="text-red-500">*</span>
+                {tt('basicInfo.workModel')} <span className="text-red-500">*</span>
               </label>
               <select
                 name="workModel"
@@ -536,7 +540,7 @@ export default function EditJobPage() {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                จำนวนที่รับสมัคร (ตำแหน่ง) <span className="text-red-500">*</span>
+                {tt('basicInfo.positions')} <span className="text-red-500">*</span>
               </label>
               <input
                 type="number"
@@ -546,6 +550,42 @@ export default function EditJobPage() {
                 required
                 min="1"
                 className="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:ring-2 focus:ring-[#020263] focus:border-[#00003D] outline-none text-gray-900 text-sm"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4 border-t border-gray-100 pt-5">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                {tt('basicInfo.province')} <span className="text-red-500">*</span>
+              </label>
+              <select
+                name="locationProvince"
+                value={form.locationProvince}
+                onChange={handleChange}
+                required
+                className="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:ring-2 focus:ring-[#020263] outline-none text-gray-900 text-sm bg-white">
+
+                {Object.keys(th.HeroSearch.provinces)
+                  .filter((key) => key !== 'all')
+                  .map((key) => (
+                    <option key={key} value={t(key)}>
+                      {t(key)}
+                    </option>
+                  ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                {tt('basicInfo.district')}
+              </label>
+              <input
+                type="text"
+                name="locationDistrict"
+                value={form.locationDistrict}
+                onChange={handleChange}
+                placeholder="เช่น คลองหลวง, จตุจักร"
+                className="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:ring-2 focus:ring-[#020263] outline-none text-gray-900 text-sm"
               />
             </div>
           </div>
@@ -650,7 +690,7 @@ export default function EditJobPage() {
                     onChange={() => setForm((p) => ({ ...p, canOnlineInterview: false }))}
                     className="w-4 h-4 text-blue-600 focus:ring-blue-500 border-gray-300"
                   />
-                  <span className="text-sm text-gray-700">ไม่รองรับ</span>
+                  <span className="text-sm text-gray-700">รองรับ</span>
                 </label>
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input
@@ -660,7 +700,7 @@ export default function EditJobPage() {
                     onChange={() => setForm((p) => ({ ...p, canOnlineInterview: true }))}
                     className="w-4 h-4 text-blue-600 focus:ring-blue-500 border-gray-300"
                   />
-                  <span className="text-sm text-gray-700">รองรับ</span>
+                  <span className="text-sm text-gray-700">ไม่รองรับ</span>
                 </label>
               </div>
             </div>
@@ -1030,8 +1070,8 @@ export default function EditJobPage() {
                     }
                   }}
                   className={`px-3 py-1.5 rounded-full text-sm font-medium border transition-colors ${active
-                      ? 'bg-blue-50 text-blue-700 border-blue-200'
-                      : 'bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100'
+                    ? 'bg-blue-50 text-blue-700 border-blue-200'
+                    : 'bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100'
                     }`}
                 >
                   {active ? '✓ ' : '+ '}

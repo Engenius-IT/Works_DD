@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException, BadRequestException, HttpException, HttpStatus } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { UploadService } from '../upload/upload.service';
 import { UpdateProfileDto } from './dto/update-profile.dto';
@@ -567,7 +567,7 @@ export class UsersService {
             .sort((a, b) => new Date(b.postedAt).getTime() - new Date(a.postedAt).getTime());
     }
 
-    async getCandidateDirectoryDetail(candidateId: string) {
+    async getCandidateDirectoryDetail(candidateId: string, currentUserId?: string) {
         const user = await this.prisma.user.findFirst({
             where: {
                 id: candidateId,
@@ -614,18 +614,160 @@ export class UsersService {
             throw new NotFoundException('ไม่พบข้อมูลผู้หางาน');
         }
 
-        return this.mapCandidateDetail(user);
+        let isUnlocked = false;
+        let contactInfo = {};
+        if (currentUserId) {
+            const unlockRecord = await this.prisma.unlockedCandidate.findUnique({
+                where: {
+                    employerId_candidateId: {
+                        employerId: currentUserId,
+                        candidateId: candidateId,
+                    },
+                },
+            });
+            const hasApplied = await this.prisma.application.findFirst({
+                where: {
+                    userId: candidateId,
+                    job: { company: { ownerId: currentUserId } }
+                }
+            });
+
+            if (unlockRecord || hasApplied) {
+                isUnlocked = true;
+                contactInfo = {
+                    email: user.email,
+                    phone: user.phone || user.profile?.phone,
+                    lineId: user.profile?.lineId,
+                };
+            }
+        }
+
+        const mappedData = await this.mapCandidateDetail(user);
+        return {
+            ...mappedData,
+            isUnlocked,
+            ...contactInfo,
+        };
     }
 
-    async getCandidateContact(candidateId: string, requester: { sub: string; role: string }) {
+
+
+    async getCandidateContact(
+        candidateId: string,
+        requester: { sub: string; role: string },
+        confirmUseCC: boolean = false
+    ) {
         if (requester.role !== 'EMPLOYER') {
             throw new ForbiddenException('เฉพาะบัญชีนายจ้างเท่านั้นที่สามารถดูข้อมูลติดต่อได้');
         }
 
+        const employerId = requester.sub;
+
+        // 1. เช็คเงื่อนไขดูฟรี (เหมือนเดิม)
+        const hasApplied = await this.prisma.application.findFirst({
+            where: {
+                userId: candidateId,
+                job: { company: { ownerId: employerId } }
+            }
+        });
+
+        const isAlreadyUnlocked = await this.prisma.unlockedCandidate.findUnique({
+            where: {
+                employerId_candidateId: { employerId, candidateId }
+            }
+        });
+
+        if (hasApplied || isAlreadyUnlocked) {
+            return this.fetchCandidateContactData(candidateId);
+        }
+
+        if (!confirmUseCC) {
+            throw new HttpException('ต้องใช้ 1 CC ในการปลดล็อกข้อมูลติดต่อ', HttpStatus.PAYMENT_REQUIRED);
+        }
+
+        // 4. กรณีเช็คโควตารายวัน ตามเวลา startDate
+        const company = await this.prisma.company.findFirst({
+            where: { ownerId: employerId },
+        });
+
+        if (!company) throw new BadRequestException('ไม่พบข้อมูลบริษัทของท่าน');
+
+        const pkg = await this.prisma.companyPackage.findUnique({
+            where: { companyId: company.id }
+        });
+
+        if (!pkg || !pkg.startDate) throw new BadRequestException('ไม่พบข้อมูลแพ็กเกจการใช้งาน');
+
+        // --- เริ่ม Logic การคำนวณรอบ 24 ชม. ตามเวลาที่ซื้อ ---
+        const now = new Date();
+        const purchaseDate = new Date(pkg.startDate);
+
+        // สร้างเวลา "จุดรีเซ็ตของวันนี้" โดยอิง ชั่วโมง:นาที:วินาที จาก startDate
+        const resetToday = new Date(now);
+        resetToday.setHours(purchaseDate.getHours(), purchaseDate.getMinutes(), purchaseDate.getSeconds(), purchaseDate.getMilliseconds());
+
+        let lastResetPoint: Date;
+        if (now >= resetToday) {
+            // ถ้าตอนนี้เลยเวลาซื้อของวันนี้ไปแล้ว จุดรีเซ็ตล่าสุดคือ "วันนี้"
+            lastResetPoint = resetToday;
+        } else {
+            // ถ้าตอนนี้ยังไม่ถึงเวลาซื้อของวันนี้ จุดรีเซ็ตล่าสุดคือ "เมื่อวาน"
+            lastResetPoint = new Date(resetToday);
+            lastResetPoint.setDate(lastResetPoint.getDate() - 1);
+        }
+
+        // นับจำนวนที่ปลดล็อกไปแล้วในรอบ 24 ชม. ล่าสุด
+        const usedInCycle = await this.prisma.unlockedCandidate.count({
+            where: {
+                employerId: employerId,
+                unlockedAt: { gte: lastResetPoint }
+            }
+        });
+
+        const maxQuota = pkg.ccQuotaTotal + (pkg.bonusQuotaCC || 0);
+
+        // ดักโควตาเต็ม
+        if (usedInCycle >= maxQuota) {
+            const nextResetPoint = new Date(lastResetPoint);
+            nextResetPoint.setDate(nextResetPoint.getDate() + 1);
+
+            const diffMs = nextResetPoint.getTime() - now.getTime();
+            const hours = Math.floor(diffMs / (1000 * 60 * 60));
+            const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+
+            throw new HttpException({
+                statusCode: HttpStatus.BAD_REQUEST,
+                message: `ขออภัยคุณใช้งานโควต้าหมดแล้ว กรุณารออีก ${hours} ชม. ${minutes} น. เพื่อใช้งานอีกครั้ง`,
+                resetIn: { hours, minutes },
+                resetAt: purchaseDate.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })
+            }, HttpStatus.BAD_REQUEST);
+        }
+
+        // 5. Transaction: บันทึกและอัปเดตตัวเลข
+        await this.prisma.$transaction([
+            this.prisma.unlockedCandidate.create({
+                data: {
+                    employerId: employerId,
+                    candidateId: candidateId,
+                    unlockedAt: new Date()
+                }
+            }),
+            this.prisma.companyPackage.update({
+                where: { id: pkg.id },
+                data: { ccQuotaUsed: usedInCycle + 1 }
+            })
+        ]);
+
+
+
+        return this.fetchCandidateContactData(candidateId);
+    }
+
+    private async fetchCandidateContactData(candidateId: string) {
         const user = await this.prisma.user.findFirst({
             where: {
                 id: candidateId,
-                role: 'JOBSEEKER',
+                role: 'JOBSEEKER'
             },
             select: {
                 id: true,
@@ -633,11 +775,12 @@ export class UsersService {
                 lastName: true,
                 email: true,
                 phone: true,
+                // ดึงข้อมูลเบอร์โทรและ Line จาก UserProfile มาสำรองด้วย
                 profile: {
                     select: {
                         phone: true,
-                        lineId: true,
-                    },
+                        lineId: true
+                    }
                 },
             },
         });
@@ -650,8 +793,9 @@ export class UsersService {
             id: user.id,
             fullName: `${user.firstName} ${user.lastName}`.trim(),
             email: user.email || '-',
-            phone: user.profile?.phone || user.phone || '-',
+            phone: user.phone || user.profile?.phone || '-',
             lineId: user.profile?.lineId || '-',
+            isUnlocked: true,
         };
     }
 

@@ -89,7 +89,6 @@ export default function AIJobMatcherPage() {
   const [drivingSkillsData, setDrivingSkillsData] = useState<any[]>([]);
   const [languageTests, setLanguageTests] = useState<any[]>([]);
 
-  // 1. ตรวจสอบสิทธิ์การเข้าถึง
   useEffect(() => {
     if (!authLoading && !user) {
       router.push('/login');
@@ -101,7 +100,10 @@ export default function AIJobMatcherPage() {
   }, [authLoading, router, user]);
 
   useEffect(() => {
-    if (!user || user.role !== 'JOBSEEKER') return;
+    if (!user || user.role !== 'JOBSEEKER')
+      return;
+
+    let isActive = true;
 
     const token = localStorage.getItem('accessToken');
     if (!token) {
@@ -138,6 +140,10 @@ export default function AIJobMatcherPage() {
       .finally(() => {
         setLoading(false);
       });
+
+    return () => {
+      isActive = false;
+    };
   }, [user]);
 
   // 2. ดึงข้อมูลทั้งหมดจาก API (รวม Profile เพื่อใช้สร้าง PDF)
@@ -173,9 +179,9 @@ export default function AIJobMatcherPage() {
         setLanguages(Array.isArray(lang?.languages) ? lang.languages : []);
 
         // ถ้าในหน้า AI Matcher มี State เหล่านี้ ให้ Uncomment เพื่อใช้งานครับ
-        // setLanguageTests(Array.isArray(lang?.tests) ? lang.tests : []);
-        // setDrivingSkillsData(Array.isArray(skills) ? skills : []);
-        // setJobPreferences(Array.isArray(jobPrefs) ? jobPrefs : []);
+        setLanguageTests(Array.isArray(lang?.tests) ? lang.tests : []);
+        setDrivingSkillsData(Array.isArray(skills) ? skills : []);
+        setJobPreferences(Array.isArray(jobPrefs) ? jobPrefs : []);
 
         setCerts(Array.isArray(cert) ? cert : []);
         setResume(Array.isArray(resumes) && resumes.length > 0 ? resumes[0] : null);
@@ -186,34 +192,83 @@ export default function AIJobMatcherPage() {
       });
   }, [user]);
 
+  const toBase64WithType = async (url: string) => {
+    try {
+      const res = await fetch(url);
+
+      if (!res.ok) {
+        console.warn("Image fetch failed:", url);
+        return null;
+      }
+
+      const blob = await res.blob();
+
+      return await new Promise<{ base64: string; type: string }>((resolve) => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          resolve({
+            base64: reader.result as string,
+            type: blob.type,
+          });
+        };
+        reader.readAsDataURL(blob);
+      });
+    } catch (err) {
+      console.warn("Image fetch error:", err);
+      return null;
+    }
+  };
 
   const handleGenerateResume = async () => {
     if (resume?.fileUrl) {
-      const confirmOverwrite = window.confirm("คุณมีไฟล์ Resume อยู่แล้วในระบบ ต้องการสร้างใหม่เพื่ออัปเดตข้อมูลหรือไม่?");
+      const confirmOverwrite = window.confirm(
+        "คุณมีไฟล์ Resume อยู่แล้วในระบบ ต้องการสร้างใหม่เพื่ออัปเดตข้อมูลหรือไม่?"
+      );
       if (!confirmOverwrite) return;
     }
 
     setIsGenerating(true);
+
     try {
       const token = localStorage.getItem('accessToken');
 
-      // 1. เตรียมข้อมูลพื้นฐาน
       const timestamp = Date.now();
       const uniqueFileName = `Resume_${profile?.firstName || 'User'}_${timestamp}.pdf`;
 
-      // 2. จัดโครงสร้างข้อมูลให้เหมือนหน้า ProfileFull
+      const rawAvatar = user?.avatarUrl || profile?.avatarUrl || '';
+      console.log("rawAvatar:", rawAvatar);
+
+      let avatarFinal: string | null = null;
+
+      if (rawAvatar) {
+        const avatarData = await toBase64WithType(rawAvatar);
+
+        if (avatarData?.base64) {
+          avatarFinal = avatarData.base64;
+        }
+      }
+
+      console.log("avatarFinal:", avatarFinal);
+
       const fullDataForTemplate = {
         fullName: `${user?.firstName || profile?.firstName || ''} ${user?.lastName || profile?.lastName || ''}`,
         email: user?.email || profile?.email,
         phone: profile?.phone || '-',
         lineId: profile?.lineId || '-',
-        avatarUrl: user?.avatarUrl || profile?.avatarUrl,
+
+        // 🔥 FIX 3: ส่ง base64 เท่านั้น
+        avatarUrl: avatarFinal,
+
         address: profile?.address || '-',
         subDistrict: profile?.subDistrict || '',
         district: profile?.district || '',
         province: profile?.province || '',
         zipCode: profile?.zipCode || '',
-        age: profile?.birthDate ? (new Date().getFullYear() - new Date(profile.birthDate).getFullYear()) : '-',
+
+        age: profile?.birthDate
+          ? (new Date().getFullYear() - new Date(profile.birthDate).getFullYear())
+          : '-',
+
         gender: profile?.gender || '-',
         nationality: profile?.nationality || '-',
         religion: profile?.religion || '-',
@@ -222,27 +277,28 @@ export default function AIJobMatcherPage() {
         height: profile?.height || '-',
         weight: profile?.weight || '-',
 
-        // ดึงตำแหน่งงานที่ต้องการจาก Job Preferences ถ้าไม่มีให้ใช้ตำแหน่งล่าสุด
-        targetPosition: jobPreferences.length > 0
-          ? jobPreferences[0].position
-          : (works.length > 0 ? works[0].position : 'พร้อมเริ่มงาน'),
+        targetPosition:
+          jobPreferences.length > 0
+            ? jobPreferences[0].position
+            : (works.length > 0 ? works[0].position : 'พร้อมเริ่มงาน'),
 
         experience: profile?.experience || 0,
         totalExperienceYear: profile?.experience || 0,
+
         expectedSalary: profile?.expectedSalary,
         expectedSalaryText: profile?.expectedSalary
           ? `${Number(profile.expectedSalary).toLocaleString()} บาท`
           : 'ตามตกลง',
 
-        // ✅ ใช้ State drivingSkillsData ที่เราดึงมาใหม่
-        drivingSkills: drivingSkillsData.map(s => getSkillLabel(s.skillType)),
+        drivingSkills: drivingSkillsData.map(s =>
+          getSkillLabel(s.skillType)
+        ),
 
         languages: languages.map(l => ({
           language: l.language,
           level: l.level
         })),
 
-        // ✅ เพิ่มผลทดสอบภาษา
         languageTests: languageTests.map(t => ({
           testName: t.testName,
           score: t.score
@@ -267,22 +323,24 @@ export default function AIJobMatcherPage() {
 
         profile: {
           ...profile,
-          age: profile?.birthDate ? (new Date().getFullYear() - new Date(profile.birthDate).getFullYear()) : '-',
+          age: profile?.birthDate
+            ? (new Date().getFullYear() - new Date(profile.birthDate).getFullYear())
+            : '-',
         }
       };
 
-      // 3. สร้างไฟล์ PDF (Blob)
+      // 🔥 สร้าง PDF
       const pdfBlob = await generate(fullDataForTemplate);
-      // แปลง Blob เป็น File Object
-      const pdfFile = new File([pdfBlob], uniqueFileName, { type: 'application/pdf' });
 
-      // 4. เตรียม FormData สำหรับ Upload
+      const pdfFile = new File([pdfBlob], uniqueFileName, {
+        type: 'application/pdf'
+      });
+
       const formData = new FormData();
       formData.append('file', pdfFile);
       formData.append('title', uniqueFileName);
       formData.append('isPrimary', 'true');
 
-      // 5. ส่งข้อมูลไปยัง Backend
       const response = await fetch(`${API_URL}/resumes/upload`, {
         method: 'POST',
         headers: {
@@ -293,13 +351,13 @@ export default function AIJobMatcherPage() {
 
       if (response.ok) {
         const updatedResume = await response.json();
-        // อัปเดต State เพื่อให้ UI แสดงผลไฟล์ใหม่ทันที
         setResume(updatedResume);
         alert("สร้างและอัปเดต Resume สำเร็จ!");
       } else {
         const errorData = await response.json().catch(() => ({}));
         throw new Error(errorData.message || "Failed to upload");
       }
+
     } catch (error: any) {
       console.error("Generate Error:", error);
       alert(`เกิดข้อผิดพลาด: ${error.message}`);

@@ -148,59 +148,74 @@ export default function ProfileFullPage() {
   const [languageTests, setLanguageTests] = useState<LanguageTest[]>([]);
 
 
+  // ─── 🟢 แก้ไขจุดสำคัญ: ป้องกัน Infinite Loop จากอาการ Context โหลดช้า ──────────────────
   useEffect(() => {
-    if (!authLoading && !user) router.push('/login');
-    if (!authLoading && user && user.role === 'EMPLOYER') router.push('/');
-  }, [user, authLoading, router]);
+    // 1. ถ้ายังโหลดเซสชันไม่เสร็จ ห้ามเพิ่งสั่งเด้งหน้าหนีเด็ดขาด
+    if (authLoading) return;
 
+    // 2. ถ้าไม่มีตัวแปร user ใน Context ให้เช็คที่ตัวตั๋วจริง (accessToken) ในเครื่องก่อน
+    const hasLocalToken = typeof window !== 'undefined' && localStorage.getItem('accessToken');
+
+    if (!user && !hasLocalToken) {
+      // ไม่มีทั้งตัวตน และไม่มีทั้งตั๋วในเครื่อง แปลว่าไม่ได้ล็อกอินชัวร์ ๆ -> ส่งไปหน้า Login
+      router.replace('/login');
+    } else if (user && user.role === 'EMPLOYER') {
+      // เป็นนายจ้าง ห้ามเข้าหน้านี้ -> ส่งกลับหน้าแรก
+      router.replace('/th/');
+    }
+  }, [user, authLoading, router]);
   useEffect(() => {
-    if (!user) return;
-    const token = localStorage.getItem('accessToken');
+    console.log("avatar:", user?.avatarUrl);
+  }, [user]);
+
+  // ─── 🟢 แก้ไขจุดตาย: ล็อกลูป Promise.all ไม่ให้ยิงรัวตามตัวแปร user ──────────────────
+  useEffect(() => {
+    // 1. ถ้า Context บอกว่ากำลังโหลดเซสชันอยู่ ให้ยืนรอเฉย ๆ ก่อน
+    if (authLoading) return;
+
+    // 2. ดึง Token ออกมาเช็คตรง ๆ
+    const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
     if (!token) return;
 
     const headers = { Authorization: `Bearer ${token}` };
 
+    // 🚀 ยิงดึงข้อมูล (ตัดคำสั่ง setLoading(true) สุ่มสี่สุ่มห้าออก เพื่อไม่ให้กระตุกเรนเดอร์)
     Promise.all([
-      fetch(`${API_URL}/users/me/profile`, { headers })
-        .then((r) => r.json())
-        .catch(() => null),
-      fetch(`${API_URL}/users/me/educations`, { headers })
-        .then((r) => r.json())
-        .catch(() => []),
-      fetch(`${API_URL}/users/me/work-histories`, { headers })
-        .then((r) => r.json())
-        .catch(() => []),
-      fetch(`${API_URL}/users/me/languages`, { headers })
-        .then((r) => r.json())
-        .catch(() => ({ languages: [], tests: [] })),
-      fetch(`${API_URL}/users/me/certificates`, { headers })
-        .then((r) => r.json())
-        .catch(() => []),
-      fetch(`${API_URL}/resumes`, { headers })
-        .then((r) => r.json())
-        .catch(() => []),
-      fetch(`${API_URL}/users/me/driving-skills`, { headers })
-        .then((r) => r.json())
-        .catch(() => []),
-      fetch(`${API_URL}/users/me/job-preferences`, { headers })
-        .then(r => r.json())
-        .catch(() => []),
+      fetch(`${API_URL}/users/me/profile`, { headers }).then((r) => r.json()).catch(() => null),
+      fetch(`${API_URL}/users/me/educations`, { headers }).then((r) => r.json()).catch(() => []),
+      fetch(`${API_URL}/users/me/work-histories`, { headers }).then((r) => r.json()).catch(() => []),
+      fetch(`${API_URL}/users/me/languages`, { headers }).then((r) => r.json()).catch(() => ({ languages: [], tests: [] })),
+      fetch(`${API_URL}/users/me/certificates`, { headers }).then((r) => r.json()).catch(() => []),
+      fetch(`${API_URL}/resumes`, { headers }).then((r) => r.json()).catch(() => []),
+      fetch(`${API_URL}/users/me/driving-skills`, { headers }).then((r) => r.json()).catch(() => []),
+      fetch(`${API_URL}/users/me/job-preferences`, { headers }).then(r => r.json()).catch(() => []),
     ]).then(([prof, edu, work, lang, cert, resumes, skills, jobPrefs]) => {
       setProfile(prof || null);
       setEducations(Array.isArray(edu) ? edu : []);
       setWorks(Array.isArray(work) ? work : []);
       setJobPreferences(Array.isArray(jobPrefs) ? jobPrefs : []);
-      setLanguages(Array.isArray(lang?.languages) ? lang.languages : []);
       setCerts(Array.isArray(cert) ? cert : []);
-      if (Array.isArray(resumes) && resumes.length > 0) {
-        setResume(resumes[0]);
-      }
       setDrivingSkillsData(Array.isArray(skills) ? skills : []);
       setLanguages(Array.isArray(lang?.languages) ? lang.languages : []);
       setLanguageTests(Array.isArray(lang?.tests) ? lang.tests : []);
+
+      if (Array.isArray(resumes) && resumes.length > 0) {
+        // ใช้ข้อมูลจากตัวแปร local 'prof' หรือถอดจาก Token แทนการพึ่งพาตัวแปร user นอกลูปที่ทำลูปพัง
+        const myResume = resumes.find(r => r.fileUrl);
+        setResume(myResume || null);
+      } else {
+        setResume(null);
+      }
+
+      // ดึงข้อมูลเสร็จสิ้น คลายล็อกหน้าจอ
+      setLoading(false);
+    }).catch((err) => {
+      console.error("Error loading profile details:", err);
       setLoading(false);
     });
-  }, [user]);
+
+    // 🔒 เปลี่ยน Dependency ด้านล่างนี้ให้เหลือแค่นี้พอครับ! ห้ามใส่ user เข้าไปเด็ดขาด!
+  }, [authLoading]);
 
   const profileComplete = !!(
     profile?.phone ||
@@ -388,9 +403,31 @@ export default function ProfileFullPage() {
     return 'text-green-500';
   };
 
+  const toBase64 = async (url: string) => {
+    try {
+      const res = await fetch(url);
+      const blob = await res.blob();
+
+      return await new Promise<string>((resolve) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result as string);
+        reader.readAsDataURL(blob);
+      });
+    } catch (err) {
+      console.error("Base64 error:", err);
+      return undefined;
+    }
+  };
+
   const handleGenerateResume = async () => {
     if (resumeUploading) return;
     setResumeUploading(true);
+
+    let avatarUrl = user?.avatarUrl;
+
+    if (avatarUrl) {
+      avatarUrl = await toBase64(avatarUrl);
+    }
 
     // 1. เตรียมข้อมูลสำหรับ Template
     const fullUserData = {
@@ -493,7 +530,6 @@ export default function ProfileFullPage() {
 
       {/* Premium Header Profile Section */}
       <div className="relative w-full overflow-hidden">
-        {/* Geometric background pattern - คงเดิม */}
         <div className="absolute top-0 left-0 w-full h-48 sm:h-64 bg-linear-to-r from-[#eef2f6] to-[#e2e8f0] overflow-hidden">
           <svg className="absolute inset-0 w-full h-full text-white/40" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320">
             <path fill="currentColor" opacity="0.5" d="M0,0 L500,150 L1000,0 Z"></path>
@@ -504,15 +540,15 @@ export default function ProfileFullPage() {
         </div>
 
         <div className="max-w-[1600px] mx-auto px-4 xl:px-8 relative z-10 pt-24 sm:pt-36 pb-8">
-          {/* Main Card: ปรับ Gap ให้กว้างขึ้นเพื่อให้ดูไม่ขาวโพลน และใช้ items-center */}
+          {/* Main Card */}
           <div className="bg-white/95 backdrop-blur-xl rounded-[2.5rem] p-6 lg:p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-white flex flex-col xl:flex-row items-center gap-8 xl:gap-10 relative">
 
-            {/* 1. Avatar - คงเดิม */}
+            {/* 1. Avatar */}
             <label className="w-28 h-28 sm:w-32 sm:h-32 rounded-full border-[6px] border-white shadow-lg flex items-center justify-center -mt-20 lg:-mt-24 shrink-0 relative overflow-hidden z-20 group bg-slate-100 cursor-pointer">
               {avatarUploading ? (
                 <Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
               ) : user?.avatarUrl ? (
-                <img src={user.avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
+                <img src={user.avatarUrl ?? undefined} alt="Avatar" className="w-full h-full object-cover" />
               ) : (
                 <User className="w-12 h-12 text-slate-400" />
               )}
@@ -524,7 +560,7 @@ export default function ProfileFullPage() {
               <input type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={handleAvatarUpload} disabled={avatarUploading} />
             </label>
 
-            {/* 2. Profile Main Info - ใช้ flex-none เพื่อไม่ให้มันดันจนขาวว่าง */}
+            {/* 2. Profile Main Info */}
             <div className="flex-none text-center xl:text-left min-w-fit">
               <div className="flex flex-col xl:flex-row xl:items-center gap-3">
                 <h1 className="text-2xl sm:text-3xl font-bold text-slate-800 tracking-tight">
@@ -544,11 +580,9 @@ export default function ProfileFullPage() {
               </div>
             </div>
 
-            {/* 3. Right Side: ก้อนข้อมูล 2 ก้อน เรียงต่อกันและขยับมาหาชื่อ (ใช้ xl:ml-auto เพื่อดันไปขวาสุดถ้าจอใหญ่มาก หรือเอาออกถ้าอยากให้ชิดชื่อ) */}
-            {/* Right Side Group: ปรับให้ยืดหยุ่น (Responsive) */}
+            {/* Right Side Group */}
             <div className="flex flex-col lg:flex-row gap-4 w-full xl:flex-1 xl:ml-auto justify-end">
 
-              {/* Card 1: ความสมบูรณ์ - ใช้ flex-1 และ max-w เพื่อให้หดได้ */}
               <div className="w-full xl:flex-1 xl:max-w-[380px] bg-[#f8faff] rounded-3xl p-5 border border-indigo-50 shadow-xs flex flex-col justify-center">
                 <div className="flex justify-between items-end mb-3 gap-2">
                   <div className="min-w-0">

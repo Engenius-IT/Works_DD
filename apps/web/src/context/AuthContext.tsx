@@ -13,6 +13,7 @@ interface User {
   avatarUrl?: string;
   companyName?: string;
   companyLogo?: string;
+  companyId?: string;
 }
 
 interface AuthContextType {

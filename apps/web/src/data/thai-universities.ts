@@ -383,6 +383,7 @@ export const THAI_UNIVERSITIES = [
     'มหาวิทยาลัยราชธานี',
     'มหาวิทยาลัยราชธานี วิทยาเขตอุดรธานี',
     'มหาวิทยาลัยธนบุรี',
+    'Framingham State College',
     'อื่นๆ',
 ].sort((a, b) => {
     if (a === 'อื่นๆ') return 1;

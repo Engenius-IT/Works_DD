@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { BookmarksModule } from './bookmarks/bookmarks.module';
+import { ScheduleModule } from '@nestjs/schedule';
 import { ConfigModule } from '@nestjs/config';
 import { PrismaModule } from './prisma/prisma.module';
 import { AuthModule } from './auth/auth.module';
@@ -13,6 +14,8 @@ import { ApplicationsModule } from './applications/applications.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { AdminModule } from './admin/admin.module';
 import { CookieConsentModule } from './cookie-consent/cookie-consent.module';
+import { PackagesModule } from './packages/packages.module';
+import { PaymentModule } from './payments/payment.module';
 
 @Module({
   imports: [
@@ -21,6 +24,8 @@ import { CookieConsentModule } from './cookie-consent/cookie-consent.module';
       isGlobal: true,
       envFilePath: '.env',
     }),
+
+    ScheduleModule.forRoot(),
 
     // Core modules
     PrismaModule,
@@ -38,6 +43,8 @@ import { CookieConsentModule } from './cookie-consent/cookie-consent.module';
     AdminModule,
     CookieConsentModule,
     BookmarksModule,
+    PackagesModule,
+    PaymentModule,
   ],
 })
 export class AppModule { }

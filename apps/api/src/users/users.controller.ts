@@ -89,18 +89,37 @@ export class UsersController {
         });
     }
 
-    @Get('candidate-directory/:id')
-    @ApiOperation({ summary: 'ดูรายละเอียดผู้หางาน' })
-    async getCandidateDirectoryDetail(@Param('id') id: string) {
-        return this.usersService.getCandidateDirectoryDetail(id);
+    // --- 1. เพิ่มฟังก์ชันปลดล็อกข้อมูลติดต่อ (สำคัญมาก เพื่อแก้ 404) ---
+    @Post('candidate-directory/:id/contact')
+    @UseGuards(OptionalJwtAuthGuard) // ใช้ Optional เพื่อให้ Guard แกะ user.sub ออกมา
+    @ApiBearerAuth()
+    @ApiOperation({ summary: 'ปลดล็อกข้อมูลติดต่อผู้สมัคร' })
+    async getCandidateContact(
+        @Param('id') id: string,
+        @Req() req: Request,
+        @Body('confirmUseCC') confirmUseCC: boolean, // รับค่าจาก Frontend ว่ากดยืนยันจ่ายแต้มหรือยัง
+    ) {
+        const user = (req as any).user;
+        if (!user) throw new BadRequestException('กรุณาเข้าสู่ระบบก่อนทำรายการ');
+
+        return this.usersService.getCandidateContact(
+            id,
+            { sub: user.sub, role: user.role },
+            confirmUseCC
+        );
     }
 
-    @Get('candidate-directory/:id/contact')
-    @UseGuards(JwtAuthGuard)
+    // --- 2. ตรวจสอบ getCandidateDirectoryDetail (มีอยู่แล้วแต่ต้องเช็ค Parameter) ---
+    @Get('candidate-directory/:id')
+    @UseGuards(OptionalJwtAuthGuard)
     @ApiBearerAuth()
-    @ApiOperation({ summary: 'ดูข้อมูลติดต่อผู้หางาน (เฉพาะนายจ้าง)' })
-    async getCandidateContact(@Param('id') id: string, @CurrentUser() user: JwtPayload) {
-        return this.usersService.getCandidateContact(id, user);
+    async getCandidateDirectoryDetail(
+        @Param('id') id: string,
+        @Req() req: Request
+    ) {
+        const user = (req as any).user;
+        // ตรวจสอบว่าใน UsersService รับ 2 arguments (id, currentUserId) ตามที่เราคุยกันก่อนหน้า
+        return this.usersService.getCandidateDirectoryDetail(id, user?.sub);
     }
 
     // ===============================

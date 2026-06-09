@@ -22,11 +22,10 @@ export class AuthService {
   ) { }
 
   /**
-   * Register a new user
+   * Register a new user (แบบปกติ กรอกฟอร์ม)
    */
   async register(dto: RegisterDto) {
     try {
-      // Check if email already exists
       const existing = await this.prisma.user.findUnique({
         where: { email: dto.email },
       });
@@ -35,10 +34,8 @@ export class AuthService {
         throw new ConflictException('อีเมลนี้ถูกใช้งานแล้ว');
       }
 
-      // Hash password
       const passwordHash = await bcrypt.hash(dto.password, 12);
 
-      // Create user first
       const user = await this.prisma.user.create({
         data: {
           email: dto.email,
@@ -50,7 +47,6 @@ export class AuthService {
         },
       });
 
-      // Create company if user is EMPLOYER and companyName is provided
       if (dto.role === 'EMPLOYER' && dto.companyName) {
         try {
           await this.prisma.company.create({
@@ -64,14 +60,11 @@ export class AuthService {
             },
           });
         } catch (error: any) {
-          // console.error('Company creation failed:', error); // Logged in outer catch
-          // Rollback user creation
           await this.prisma.user.delete({ where: { id: user.id } });
           throw error;
         }
       }
 
-      // Generate JWT
       const token = await this.signToken(user.id, user.email ?? '', user.role);
 
       return {
@@ -87,18 +80,8 @@ export class AuthService {
         },
       };
     } catch (error: any) {
-      // Simple logger or use Console
-      console.error(
-        `[${new Date().toISOString()}] Register Error:`,
-        JSON.stringify(error, null, 2),
-      );
-      console.error(error.stack);
-
-      // Re-throw NestJS HTTP exceptions as-is (ConflictException, etc.)
-      if (error?.status) {
-        throw error;
-      }
-      // Only wrap unexpected errors as 500
+      console.error(`[${new Date().toISOString()}] Register Error:`, JSON.stringify(error, null, 2));
+      if (error?.status) throw error;
       throw new InternalServerErrorException(`Registration Failed: ${error.message}`);
     }
   }
@@ -107,7 +90,7 @@ export class AuthService {
     return (
       name
         .toLowerCase()
-        .replace(/[^a-z0-9ก-๙]+/g, '-') // Allow Thai characters and alphanumeric
+        .replace(/[^a-z0-9ก-๙]+/g, '-')
         .replace(/^-+|-+$/g, '') +
       '-' +
       Math.random().toString(36).substring(2, 7)
@@ -119,7 +102,6 @@ export class AuthService {
    */
   async login(dto: LoginDto) {
     try {
-      // Find user
       const user = await this.prisma.user.findUnique({
         where: { email: dto.email },
         include: { companies: true },
@@ -129,26 +111,26 @@ export class AuthService {
         throw new UnauthorizedException('อีเมลหรือรหัสผ่านไม่ถูกต้อง');
       }
 
-      if (dto.role && user.role !== dto.role && user.role !== 'ADMIN') {
+      if (dto.role && user.role !== dto.role) {
+        if (user.role === 'ADMIN') {
+          throw new UnauthorizedException('บัญชีผู้ดูแลระบบ กรุณาเข้าสู่ระบบผ่านหน้า Admin Dashboard');
+        }
         const roleName = dto.role === 'JOBSEEKER' ? 'ผู้สมัครงาน' : 'นายจ้าง/บริษัท';
         throw new UnauthorizedException(`บัญชีนี้ไม่ได้ลงทะเบียนในฐานะ${roleName}`);
       }
 
-      // OAuth-only users have no password
       if (!user.passwordHash) {
         throw new UnauthorizedException(
           'บัญชีนี้ลงทะเบียนผ่าน Google หรือ Line กรุณาใช้ปุ่ม OAuth เพื่อเข้าสู่ระบบ',
         );
       }
 
-      // Verify password
       const isPasswordValid = await bcrypt.compare(dto.password, user.passwordHash);
 
       if (!isPasswordValid) {
         throw new UnauthorizedException('อีเมลหรือรหัสผ่านไม่ถูกต้อง');
       }
 
-      // Generate JWT
       const token = await this.signToken(user.id, user.email ?? '', user.role);
 
       return {
@@ -172,12 +154,12 @@ export class AuthService {
         logPath,
         `[${new Date().toISOString()}] Login Error: ${JSON.stringify(error, null, 2)}\nStack: ${error.stack}\n`,
       );
-      throw error; // Re-throw to maintain behavior
+      throw error;
     }
   }
 
   /**
-   * Get current user profile from JWT payload
+   * Get current user profile
    */
   async getProfile(payload: JwtPayload) {
     const user = await this.prisma.user.findUnique({
@@ -208,8 +190,10 @@ export class AuthService {
     };
   }
 
+  // ─── 🟢 GOOGLE OAUTH FLOW ปรับปรุงใหม่ ─────────────────────────────────────────
+
   /**
-   * Get Google OAuth redirect URL
+   * Get Google OAuth redirect URL (ถอดพารามิเตอร์ role ออกแล้ว)
    */
   getGoogleRedirectUrl(): string {
     const clientId = this.config.get<string>('GOOGLE_CLIENT_ID');
@@ -226,14 +210,13 @@ export class AuthService {
   }
 
   /**
-   * Handle Google OAuth callback — exchange code for user info, create/find user
+   * Handle Google OAuth callback (ไม่ล็อกบทบาทล่วงหน้าจากภายนอก)
    */
-  async handleGoogleCallback(code: string): Promise<{ token: string; user: object }> {
+  async handleGoogleCallback(code: string): Promise<{ isNewUser: boolean; token?: string; user: object }> {
     const clientId = this.config.get<string>('GOOGLE_CLIENT_ID');
     const clientSecret = this.config.get<string>('GOOGLE_CLIENT_SECRET');
     const redirectUri = this.getApiCallbackUrl('google');
 
-    // Exchange code for access token
     const tokenRes = await fetch('https://oauth2.googleapis.com/token', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -251,13 +234,13 @@ export class AuthService {
       throw new UnauthorizedException('Google OAuth ล้มเหลว');
     }
 
-    // Get user info from Google
     const userRes = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
       headers: { Authorization: `Bearer ${tokenData.access_token}` },
     });
     const googleUser = (await userRes.json()) as any;
 
-    return this.findOrCreateOAuthUser({
+    // ส่งต่อไปเช็คประวัติในฐานข้อมูล
+    return this.checkOAuthUser({
       email: googleUser.email,
       googleId: googleUser.id,
       firstName: googleUser.given_name || 'Google',
@@ -267,83 +250,156 @@ export class AuthService {
   }
 
   /**
-   * Find existing user by OAuth ID or email, or create a new one
+   * ตรวจสอบสิทธิ์บัญชี OAuth (แก้ลอจิก: ถ้าไม่มีประวัติ ห้ามบันทึกทันที ให้เด้งไปให้หน้าบ้านเลือกฝั่ง)
    */
-  private async findOrCreateOAuthUser(data: {
+  private async checkOAuthUser(data: {
     email?: string;
     googleId?: string;
-    lineId?: string;
     firstName: string;
     lastName: string;
     avatarUrl?: string;
-  }): Promise<{ token: string; user: object }> {
-    const { email, googleId, lineId, firstName, lastName, avatarUrl } = data;
+  }): Promise<{ isNewUser: boolean; token?: string; user: object }> {
+    const { email, googleId, firstName, lastName, avatarUrl } = data;
 
-    // Try to find existing user by OAuth ID first
+    // ค้นหายูสเซอร์เดิม
     let user = await this.prisma.user.findFirst({
       where: {
         OR: [
           ...(googleId ? [{ googleId }] : []),
-          ...(lineId ? [{ lineId }] : []),
           ...(email ? [{ email }] : []),
         ],
       },
+      include: { companies: true },
     });
 
+    // ❌ เคสเด็กใหม่: คืนธง isNewUser=true กลับไปเพื่อให้ฝั่ง Controller เตะส่งไปให้ป๊อปอัพหน้าบ้านคัดกรอง
     if (!user) {
-      // Create new user
-      user = await this.prisma.user.create({
-        data: {
-          email: email || null,
-          googleId: googleId || null,
-          lineId: lineId || null,
-          firstName,
-          lastName,
-          avatarUrl: avatarUrl || null,
-          role: 'JOBSEEKER',
-        },
-      });
-    } else {
-      // Link OAuth ID if not already linked
-      const updateData: Record<string, any> = {};
-      if (googleId && !user.googleId) updateData.googleId = googleId;
-      if (lineId && !user.lineId) updateData.lineId = lineId;
-      if (avatarUrl && !user.avatarUrl) updateData.avatarUrl = avatarUrl;
-      if (Object.keys(updateData).length > 0) {
-        user = await this.prisma.user.update({ where: { id: user.id }, data: updateData });
-      }
+      return {
+        isNewUser: true,
+        user: { email, googleId, firstName, lastName, avatarUrl },
+      };
     }
 
+    // เคสคนเก่า: ถ้ายังไม่เคยลิงก์ ID หรืออัปเดตรูป ให้ปรับปรุงตารางเล็กน้อย
+    const updateData: Record<string, any> = {};
+    if (googleId && !user.googleId) updateData.googleId = googleId;
+    if (avatarUrl && !user.avatarUrl) updateData.avatarUrl = avatarUrl;
+    if (Object.keys(updateData).length > 0) {
+      user = await this.prisma.user.update({
+        where: { id: user.id },
+        data: updateData,
+        include: { companies: true },
+      });
+    }
+
+    // เจนเนอเรต Token ปล่อยผ่านเข้าระบบตามบทบาทจริงในฐานข้อมูล
     const token = await this.signToken(user.id, user.email ?? '', user.role);
-    const userPayload = {
-      id: user.id,
-      email: user.email,
-      firstName: user.firstName,
-      lastName: user.lastName,
-      role: user.role,
-      avatarUrl: user.avatarUrl,
+    return {
+      isNewUser: false,
+      token,
+      user: {
+        id: user.id,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        role: user.role,
+        avatarUrl: user.avatarUrl,
+        companyName: user.companies?.[0]?.name || null,
+        companyLogo: user.companies?.[0]?.logoUrl || null,
+      },
     };
-    return { token, user: userPayload };
   }
 
   /**
-   * Build the API OAuth callback URL for a provider
+   * 🟢 ฟังก์ชันเพิ่มใหม่: รับไม้ต่อเพื่อบันทึกยูสเซอร์ Google ลงตารางจริงหลังเลือกบทบาทเสร็จสิ้น
    */
+  async registerGoogleUser(body: { role: 'JOBSEEKER' | 'EMPLOYER'; oauthData: any; companyName?: string }) {
+    const { role, oauthData, companyName } = body;
+    const { email, googleId, firstName, lastName, avatarUrl } = oauthData;
+
+    try {
+      // ดักซ้ำอีกรอบเพื่อความปลอดภัย 
+      const existing = await this.prisma.user.findFirst({
+        where: {
+          OR: [
+            ...(googleId ? [{ googleId }] : []),
+            ...(email ? [{ email }] : []),
+          ],
+        },
+      });
+
+      if (existing) {
+        throw new ConflictException('บัญชีอีเมลหรือสิทธิ์การใช้งานนี้ลงทะเบียนไว้แล้ว');
+      }
+
+      // 1. สร้างบัญชีผู้ใช้ลงตาราง User จริง ๆ 
+      let user = await this.prisma.user.create({
+        data: {
+          email: email || null,
+          googleId: googleId || null,
+          firstName,
+          lastName,
+          avatarUrl: avatarUrl || null,
+          role: role,
+        },
+        include: { companies: true },
+      });
+
+      // 2. ถ้าผู้ใช้กดเลือกเป็น 'EMPLOYER' (นายจ้าง) ให้ผูกข้อมูลบริษัทให้ตามชื่อที่ส่งมาจากป๊อปอัพ
+      if (role === 'EMPLOYER') {
+        const finalCompanyName = companyName || `${firstName} Company`;
+        await this.prisma.company.create({
+          data: {
+            ownerId: user.id,
+            name: finalCompanyName,
+            slug: this.generateSlug(finalCompanyName),
+            isVerified: false,
+            verificationStatus: VerificationStatus.UNVERIFIED,
+          },
+        });
+
+        // ดึงข้อมูลผู้ใช้ซ้ำเพื่อให้ Array โครงสร้างบริษัทอัปเดตออกมาสมบูรณ์
+        user = await this.prisma.user.findUnique({
+          where: { id: user.id },
+          include: { companies: true },
+        }) as any;
+      }
+
+      // 3. เจน Access Token ปล่อยล็อกอินเข้าใช้งานทันทีหลังลงทะเบียนเสร็จ
+      const token = await this.signToken(user.id, user.email ?? '', user.role);
+
+      return {
+        accessToken: token,
+        user: {
+          id: user.id,
+          email: user.email,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          role: user.role,
+          avatarUrl: user.avatarUrl,
+          companyName: user.companies?.[0]?.name || null,
+          companyLogo: user.companies?.[0]?.logoUrl || null,
+        },
+      };
+
+    } catch (error: any) {
+      console.error(`[${new Date().toISOString()}] Google Register Error:`, error);
+      if (error?.status) throw error;
+      throw new InternalServerErrorException(`Google Registration Failed: ${error.message}`);
+    }
+  }
+
   private getApiCallbackUrl(provider: string): string {
     const apiUrl = this.config.get<string>('API_URL', 'http://localhost:3001');
     return `${apiUrl}/api/v1/auth/${provider}/callback`;
   }
 
-  /**
-   * Sign a JWT token
-   */
   private async signToken(userId: string, email: string, role: string): Promise<string> {
     const payload: JwtPayload = {
       sub: userId,
       email,
       role,
     };
-
     return this.jwtService.signAsync(payload);
   }
 }

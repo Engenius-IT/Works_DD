@@ -142,3 +142,23 @@ html {
   outline-offset: 2px;
   border-radius: var(--radius-sm);
 }
+
+
+@theme {
+  /* สร้าง Keyframes ภายในธีมของ v4 */
+  @keyframes sweepSwing {
+    0%, 100% {
+      top: -150%;
+      left: -150%;
+    }
+    50% {
+      top: 100%;
+      left: 100%;
+    }
+  }
+}
+
+/* สร้าง Utility Class ไว้เรียกใช้ */
+@utility animate-sweep-swing {
+  animation: sweepSwing 3s ease-in-out infinite;
+}

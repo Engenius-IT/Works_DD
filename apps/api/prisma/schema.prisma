@@ -380,6 +380,66 @@ model DrivingSkill {
   @@map("driving_skills")
 }
 
+model CompanyPackage {
+  id           String   @id @default(uuid())
+  companyId    String   @unique
+  name         String   @default("Free") 
+  type         String   @default("trial")
+  lastReset    DateTime @default(now())
+  
+  ccQuotaUsed  Int      @default(0)
+  ccQuotaTotal Int      @default(10)
+  acQuotaUsed  Int      @default(0)
+  acQuotaTotal Int      @default(5)
+
+  bonusQuotaCC    Int       @default(0) 
+  bonusQuotaAC    Int       @default(0)
+  bonusEndsAt     DateTime?
+  
+  startDate    DateTime?
+  endDate      DateTime?
+  
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Transaction {
+  id           String   @id @default(uuid())
+  companyId    String
+  amount       Float
+  status       String   @default("PENDING") 
+  packageType  String
+  createdAt    DateTime @default(now())
+}
+
+model CompanySpending {
+  companyId    String   @id
+  totalSpent   Float    @default(0)
+  updatedAt    DateTime @updatedAt
+}
+
+model PaymentTransaction {
+  id        String   @id @default(cuid())
+  chargeId  String   @unique // สำคัญมาก: เอาไว้ map กับ Omise
+  companyId String
+  planName  String
+  amount    Float
+  status    String   @default("PENDING") // PENDING, SUCCESS, FAILED
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([chargeId])
+}
+
+model UnlockedCandidate {
+  id           String   @id @default(uuid())
+  employerId   String   
+  candidateId  String   
+  unlockedAt   DateTime @default(now())
+
+  @@unique([employerId, candidateId])
+}
+
 enum UserRole {
   JOBSEEKER
   EMPLOYER
@@ -429,3 +489,5 @@ enum NotificationType {
   INTERVIEW_SCHEDULED
   GENERAL
 }
+
+

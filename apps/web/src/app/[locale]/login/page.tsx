@@ -1,10 +1,10 @@
 'use client';
 
-import { Suspense, useState, useEffect } from 'react';
+import { Suspense, useState, useEffect, useRef } from 'react';
 import { Link } from '@/i18n/routing';
 import { useAuth } from '@/context/AuthContext';
 import { Navbar } from '@/components/Navbar';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
 const OAUTH_BASE = API_URL.replace('/api/v1', '');
@@ -17,8 +17,9 @@ const OAUTH_ERROR_MESSAGES: Record<string, string> = {
 function LoginForm() {
   const { login } = useAuth();
   const searchParams = useSearchParams();
+  const router = useRouter();
 
-  /* State สำหรับจัดการ Role */
+  /* State สำหรับจัดการ Role (เฉพาะฟอร์มกรอก Password ปกติ) */
   const [role, setRole] = useState<'JOBSEEKER' | 'EMPLOYER'>('JOBSEEKER');
 
   const [form, setForm] = useState({
@@ -28,6 +29,70 @@ function LoginForm() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
+  // ─── 🟢 1. ดักจับกรณี Google Auth (เวอร์ชันแก้ทางล็อกตาย เปลี่ยนหน้าได้ชัวร์) ───
+  // เพิ่มตัวแปร Flag ดักรีรันซ้ำเฉพาะเซสชันนี้
+  const hasProcessed = useRef(false);
+
+  useEffect(() => {
+    const token = searchParams.get('token');
+    const userParam = searchParams.get('user');
+    const status = searchParams.get('status');
+    const oauthData = searchParams.get('oauthData');
+
+    // 1. เคสคนเก่า (มีบัญชีอยู่แล้ว)
+    if (token && userParam) {
+      try {
+        // 🔥 ป้องกันการรันซ้ำซ้อนในรอบเรนเดอร์เดียวกัน
+        if (hasProcessed.current) return;
+        hasProcessed.current = true;
+
+        const userData = JSON.parse(decodeURIComponent(userParam));
+
+        // อัปเดตสถานะล็อกอินเข้าสู่ Context ตัวแอปพลิเคชัน
+        login(token, userData);
+
+        // ดึงค่า locale จาก url ปัจจุบัน (ถ้ามี) หรือใช้เริ่มต้นเป็น th
+        const currentLocale = typeof window !== 'undefined' ? window.location.pathname.split('/')[1] || 'th' : 'th';
+
+        // 🟢 เปลี่ยนมาใช้ window.location.href ตัดปัญหาระบบเร้าเตอร์ Next.js นิ่งค้าง
+        if (userData.role === 'EMPLOYER') {
+          window.location.href = `/${currentLocale}/employer/dashboard`;
+        } else {
+          // พี่สามารถเปลี่ยนจาก '/th' เป็น '/th/profilefull' หรือหน้าไหนก็ได้ที่พี่อยากให้ผู้สมัครไปได้เลยครับ!
+          window.location.href = `/${currentLocale}/profilefull`;
+        }
+
+        // 🧼 เคลียร์พารามิเตอร์บน URL ทิ้งหลังจากที่สั่งย้ายหน้าแล้ว
+        setTimeout(() => {
+          if (typeof window !== 'undefined') {
+            window.history.replaceState({}, document.title, window.location.pathname);
+          }
+        }, 50);
+      } catch (err) {
+        console.error('Failed to parse OAuth user data:', err);
+        setError('เกิดข้อผิดพลาดในการประมวลผลข้อมูลของ Google');
+        hasProcessed.current = false;
+      }
+    }
+
+    // 2. เคสเด็กใหม่ 
+    if (status === 'new_user' && oauthData) {
+      if (hasProcessed.current) return;
+      hasProcessed.current = true;
+
+      const currentLocale = window.location.pathname.split('/')[1] || 'th';
+
+      router.replace(`/${currentLocale}/register?status=new_user&oauthData=${encodeURIComponent(oauthData)}`);
+
+      setTimeout(() => {
+        if (typeof window !== 'undefined') {
+          window.history.replaceState({}, document.title, window.location.pathname);
+        }
+      }, 100);
+    }
+  }, [searchParams, login, router]);
+
+  // ดักจับข้อความ Error ล็อกอินไม่ผ่านจาก Google
   useEffect(() => {
     const oauthError = searchParams.get('error');
     if (oauthError && OAUTH_ERROR_MESSAGES[oauthError]) {
@@ -39,6 +104,7 @@ function LoginForm() {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
+  // ฟังก์ชันการล็อกอินด้วยฟอร์มธรรมดา (Email/Password)
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
@@ -66,6 +132,14 @@ function LoginForm() {
       }
 
       login(data.accessToken, data.user);
+
+      // 🟢 ฟอร์มธรรมดาก็ให้เช็คทางเดินไปหน้าที่มีอยู่จริงเช่นกันครับ
+      if (data.user.role === 'EMPLOYER') {
+        router.replace('/th/employer/dashboard');
+      } else {
+        // 🟢 [เปลี่ยนจุดนี้] เปลี่ยนให้เหมือนกันกับจุดแรกเพื่อความปลอดภัยครับ
+        router.replace('/th');
+      }
     } catch {
       setError('ไม่สามารถเชื่อมต่อ API ได้');
     } finally {
@@ -81,7 +155,7 @@ function LoginForm() {
         <div className="w-full max-w-md bg-white border border-gray-300 rounded-lg p-8 shadow-sm">
           <h1 className="text-3xl font-bold text-black mb-6">เข้าสู่ระบบ</h1>
 
-          {/* 3. ส่วนของ Toggle Switch เลือก Role */}
+          {/* ส่วนของ Toggle Switch เลือก Role (ใช้เฉพาะฟอร์มธรรมดา) */}
           <div className="flex p-1 bg-gray-100 rounded-full mb-8">
             <button
               type="button"
@@ -165,8 +239,9 @@ function LoginForm() {
           </div>
 
           <div className="space-y-4">
+            {/* 🟢 แก้ไขจุดที่ 3: ปลดล็อกดึงตัวแปร `?role=${role}` ออก เพื่อให้ Google ค้นหาตัวตนและบทบาทจริงจากตารางฐานข้อมูล */}
             <a
-              href={`${OAUTH_BASE}/api/v1/auth/google?role=${role}`}
+              href={`${OAUTH_BASE}/api/v1/auth/google`}
               className="w-full bg-white border border-gray-200 text-black font-medium py-3 px-4 rounded-full hover:bg-gray-50 transition-colors flex items-center justify-center gap-3 relative shadow-sm"
             >
               <svg className="w-6 h-6 absolute left-4" viewBox="0 0 24 24">
@@ -188,9 +263,9 @@ export default function LoginPage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen bg-white flex flex-col font-sans">
+        <div className="min-h-screen bg-white flex flex-col font-sans" >
           <Navbar />
-          <div className="flex-1 flex justify-center items-center">
+          <div className="flex-1 flex justify-center items-center" >
             <div className="w-8 h-8 border-4 border-gray-200 border-t-[#d32f2f] rounded-full animate-spin" />
           </div>
         </div>

@@ -6,6 +6,7 @@ import { useRouter } from '@/i18n/routing';
 import { useAuth } from '@/context/AuthContext';
 import { bookmarkService } from '@/services/bookmark';
 import { useTranslations, useLocale } from 'next-intl';
+import axios from 'axios';
 import {
   Briefcase,
   GraduationCap,
@@ -24,6 +25,10 @@ import {
   ExternalLink,
   Award,
   Car,
+  Lock,
+  LockOpen,
+  Timer,
+  ShieldCheck,
 } from 'lucide-react';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
@@ -85,6 +90,7 @@ type CandidateDetail = {
   subDistrict?: string;
   district?: string;
   postalCode?: string;
+  isUnlocked?: boolean;
 };
 
 type UserLanguage = {
@@ -175,6 +181,16 @@ function GenderBadge({ avatarUrl }: { avatarUrl: string | null | undefined }) {
   );
 }
 
+const ContactRow = ({ icon, label, value }: { icon: any, label: string, value: string }) => (
+  <div className="flex items-start gap-3 rounded-2xl bg-slate-50 px-4 py-3 border border-slate-100 hover:bg-white transition-colors">
+    <div className="mt-0.5">{icon}</div>
+    <div>
+      <div className="text-slate-400 text-[9px] uppercase font-bold">{label}</div>
+      <div className="font-bold text-sm text-slate-900 break-all">{value || '-'}</div>
+    </div>
+  </div>
+);
+
 
 export function CandidateDetailModal({ candidateId, onClose, isBookmarked, onBookmarkToggle }: CandidateDetailModalProps) {
   const router = useRouter();
@@ -187,6 +203,8 @@ export function CandidateDetailModal({ candidateId, onClose, isBookmarked, onBoo
   const [contactError, setContactError] = useState('');
   const t = useTranslations('CandidateDirectory');
   const locale = useLocale();
+  const [showConfirmUseCC, setShowConfirmUseCC] = useState(false);
+  const isUnlocked = !!contact || !!data?.isUnlocked;
 
   const getStarRating = (level: string) => {
     const l = level?.toLowerCase() || '';
@@ -212,18 +230,21 @@ export function CandidateDetailModal({ candidateId, onClose, isBookmarked, onBoo
     m_forklift: { th: 'รถยก (Forklift)', en: 'Forklift' },
   };
 
-
   useEffect(() => {
     const fetchDetail = async () => {
       try {
         setLoading(true);
         setError('');
-        const res = await fetch(`${API_URL}/users/candidate-directory/${candidateId}`);
-        const json = await res.json();
 
-        if (!res.ok) {
-          throw new Error(json.message || t('detailModal.errorFetchDetail'));
-        }
+        const token = localStorage.getItem('accessToken'); // เพิ่มการดึง Token
+        const res = await fetch(`${API_URL}/users/candidate-directory/${candidateId}`, {
+          headers: {
+            ...(token ? { Authorization: `Bearer ${token}` } : {}), // ส่ง Token ไปถ้ามี
+          }
+        });
+
+        const json = await res.json();
+        if (!res.ok) throw new Error(json.message || t('detailModal.errorFetchDetail'));
 
         setData(json);
       } catch (error: unknown) {
@@ -236,7 +257,29 @@ export function CandidateDetailModal({ candidateId, onClose, isBookmarked, onBoo
     fetchDetail();
   }, [candidateId]);
 
-  const handleShowContact = async () => {
+  useEffect(() => {
+    if (candidateId && data?.id) {
+      const checkStatus = async () => {
+        try {
+          const token = localStorage.getItem('accessToken');
+          if (!token) return;
+
+          const res = await axios.post(`${API_URL}/users/candidate-directory/${candidateId}/contact`,
+            { confirmUseCC: false },
+            { headers: { Authorization: `Bearer ${token}` } }
+          );
+
+          if (res.data) {
+            setContact(res.data);
+          }
+        } catch (err: any) {
+        }
+      };
+      checkStatus();
+    }
+  }, [candidateId, data?.id]);
+
+  const handleShowContact = async (isConfirmed: boolean = false) => {
     if (!user) {
       router.push('/login');
       return;
@@ -252,11 +295,22 @@ export function CandidateDetailModal({ candidateId, onClose, isBookmarked, onBoo
       setContactError('');
       const token = localStorage.getItem('accessToken');
       const res = await fetch(`${API_URL}/users/candidate-directory/${candidateId}/contact`, {
+        method: 'POST',
         headers: {
+          'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
+        body: JSON.stringify({
+          confirmUseCC: isConfirmed // ส่งตัวนี้ไปบอกหลังบ้านว่า "กดยืนยันจ่ายแต้มแล้วนะ"
+        }),
       });
       const json = await res.json();
+
+      if (res.status === 402) {
+        // 402 Payment Required: สมมติว่าหลังบ้านส่ง Code นี้มาถ้ายังไม่เคยปลดล็อกและไม่ได้สมัครงานมา
+        setShowConfirmUseCC(true);
+        return;
+      }
 
       console.log("DEBUG CONTACT DATA:", json);
 
@@ -265,6 +319,7 @@ export function CandidateDetailModal({ candidateId, onClose, isBookmarked, onBoo
       }
 
       setContact(json);
+      setShowConfirmUseCC(false);
     } catch (error: unknown) {
       setContactError(getErrorMessage(error, t('detailModal.errorFetchContact')));
     } finally {
@@ -308,27 +363,33 @@ export function CandidateDetailModal({ candidateId, onClose, isBookmarked, onBoo
       </div>
     );
   }
+  // วางไว้ก่อนบรรทัด return หรือตรงที่มีการประกาศ isUnlocked
+  console.log("DEBUG CHECK:", {
+    hasContact: !!contact,
+    dataIsUnlocked: data?.isUnlocked,
+    finalResult: isUnlocked
+  });
 
   return (
     <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm p-4 sm:p-6 overflow-y-auto">
       <div className="max-w-6xl mx-auto bg-slate-50 rounded-[2rem] shadow-2xl overflow-hidden min-h-[80vh]">
-        <div className="bg-white border-b border-slate-100 px-6 sm:px-8 py-6 flex items-center justify-between gap-4">
-          <div className="flex-1 min-w-0"> {/* เพิ่ม min-w-0 เพื่อให้ truncate ทำงานได้ถ้าชื่อยาว */}
+        {/* ปรับจาก items-center เป็น items-start เพื่อให้รองรับชื่อตำแหน่งที่ยาวหลายบรรทัดบนมือถือ */}
+        <div className="bg-white border-b border-slate-100 px-6 sm:px-8 py-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
+
+          <div className="flex-1 min-w-0 w-full"> {/* เพิ่ม w-full เพื่อให้กินพื้นที่เต็มบนมือถือ */}
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-50 text-indigo-700 text-xs font-bold border border-indigo-100 mb-2">
               <Briefcase className="w-4 h-4" />
               {data.candidateType ? t(`list.${data.candidateType.toLowerCase()}`) : t('list.jobSeeker')}
             </div>
 
-            {/* แสดงตำแหน่งงานหลัก และประเภทงานแรก (ถ้ามี) */}
+            {/* ปรับให้ Header รองรับการขึ้นบรรทัดใหม่ และไม่เบียดกับปุ่ม */}
             <div className="flex flex-wrap items-center gap-3">
-              <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 leading-tight">
-                {/* เอาตำแหน่งแรกมาโชว์เป็น Title */}
+              <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 leading-tight break-words">
                 {data.desiredPosition?.split(',')[0].trim() || t('detailModal.desiredPosition')}
               </h2>
 
-              {/* ถ้ามีประเภทงาน ให้เอาประเภทงานแรกมาใส่กรอบมนๆ ต่อท้ายชื่อตำแหน่งใน Header เลย */}
               {(data as any).jobTypes?.[0] && (
-                <span className="inline-flex items-center px-3 py-1 rounded-full border border-slate-200 bg-slate-50 text-xs font-bold text-slate-500 shadow-sm mt-1">
+                <span className="inline-flex items-center px-3 py-1 rounded-full border border-slate-200 bg-slate-50 text-xs font-bold text-slate-500 shadow-sm">
                   {(data as any).jobTypes[0]}
                 </span>
               )}
@@ -340,14 +401,26 @@ export function CandidateDetailModal({ candidateId, onClose, isBookmarked, onBoo
             </p>
           </div>
 
-          <div className="flex items-center gap-3 shrink-0">
+          {/* ส่วนของปุ่ม ปรับให้ชิดขวาในจอใหญ่ และจัดวางให้เหมาะสมในมือถือ */}
+          <div className="flex items-center gap-3 shrink-0 self-end sm:self-center">
             {user?.role === 'EMPLOYER' && (
               <button
                 type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  if (onBookmarkToggle) onBookmarkToggle();
-                  bookmarkService.toggle(candidateId).catch(() => onBookmarkToggle?.());
+                onClick={async (e) => {
+                  e.preventDefault(); // ใช้ preventDefault แทนเพื่อป้องกัน side effect
+
+                  try {
+                    // 1. เรียก Service เพื่อ Toggle สถานะใน Backend
+                    await bookmarkService.toggle(candidateId);
+
+                    // 2. แจ้ง Parent Component ให้ Handle การอัปเดต UI (เช่นเปลี่ยนสีปุ่มหรือรีเฟรชลิสต์)
+                    if (onBookmarkToggle) {
+                      onBookmarkToggle();
+                    }
+                  } catch (error) {
+                    console.error("Failed to toggle bookmark:", error);
+                    // กรณี Error อาจจะแจ้งเตือนผู้ใช้ตรงนี้
+                  }
                 }}
                 className={`flex items-center gap-2 px-5 py-2.5 rounded-2xl border transition-all shadow-sm font-bold text-sm ${isBookmarked
                   ? "bg-rose-50 border-rose-200 text-rose-600"
@@ -358,7 +431,11 @@ export function CandidateDetailModal({ candidateId, onClose, isBookmarked, onBoo
                   className="w-5 h-5"
                   fill={isBookmarked ? "currentColor" : "none"}
                 />
-                <span>{isBookmarked ? (locale === 'en' ? 'Saved' : 'บันทึกแล้ว') : (locale === 'en' ? 'Save' : 'บันทึก')}</span>
+                <span>
+                  {isBookmarked
+                    ? (locale === 'en' ? 'Saved' : 'บันทึกแล้ว')
+                    : (locale === 'en' ? 'Save' : 'บันทึก')}
+                </span>
               </button>
             )}
 
@@ -405,39 +482,187 @@ export function CandidateDetailModal({ candidateId, onClose, isBookmarked, onBoo
             </div>
 
             <div className="rounded-3xl bg-white text-slate-900 p-4 border border-white/20">
-              <button
-                onClick={handleShowContact}
-                disabled={contactLoading}
-                className="w-full py-3 rounded-2xl bg-[#020263] hover:bg-[#11117c] disabled:opacity-60 text-white font-bold transition-colors"
-              >
-                {contactLoading ? `${t('detailModal.loadingContact')}` : `${t('detailModal.showContactBtn')}`}
-              </button>
+              {/* --- 🟢 ส่วนที่ 1: ถ้าปลดล็อกแล้ว ต้องโชว์แค่นี้เท่านั้น --- */}
+              {isUnlocked ? (
+                <div className="space-y-3 animate-in fade-in slide-in-from-top-2">
+                  {/* Header Status - ปลดล็อกแล้ว (เปลี่ยนเป็นโทน Indigo) */}
+                  <div className="flex items-center gap-3 px-4 py-3 rounded-2xl bg-indigo-50 border border-indigo-100 shadow-sm">
+                    <div className="flex items-center justify-center w-8 h-8 rounded-full bg-indigo-600 shadow-md">
+                      <LockOpen className="w-4 h-4 text-white" />
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-xs font-black text-indigo-700 uppercase leading-tight">
+                        {locale === 'en' ? 'Unlocked' : 'ปลดล็อกแล้ว'}
+                      </span>
+                      <span className="text-[10px] text-indigo-500 font-medium">
+                        {locale === 'en' ? 'Access granted' : 'ได้รับสิทธิ์เข้าถึงข้อมูลแล้ว'}
+                      </span>
+                    </div>
+                  </div>
 
-              {contactError && <p className="mt-3 text-sm text-red-500">{contactError}</p>}
+                  {/* Contact Grid & Resume Section */}
+                  <div className="grid gap-3 mt-2">
+                    <div className="grid gap-2">
+                      <ContactRow
+                        icon={<Mail className="w-4 h-4 text-indigo-500" />}
+                        label={t('detailModal.contactEmail')}
+                        value={contact?.email || (data as any)?.email}
+                      />
+                      <ContactRow
+                        icon={<Phone className="w-4 h-4 text-indigo-500" />}
+                        label={t('detailModal.contactPhone')}
+                        value={contact?.phone || (data as any)?.phone}
+                      />
+                      <ContactRow
+                        icon={<MessageCircle className="w-4 h-4 text-indigo-500" />}
+                        label={t('detailModal.contactLine')}
+                        value={contact?.lineId || (data as any)?.lineId}
+                      />
+                    </div>
 
-              {contact && (
-                <div className="mt-4 space-y-3 text-sm">
-                  <div className="flex items-start gap-3 rounded-2xl bg-slate-50 px-4 py-3 border border-slate-100">
-                    <Mail className="w-4 h-4 mt-0.5 text-slate-400" />
-                    <div>
-                      <div className="text-slate-500">{t('detailModal.contactEmail')}</div>
-                      <div className="font-semibold break-all">{contact.email}</div>
-                    </div>
+                    {/* Resume Box - โทน Indigo ทั้งหมด */}
+                    {data.resumeFileUrl && (
+                      <div className="mt-4">
+                        <a
+                          href={data.resumeFileUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="
+                                      group flex items-center justify-between w-full px-6 py-4 rounded-2xl 
+                                      bg-indigo-600 text-white 
+                                      shadow-[0_8px_16px_-6px_rgba(79,70,229,0.5)]
+                                      hover:bg-indigo-700 hover:shadow-[0_12px_20px_-8px_rgba(79,70,229,0.6)]
+                                      hover:-translate-y-0.5 transition-all duration-200
+                                    "
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-white/20">
+                              <FileText className="w-5 h-5 text-white" />
+                            </div>
+                            <span className="text-sm font-bold tracking-wide">
+                              {t('detailModal.viewResume')}
+                            </span>
+                          </div>
+
+                          <div className="flex items-center gap-2 px-3 py-1 rounded-lg bg-indigo-500/50 border border-indigo-400/30 text-[10px] font-black tracking-widest">
+                            PDF
+                          </div>
+                        </a>
+                      </div>
+                    )}
                   </div>
-                  <div className="flex items-start gap-3 rounded-2xl bg-slate-50 px-4 py-3 border border-slate-100">
-                    <Phone className="w-4 h-4 mt-0.5 text-slate-400" />
-                    <div>
-                      <div className="text-slate-500">{t('detailModal.contactPhone')}</div>
-                      <div className="font-semibold">{contact.phone}</div>
+                </div>
+              ) : (
+                /* --- 🔴 ส่วนที่ 2: ถ้ายังไม่ปลดล็อก (ปุ่มแดง/ยืนยัน) --- */
+                <div className="relative z-10 transition-all duration-500">
+                  {!showConfirmUseCC ? (
+                    <div className="group animate-in fade-in zoom-in-95 duration-300">
+                      <button
+                        onClick={() => handleShowContact(false)}
+                        disabled={contactLoading}
+                        className="
+                                  w-full py-4 rounded-2xl 
+                                  bg-gradient-to-r from-rose-600 to-red-600 
+                                  text-white font-black text-sm tracking-wide
+                                  shadow-[0_10px_20px_-5px_rgba(225,29,72,0.4)]
+                                  hover:shadow-[0_20px_30px_-5px_rgba(225,29,72,0.6)]
+                                  /* จุดสำคัญ: ใช้ relative และ z-20 เวลา hover เพื่อให้ลอยเหนือก้อนอื่นๆ */
+                                  relative z-10 hover:z-20
+                                  hover:-translate-y-1.5 active:scale-[0.97]
+                                  transition-all duration-300 ease-out 
+                                  flex items-center justify-center gap-3
+                                "
+                      >
+                        {contactLoading ? (
+                          <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                        ) : (
+                          <>
+                            <div className="p-1 bg-white/20 rounded-lg group-hover:rotate-12 transition-transform duration-300">
+                              <Lock className="w-4 h-4" />
+                            </div>
+                            <span className="relative">{t('detailModal.showContactBtn')}</span>
+                          </>
+                        )}
+                      </button>
+
+                      {/* ส่วนเส้นขีดข้างล่าง */}
+                      <div className="flex items-center justify-center gap-3 mt-4 opacity-60">
+                        <div className="h-[1px] flex-1 bg-gradient-to-r from-transparent to-slate-200" />
+                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-[0.2em] whitespace-nowrap">
+                          {locale === 'en' ? "Information Locked" : "ข้อมูลถูกล็อกไว้"}
+                        </p>
+                        <div className="h-[1px] flex-1 bg-gradient-to-l from-transparent to-slate-200" />
+                      </div>
                     </div>
-                  </div>
-                  <div className="flex items-start gap-3 rounded-2xl bg-slate-50 px-4 py-3 border border-slate-100">
-                    <MessageCircle className="w-4 h-4 mt-0.5 text-slate-400" />
-                    <div>
-                      <div className="text-slate-500">{t('detailModal.contactLine')}</div>
-                      <div className="font-semibold">{contact.lineId}</div>
+                  ) : (
+                    /* ส่วนยืนยัน (Confirm Card) */
+                    <div className="relative z-30 animate-in slide-in-from-bottom-2 fade-in duration-300 p-6 rounded-3xl bg-white border border-red-100 shadow-[0_25px_50px_-12px_rgba(0,0,0,0.1)]">
+                      <div className="flex flex-col items-center text-center">
+
+                        {/* 🔄 ถ้ากำลังโหลด ให้โชว์สถานะ Unlocking */}
+                        {contactLoading ? (
+                          <div className="py-8 flex flex-col items-center animate-in fade-in zoom-in-95">
+                            <div className="relative w-16 h-16 mb-4">
+                              <div className="absolute inset-0 border-4 border-indigo-100 rounded-full"></div>
+                              <div className="absolute inset-0 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
+                              <div className="absolute inset-0 flex items-center justify-center">
+                                <Lock className="w-6 h-6 text-indigo-600 animate-pulse" />
+                              </div>
+                            </div>
+                            <h4 className="text-sm font-black text-slate-900 mb-1">
+                              {locale === 'en' ? 'Unlocking...' : 'กำลังปลดล็อก...'}
+                            </h4>
+                            <p className="text-[10px] text-slate-400 uppercase tracking-widest font-bold">
+                              {locale === 'en' ? 'Processing Transaction' : 'กำลังดำเนินการ'}
+                            </p>
+                          </div>
+                        ) : (
+                          /* 🛑 ถ้าไม่ได้โหลด ให้โชว์ปุ่มยืนยันปกติ (โค้ดเดิมของพี่) */
+                          <>
+                            <div className={`
+          w-14 h-14 rounded-2xl flex items-center justify-center mb-4
+          ${contactError?.includes('โควต้า') ? 'bg-amber-50 text-amber-500' : 'bg-red-50 text-red-500'}
+        `}>
+                              {contactError?.includes('โควต้า') ? <Timer className="w-7 h-7 animate-pulse" /> : <ShieldCheck className="w-7 h-7" />}
+                            </div>
+
+                            <h4 className="text-base font-black text-slate-900 mb-1">
+                              {contactError?.includes('โควต้า') ? (locale === 'en' ? 'Limit Reached' : 'ถึงขีดจำกัดแล้ว') : (locale === 'en' ? 'Confirm Unlock' : 'ยืนยันการเข้าถึง')}
+                            </h4>
+
+                            <p className="text-xs text-slate-500 mb-6 leading-relaxed px-2">
+                              {contactError || (locale === 'en' ? "Use 1 CC to unlock this candidate's contact info?" : "ระบบจะหัก 1 CC เพื่อแสดงข้อมูลติดต่อและ Resume")}
+                            </p>
+
+                            <div className="flex gap-3 w-full">
+                              {!contactError?.includes('โควต้า') && (
+                                <button
+                                  onClick={() => handleShowContact(true)}
+                                  className="flex-[2] py-3.5 bg-red-600 hover:bg-red-700 text-white text-xs rounded-2xl font-black shadow-lg shadow-red-200 transition-all active:scale-95"
+                                >
+                                  {locale === 'en' ? 'Confirm' : 'ยืนยันปลดล็อก'}
+                                </button>
+                              )}
+                              <button
+                                onClick={() => { setShowConfirmUseCC(false); setContactError(''); }}
+                                className="flex-1 py-3.5 bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs rounded-2xl font-bold transition-all"
+                              >
+                                {locale === 'en' ? 'Cancel' : 'ยกเลิก'}
+                              </button>
+                            </div>
+                          </>
+                        )}
+                      </div>
                     </div>
-                  </div>
+                  )}
+                </div>
+              )}
+
+              {/* ⚠️ ส่วนที่ 3: Error ทั่วไป (จะโชว์ได้ทั้งสองสถานะถ้ามี Error หลุดมา) */}
+              {contactError && !showConfirmUseCC && (
+                <div className="mt-3 p-3 rounded-xl bg-amber-50 border border-amber-200 text-[11px] text-amber-700 flex items-center gap-2">
+                  <BadgeInfo className="w-4 h-4 shrink-0" />
+                  <span className="leading-tight font-medium">{contactError}</span>
                 </div>
               )}
             </div>
@@ -768,27 +993,9 @@ export function CandidateDetailModal({ candidateId, onClose, isBookmarked, onBoo
                 )}
               </div>
             </div>
-
-            {data.resumeFileUrl && (
-              <div className="bg-white rounded-3xl border border-slate-100 p-6 shadow-sm">
-                <div className="flex items-center gap-3 mb-4">
-                  <FileText className="w-5 h-5 text-indigo-600" />
-                  <h3 className="text-lg font-extrabold text-black">Resume</h3>
-                </div>
-                <a
-                  href={data.resumeFileUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 px-4 py-3 rounded-2xl bg-indigo-50 text-indigo-700 border border-indigo-100 font-semibold hover:bg-indigo-100 transition-colors"
-                >
-                  <FileText className="w-4 h-4" />
-                  {t('detailModal.viewResume')}
-                </a>
-              </div>
-            )}
           </section>
         </div>
-      </div>
-    </div>
+      </div >
+    </div >
   );
 }
