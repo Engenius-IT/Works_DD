@@ -23,11 +23,7 @@ async function bootstrap() {
         credentials: true,
     });*/
     app.enableCors({
-        origin: [
-            'http://localhost:3000',
-            'http://192.168.1.33:3000', // เพิ่ม IP คอมพิวเตอร์คุณที่นี่
-            process.env.NEXTAUTH_URL,   // ดึงจาก .env (ซึ่งเราแก้เป็น 192.168... แล้ว)
-        ].filter(Boolean),              // ตัดค่าว่างออกถ้าใน .env ไม่ได้ใส่ไว้
+        origin: true,
         credentials: true,
         methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
     });
