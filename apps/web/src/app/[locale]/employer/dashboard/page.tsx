@@ -1240,7 +1240,7 @@ export default function EmployerDashboard() {
               <div>
                 <div className="flex justify-between text-xs mb-1">
                   <div className="flex items-center gap-1">
-                    <span className="text-gray-600 font-medium">โควต้า CC คงเหลือ</span>
+                    <span className="text-gray-600 font-medium">โควตา CC คงเหลือ</span>
                   </div>
                   <span className={packageInfo ? "text-gray-800 font-medium" : "text-red-400"}>
                     {packageInfo ? (
@@ -1303,7 +1303,7 @@ export default function EmployerDashboard() {
               <div>
                 <div className="flex justify-between text-xs mb-1">
                   <div className="flex items-center gap-1">
-                    <span className="text-gray-600 font-medium">โควต้า AC คงเหลือ</span>
+                    <span className="text-gray-600 font-medium">โควตา AC คงเหลือ</span>
                   </div>
                   <span className={packageInfo ? "text-gray-800 font-medium" : "text-red-400"}>
                     {packageInfo ? (
