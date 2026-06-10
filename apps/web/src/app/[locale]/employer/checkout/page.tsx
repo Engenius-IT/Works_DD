@@ -39,14 +39,14 @@ export default function CheckoutPage() {
     const isPro = !isVip && !isPremium;
 
     let planName = 'Pro';
-    let price = 39;
+    let price = 299;
 
     if (isVip) {
         planName = 'VIP';
-        price = 249;
+        price = 1599;
     } else if (isPremium) {
         planName = 'Premium';
-        price = 99;
+        price = 599;
     }
 
     const [loading, setLoading] = useState(false);
@@ -462,7 +462,6 @@ export default function CheckoutPage() {
                                     </p>
                                     <div className="flex items-baseline gap-1">
                                         <span className="text-4xl font-black text-white">฿{price}.00</span>
-                                        <span className={`text-sm opacity-80 ${isVip ? 'text-rose-100' : isPremium ? 'text-amber-100' : 'text-blue-300'}`}>/เดือน</span>
                                     </div>
                                 </div>
                             </div>
