@@ -92,8 +92,8 @@ export default function PackagesPage() {
 
                             <div className="text-center mb-8 relative z-10">
                                 <div className="flex justify-center items-baseline gap-1">
-                                    <span className="text-6xl font-black text-[#020263]">39</span>
-                                    <span className="text-xl font-bold text-slate-400">บาท/เดือน</span>
+                                    <span className="text-6xl font-black text-[#020263]">299</span>
+                                    <span className="text-xl font-bold text-slate-400">บาท 1 เดือน</span>
                                 </div>
                             </div>
 
@@ -104,8 +104,8 @@ export default function PackagesPage() {
                                         <Sparkles className="w-5 h-5 text-[#020263]" />
                                     </div>
                                     <div>
-                                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tight">โควต้าติดต่อบุคลากร (CC)</p>
-                                        <p className="text-lg font-black text-[#020263]">15 CC / วัน</p>
+                                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tight">โควตาติดต่อบุคลากร (CC)</p>
+                                        <p className="text-lg font-black text-[#020263]">100 CC / เดือน</p>
                                     </div>
                                 </div>
 
@@ -115,8 +115,8 @@ export default function PackagesPage() {
                                         <Zap className="w-5 h-5 text-[#020263]" />
                                     </div>
                                     <div>
-                                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tight">โควต้าการลงงาน (AC)</p>
-                                        <p className="text-lg font-black text-[#020263]">8 AC / วัน</p>
+                                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tight">โควตาการลงงาน (AC)</p>
+                                        <p className="text-lg font-black text-[#020263]">50 AC </p>
                                     </div>
                                 </div>
 
@@ -124,7 +124,7 @@ export default function PackagesPage() {
                                 <div className="pt-4 space-y-2 border-t border-slate-50">
                                     <div className="flex items-center gap-2 text-sm text-slate-600 font-black">
                                         <Check className="w-4 h-4 text-blue-600 stroke-[3px]" />
-                                        ปลดล็อคระบบคัดกรองด้วย AI
+                                        ปลดล็อคการมองเห็นข้อมูลติดต่อผู้สมัคร
                                     </div>
                                 </div>
                             </div>
@@ -163,8 +163,8 @@ export default function PackagesPage() {
 
                             <div className="text-center mb-8 relative z-10">
                                 <div className="flex justify-center items-baseline gap-1">
-                                    <span className="text-6xl font-black text-slate-900 tracking-tighter">99</span>
-                                    <span className="text-xl font-bold text-slate-400">บาท/เดือน</span>
+                                    <span className="text-6xl font-black text-slate-900 tracking-tighter">599</span>
+                                    <span className="text-xl font-bold text-slate-400">บาท 3 เดือน</span>
                                 </div>
                             </div>
 
@@ -175,8 +175,8 @@ export default function PackagesPage() {
                                         <Sparkles className="w-5 h-5 text-amber-600" />
                                     </div>
                                     <div>
-                                        <p className="text-[10px] text-amber-600 font-bold uppercase tracking-tight">โควต้าติดต่อบุคลากร (CC)</p>
-                                        <p className="text-lg font-black text-slate-800">50 CC / วัน</p>
+                                        <p className="text-[10px] text-amber-600 font-bold uppercase tracking-tight">โควตาติดต่อบุคลากร (CC)</p>
+                                        <p className="text-lg font-black text-slate-800">150 CC / เดือน</p>
                                     </div>
                                 </div>
 
@@ -186,8 +186,8 @@ export default function PackagesPage() {
                                         <Zap className="w-5 h-5 text-amber-600" />
                                     </div>
                                     <div>
-                                        <p className="text-[10px] text-amber-600 font-bold uppercase tracking-tight">โควต้าการลงงาน (AC)</p>
-                                        <p className="text-lg font-black text-slate-800">25 AC / วัน</p>
+                                        <p className="text-[10px] text-amber-600 font-bold uppercase tracking-tight">โควตาการลงงาน (AC)</p>
+                                        <p className="text-lg font-black text-slate-800">75 AC </p>
                                     </div>
                                 </div>
 
@@ -195,11 +195,11 @@ export default function PackagesPage() {
                                 <div className="pt-4 space-y-2 border-t border-slate-50">
                                     <div className="flex items-center gap-2 text-sm text-slate-700 font-black">
                                         <Check className="w-4 h-4 text-amber-500 stroke-[3px]" />
-                                        ฟิลเตอร์คัดกรองระดับสูง
+                                        ปลดล็อคการมองเห็นข้อมูลติดต่อผู้สมัคร
                                     </div>
                                     <div className="flex items-center gap-2 text-sm text-slate-700 font-black">
                                         <Check className="w-4 h-4 text-amber-500 stroke-[3px]" />
-                                        ส่งออกข้อมูลเป็น PDF ไม่จำกัด
+                                        เพิ่มระดับการมองเห็นงานแก่ผู้สมัคร
                                     </div>
                                 </div>
                             </div>
@@ -244,31 +244,31 @@ export default function PackagesPage() {
                             <div className="text-center mb-8 relative z-10">
                                 <div className="flex justify-center items-baseline gap-1">
                                     {/* ราคาตัวเลขไล่เฉดขาวไปชมพูแดง */}
-                                    <span className="text-7xl font-black text-transparent bg-clip-text bg-gradient-to-b from-white via-rose-100 to-rose-400 drop-shadow-sm">249</span>
-                                    <span className="text-xl font-bold text-rose-200/80">บาท/เดือน</span>
+                                    <span className="text-7xl font-black text-transparent bg-clip-text bg-gradient-to-b from-white via-rose-100 to-rose-400 drop-shadow-sm">1,599</span>
+                                    <span className="text-xl font-bold text-rose-200/80">บาท 1 ปี</span>
                                 </div>
                             </div>
 
                             <div className="space-y-4 flex-grow relative z-10">
-                                {/* โควต้า CC - Rose Red Style */}
+                                {/* โควตา CC - Rose Red Style */}
                                 <div className="flex items-center gap-4 bg-white/10 backdrop-blur-md p-4 rounded-3xl border border-white/10 group-hover:border-rose-300/40 transition-all">
                                     <div className="bg-gradient-to-br from-rose-500 to-red-600 rounded-2xl p-3 shadow-lg shadow-rose-950/50">
                                         <Sparkles className="w-5 h-5 text-white" />
                                     </div>
                                     <div>
-                                        <p className="text-[10px] text-rose-200 font-bold uppercase tracking-widest">โควต้าติดต่อบุคลากร (CC)</p>
-                                        <p className="text-xl font-black text-white">150 CC / วัน</p>
+                                        <p className="text-[10px] text-rose-200 font-bold uppercase tracking-widest">โควตาติดต่อบุคลากร (CC)</p>
+                                        <p className="text-xl font-black text-white">200 CC / เดือน</p>
                                     </div>
                                 </div>
 
-                                {/* โควต้า AC - Dark Rose Style */}
+                                {/* โควตา AC - Dark Rose Style */}
                                 <div className="flex items-center gap-4 bg-black/20 backdrop-blur-md p-4 rounded-3xl border border-white/5 group-hover:border-red-400/30 transition-all">
                                     <div className="bg-gradient-to-br from-red-600 to-rose-800 rounded-2xl p-3 shadow-lg shadow-red-950/50">
                                         <Zap className="w-5 h-5 text-white" />
                                     </div>
                                     <div>
-                                        <p className="text-[10px] text-rose-300 font-bold uppercase tracking-widest">โควต้าการลงงาน (AC)</p>
-                                        <p className="text-xl font-black text-white">75 AC / วัน</p>
+                                        <p className="text-[10px] text-rose-300 font-bold uppercase tracking-widest">โควตาการลงงาน (AC)</p>
+                                        <p className="text-xl font-black text-white">100 AC </p>
                                     </div>
                                 </div>
 
@@ -278,13 +278,13 @@ export default function PackagesPage() {
                                         <div className="w-6 h-6 rounded-full bg-rose-500 flex items-center justify-center shrink-0 shadow-sm">
                                             <Check className="w-3.5 h-3.5 text-white stroke-[4px]" />
                                         </div>
-                                        วิเคราะห์บุคลากรเชิงลึก (AI Insight)
+                                        เพิ่มการมองเห็นแสดงไปยังบริษัทชั้นนำ
                                     </div>
                                     <div className="flex items-center gap-3 text-sm text-white font-medium">
                                         <div className="w-6 h-6 rounded-full bg-rose-500 flex items-center justify-center shrink-0 shadow-sm">
                                             <Check className="w-3.5 h-3.5 text-white stroke-[4px]" />
                                         </div>
-                                        Priority Support 24/7
+                                        Priority Support
                                     </div>
                                 </div>
                             </div>
