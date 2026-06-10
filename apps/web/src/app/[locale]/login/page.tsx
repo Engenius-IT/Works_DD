@@ -83,12 +83,6 @@ function LoginForm() {
       const currentLocale = window.location.pathname.split('/')[1] || 'th';
 
       router.replace(`/${currentLocale}/register?status=new_user&oauthData=${encodeURIComponent(oauthData)}`);
-
-      setTimeout(() => {
-        if (typeof window !== 'undefined') {
-          window.history.replaceState({}, document.title, window.location.pathname);
-        }
-      }, 100);
     }
   }, [searchParams, login, router]);
 
