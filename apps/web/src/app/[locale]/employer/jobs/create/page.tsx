@@ -136,6 +136,7 @@ export default function CreateJobPage() {
   const [companyStatus, setCompanyStatus] = useState<'UNVERIFIED' | 'PENDING_REVIEW' | 'VERIFIED' | 'REJECTED'>('UNVERIFIED');
   const [loadingCompany, setLoadingCompany] = useState(true);
   const [companyError, setCompanyError] = useState('');
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
 
   const [form, setForm] = useState<FormState>({
     title: '',
@@ -335,6 +336,25 @@ export default function CreateJobPage() {
       setError(getErrorMessage(error, 'เกิดข้อผิดพลาด'));
       setSaving(false);
     }
+  };
+
+  // ฟังก์ชันเมื่อกดปุ่ม "เผยแพร่" (🚀 เผยแพร่ทันที)
+  const handlePublishClick = () => {
+    setError('');
+
+    // 1. ตรวจสอบข้อมูลบริษัทเบื้องต้น
+    if (!companyId) {
+      setError('ไม่พบข้อมูลบริษัท');
+      return;
+    }
+    // 2. ตรวจสอบ Validation อื่นๆ ตามเงื่อนไขของพี่
+    if (form.requiredSkills.length === 0) {
+      setError('กรุณาเพิ่มทักษะที่ต้องการอย่างน้อย 1 รายการ');
+      return;
+    }
+
+    // ถ้าผ่านเงื่อนไขครบถ้วน ค่อยเปิด Pop-up เตือนหักแต้ม AC
+    setShowConfirmModal(true);
   };
 
   if (authLoading || loadingCompany) {
@@ -1238,6 +1258,7 @@ export default function CreateJobPage() {
 
         {/* Action Buttons */}
         <div className="flex flex-col sm:flex-row gap-3 pb-8">
+          {/* ปุ่มบันทึกแบบร่าง: ทำงานเหมือนเดิม ส่ง false ทันที ไม่ต้องผ่าน Pop-up */}
           <button
             type="button"
             onClick={() => handleSubmit(false)}
@@ -1246,15 +1267,74 @@ export default function CreateJobPage() {
           >
             {saving ? tt('footerActions.saving') : `💾 ${tt('footerActions.saveDraft')}`}
           </button>
+
+          {/* ปุ่มเผยแพร่: เปลี่ยนมาเรียก handlePublishClick เพื่อเปิด Pop-up ก่อน */}
           <button
             type="button"
-            onClick={() => handleSubmit(true)}
+            onClick={handlePublishClick}
             disabled={saving}
-            className="flex-1 py-3 rounded-xl bg-[#E00016] hover:bg-[#E00016]/80 text-white font-semibold transition-all disabled:opacity-60 shadow-sm hover:shadow-md text-sm"
+            className="flex-1 py-3 rounded-xl bg-[#E00016] hover:bg-[#E00016]/80 text-white font-semibold transition-all disabled:opacity-60 shadow-sm hover:shadow-md text-sm flex items-center justify-center gap-2"
           >
-            {saving ? 'กำลังเผยแพร่...' : `🚀 ${tt('footerActions.publish')}`}
+            {saving ? (
+              <>
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                กำลังเผยแพร่...
+              </>
+            ) : (
+              `🚀 ${tt('footerActions.publish')}`
+            )}
           </button>
         </div>
+        {/* ==================== POP-UP MODAL ยืนยันการใช้ 1 AC ==================== */}
+        {showConfirmModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto">
+            {/* Background Overlay */}
+            <div
+              className="fixed inset-0 bg-black/50 backdrop-blur-xs transition-opacity"
+              onClick={() => setShowConfirmModal(false)} // กดพื้นหลังเพื่อปิดได้
+            />
+
+            {/* Modal Container */}
+            <div className="relative bg-white rounded-2xl max-w-md w-full mx-4 p-6 shadow-2xl border border-gray-100 z-10 transform transition-all scale-100 animate-scaleUp">
+              <div className="flex flex-col items-center text-center">
+                {/* Icon สัญลักษณ์เหรียญ/เครดิต */}
+                <div className="w-14 h-14 bg-red-50 rounded-full flex items-center justify-center mb-4 border border-red-100">
+                  <span className="text-2xl text-[#E00016] font-bold">🪙</span>
+                </div>
+
+                <h3 className="text-lg font-bold text-gray-900 mb-2">
+                  ยืนยันการเผยแพร่ประกาศงาน
+                </h3>
+
+                <p className="text-sm text-gray-600 mb-6 leading-relaxed">
+                  การเปิดใช้งานและเผยแพร่ตำแหน่งงานนี้สู่สาธารณะ <br />
+                  <span className="font-semibold text-[#E00016] bg-red-50 px-2 py-0.5 rounded-md mt-1 inline-block">
+                    จะมีค่าใช้จ่ายจำนวน 1 AC
+                  </span> <br />
+                  ระบบจะทำการตัดยอดเครดิตคงเหลือของคุณทันที
+                </p>
+
+                {/* Action Buttons inside Modal */}
+                <div className="flex w-full gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmModal(false)}
+                    className="flex-1 px-4 py-2.5 border border-gray-200 hover:bg-gray-50 text-gray-700 text-sm font-semibold rounded-xl transition-colors"
+                  >
+                    ยกเลิก
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleSubmit(true)} // พอกดยืนยัน จะยิงส่งฟอร์มจริงและสั่งยิง API Publish (true)
+                    className="flex-1 px-4 py-2.5 bg-[#E00016] hover:bg-[#E00016]/90 text-white text-sm font-semibold rounded-xl shadow-sm transition-colors"
+                  >
+                    ยืนยันและหัก 1 AC
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
