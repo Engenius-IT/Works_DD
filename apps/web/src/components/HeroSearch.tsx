@@ -95,11 +95,38 @@ interface HeroSearchProps {
 export function HeroSearch({ onSearch, initialValues }: HeroSearchProps = {}) {
   const t = useTranslations('HeroSearch');
   const router = useRouter();
+
+  useEffect(() => {
+    const navigationEntry = performance.getEntriesByType('navigation')[0] as
+      | PerformanceNavigationTiming
+      | undefined;
+
+    if (navigationEntry?.type === 'reload' && window.location.search) {
+      router.push('/jobs');
+    }
+  }, [router]);
+
+  const getCategoryValueFromParam = (categoryParam: string) => {
+    const category = JOB_CATEGORIES.find(
+      (item) => item.value === categoryParam || t(item.labelKey) === categoryParam,
+    );
+    return category ? category.value : categoryParam;
+  };
+
+  const parseCategoryParams = (categoryParams?: string) =>
+    Array.from(
+      new Set(
+        categoryParams
+          ? categoryParams.split(',').filter(Boolean).map(getCategoryValueFromParam)
+          : [],
+      ),
+    );
+
   const [keyword, setKeyword] = useState(initialValues?.keyword ?? '');
   const [selectedProvince, setSelectedProvince] = useState(initialValues?.province ?? '');
 
   const [selectedCategories, setSelectedCategories] = useState<string[]>(
-    initialValues?.category ? initialValues.category.split(',').filter(Boolean) : [],
+    parseCategoryParams(initialValues?.category),
   );
   const [isCategoryOpen, setIsCategoryOpen] = useState(false);
 
@@ -130,7 +157,7 @@ export function HeroSearch({ onSearch, initialValues }: HeroSearchProps = {}) {
   useEffect(() => {
     setKeyword(initialValues?.keyword ?? '');
     setSelectedProvince(initialValues?.province ?? '');
-    setSelectedCategories(initialValues?.category ? initialValues.category.split(',').filter(Boolean) : []);
+    setSelectedCategories(parseCategoryParams(initialValues?.category));
     setSelectedJobTypes(initialValues?.jobType ? initialValues.jobType.split(',').filter(Boolean) : []);
     setSelectedEducations(initialValues?.education ? initialValues.education.split(',').filter(Boolean) : []);
     setSelectedSalary(initialValues?.salaryMin ? Number(initialValues.salaryMin) || 0 : 0);
@@ -142,6 +169,7 @@ export function HeroSearch({ onSearch, initialValues }: HeroSearchProps = {}) {
     initialValues?.jobType,
     initialValues?.education,
     initialValues?.salaryMin,
+    t,
   ]);
 
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -150,15 +178,33 @@ export function HeroSearch({ onSearch, initialValues }: HeroSearchProps = {}) {
   const jobTypeDropdownRef = useRef<HTMLDivElement>(null);
   const educationDropdownRef = useRef<HTMLDivElement>(null);
 
-  const handleSearch = () => {
-    const params: SearchParams = {
-      keyword,
-      province: selectedProvince,
-      jobType: selectedJobTypes.join(','),
-      salaryMin: selectedSalary > 0 ? String(selectedSalary) : '',
-      education: selectedEducations.join(','),
-      category: selectedCategories.join(','),
-    };
+  const getCategoryParamValue = (categoryValue: string) => {
+    if (categoryValue === 'admin') return 'งานธุรการ,admin';
+
+    const category = JOB_CATEGORIES.find((item) => item.value === categoryValue);
+    return category ? t(category.labelKey) : categoryValue;
+  };
+
+  const buildSearchParams = (overrides?: {
+    keyword?: string;
+    province?: string;
+    jobTypes?: string[];
+    salary?: number;
+    educations?: string[];
+    categories?: string[];
+  }): SearchParams => ({
+    keyword: overrides?.keyword ?? keyword,
+    province: overrides?.province ?? selectedProvince,
+    jobType: (overrides?.jobTypes ?? selectedJobTypes).join(','),
+    salaryMin:
+      (overrides?.salary ?? selectedSalary) > 0
+        ? String(overrides?.salary ?? selectedSalary)
+        : '',
+    education: (overrides?.educations ?? selectedEducations).join(','),
+    category: (overrides?.categories ?? selectedCategories).map(getCategoryParamValue).join(','),
+  });
+
+  const applySearch = (params: SearchParams) => {
     if (onSearch) {
       onSearch(params);
     } else {
@@ -171,6 +217,34 @@ export function HeroSearch({ onSearch, initialValues }: HeroSearchProps = {}) {
       if (params.category) q.set('category', params.category);
       router.push(`/jobs?${q.toString()}`);
     }
+  };
+
+  const handleSearch = () => {
+    const searchText = keyword.trim().toLowerCase();
+
+    const matchedCategory = JOB_CATEGORIES.find((category) => {
+      const categoryLabel = t(category.labelKey).toLowerCase();
+
+      return (
+        searchText &&
+        (category.value.toLowerCase() === searchText ||
+          categoryLabel.includes(searchText) ||
+          searchText.includes(categoryLabel))
+      );
+    });
+
+    if (matchedCategory) {
+      setSelectedCategories([matchedCategory.value]);
+      applySearch(
+        buildSearchParams({
+          keyword: '',
+          categories: [matchedCategory.value],
+        }),
+      );
+      return;
+    }
+
+    applySearch(buildSearchParams());
   };
 
   const handleClear = () => {
@@ -229,15 +303,24 @@ export function HeroSearch({ onSearch, initialValues }: HeroSearchProps = {}) {
   }, []);
 
   const toggleCategory = (category: string) => {
-    setSelectedCategories((prev) =>
-      prev.includes(category) ? prev.filter((c) => c !== category) : [...prev, category],
-    );
+    setSelectedCategories((prev) => {
+      const nextCategories = prev.includes(category)
+        ? prev.filter((c) => c !== category)
+        : [...prev, category];
+
+      applySearch(buildSearchParams({ categories: nextCategories }));
+
+      return nextCategories;
+    });
   };
 
   const selectSalaryPreset = (value: number) => {
-    setSelectedSalary((prev) => (prev === value ? 0 : value));
+    const nextSalary = selectedSalary === value ? 0 : value;
+
+    setSelectedSalary(nextSalary);
     setSalaryInputText('');
     setIsSalaryOpen(false);
+    applySearch(buildSearchParams({ salary: nextSalary }));
   };
 
   const handleSalaryInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -254,15 +337,27 @@ export function HeroSearch({ onSearch, initialValues }: HeroSearchProps = {}) {
   };
 
   const toggleJobType = (type: string) => {
-    setSelectedJobTypes((prev) =>
-      prev.includes(type) ? prev.filter((t) => t !== type) : [...prev, type],
-    );
+    setSelectedJobTypes((prev) => {
+      const nextJobTypes = prev.includes(type)
+        ? prev.filter((t) => t !== type)
+        : [...prev, type];
+
+      applySearch(buildSearchParams({ jobTypes: nextJobTypes }));
+
+      return nextJobTypes;
+    });
   };
 
   const toggleEducation = (edu: string) => {
-    setSelectedEducations((prev) =>
-      prev.includes(edu) ? prev.filter((e) => e !== edu) : [...prev, edu],
-    );
+    setSelectedEducations((prev) => {
+      const nextEducations = prev.includes(edu)
+        ? prev.filter((e) => e !== edu)
+        : [...prev, edu];
+
+      applySearch(buildSearchParams({ educations: nextEducations }));
+
+      return nextEducations;
+    });
   };
 
   return (
@@ -402,6 +497,7 @@ export function HeroSearch({ onSearch, initialValues }: HeroSearchProps = {}) {
                               setSelectedProvince(value);
                               setIsLocationOpen(false);
                               setLocationSearch('');
+                              applySearch(buildSearchParams({ province: value }));
                             }}
                             className={`w-full text-left px-3 py-2 text-sm rounded transition-colors ${selectedProvince === value
                               ? 'bg-blue-50 text-blue-700 font-medium'
