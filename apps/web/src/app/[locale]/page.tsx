@@ -60,7 +60,7 @@ export default function HomePage() {
       </main>
 
       {/* Footer */}
-      <Footer />
+      <Footer role={user?.role} />
     </div>
   );
 }
