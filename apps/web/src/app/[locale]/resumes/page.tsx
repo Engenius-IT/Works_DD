@@ -406,23 +406,6 @@ function getMatchedSnippet(
   return null;
 }
 
-function summarizeCardList(items: string[], unit: string) {
-  const cleanItems = items.map((item) => item.trim()).filter(Boolean);
-
-  if (cleanItems.length === 0) return "";
-  if (cleanItems.length === 1) return cleanItems[0];
-
-  return `${cleanItems[0]} และอีก ${cleanItems.length - 1} ${unit}`;
-}
-
-function getProvinceDisplayText(value: unknown) {
-  if (typeof value === "string") return value;
-  if (value && typeof value === "object" && "provinceName" in value) {
-    return String((value as { provinceName?: string }).provinceName || "");
-  }
-  return "";
-}
-
 function GenderAvatar({
   gender,
   avatarUrl,
@@ -528,6 +511,46 @@ export default function ResumeDirectoryPage({}: Resumesearch = {}) {
       ? t("employerBox.ctaLoggedIn")
       : t("employerBox.ctaGuest");
   const isExpValid = filters.experience !== "" && filters.experience !== "0";
+
+  const experienceOptions = useMemo(
+    () => [
+      { id: "0", label: t("filters.experienceOptions.noExperience") },
+      { id: "1-3", label: t("filters.experienceOptions.oneToThree") },
+      { id: "3-5", label: t("filters.experienceOptions.threeToFive") },
+      { id: "5-10", label: t("filters.experienceOptions.fiveToTen") },
+      { id: "10+", label: t("filters.experienceOptions.moreThanTen") },
+    ],
+    [t],
+  );
+
+  const getExperienceLabel = (value: string) =>
+    experienceOptions.find((item) => item.id === value)?.label ||
+    t("filters.experienceAll");
+
+  const jobTypeLabelMap: Record<string, string> = {
+    "งานประจำ (Full-time)": t("filters.jobTypeOptions.fullTime"),
+    "งานพาร์ทไทม์ (Part-time)": t("filters.jobTypeOptions.partTime"),
+    "สัญญาจ้าง (Contract)": t("filters.jobTypeOptions.contract"),
+    "ฟรีแลนซ์ (Freelance)": t("filters.jobTypeOptions.freelance"),
+    "ฝึกงาน (Internship)": t("filters.jobTypeOptions.internship"),
+  };
+
+  const educationOptions = useMemo(
+    () => [
+      { id: "ต่ำกว่ามัธยมศึกษาตอนปลาย", label: t("filters.educationOptions.lowerThanHighSchool") },
+      { id: "มัธยมศึกษาตอนปลาย", label: t("filters.educationOptions.highSchool") },
+      { id: "ปวช", label: t("filters.educationOptions.vocationalCertificate") },
+      { id: "ปวส", label: t("filters.educationOptions.diploma") },
+      { id: "ปริญญาตรี", label: t("filters.educationOptions.bachelor") },
+      { id: "ปริญญาโท", label: t("filters.educationOptions.master") },
+      { id: "ปริญญาเอก", label: t("filters.educationOptions.doctorate") },
+    ],
+    [t],
+  );
+
+  const getEducationLabel = (value: string) =>
+    educationOptions.find((item) => item.id === value)?.label ||
+    t("filters.educationAll");
 
   {
     /*const updateUrlParams = (newFilters: Filters) => {
@@ -756,24 +779,6 @@ export default function ResumeDirectoryPage({}: Resumesearch = {}) {
     ];
 
     return candidates.filter((candidate) => {
-      if (filters.position) {
-  const selectedPosition = filters.position.toLowerCase().trim();
-
-  const desiredPositionText = (candidate.desiredPosition || "")
-    .toLowerCase()
-    .trim();
-
-  const matchJobPreferences = candidate.jobPreferences?.some((pref) =>
-    (pref.position || "").toLowerCase().includes(selectedPosition)
-  );
-
-  if (
-    !desiredPositionText.includes(selectedPosition) &&
-    !matchJobPreferences
-  ) {
-    return false;
-  }
-}
       if (filters.desiredProvinces) {
         const target = filters.desiredProvinces;
         const isSearchingVicinity =
@@ -1003,7 +1008,7 @@ export default function ResumeDirectoryPage({}: Resumesearch = {}) {
                     className="inline-flex items-center justify-center gap-2 h-12 px-5 rounded-2xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-semibold transition-colors"
                   >
                     <Filter className="w-4 h-4 text-indigo-600" />
-                    ตัวกรอง
+                    {t("filters.title")}
                     <ChevronDown
                       className={`w-4 h-4 transition-transform duration-200 ${
                         isFilterPanelOpen ? "rotate-180" : ""
@@ -1027,7 +1032,7 @@ export default function ResumeDirectoryPage({}: Resumesearch = {}) {
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                   <div>
                     <label className="block text-xs font-semibold text-slate-500 mb-2">
-                      ตำแหน่ง
+                      {t("filters.positionLabel")}
                     </label>
                     <div className="relative">
                       <select
@@ -1040,13 +1045,15 @@ export default function ResumeDirectoryPage({}: Resumesearch = {}) {
                         }
                         className="w-full h-11 rounded-xl border border-slate-200 bg-white px-4 pr-10 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-200 appearance-none"
                       >
-                        <option value="">เลือกตำแหน่ง</option>
+                        <option value="">{t("filters.positionPlaceholder")}</option>
                         <option value="Developer">Developer</option>
                         <option value="Programmer">Programmer</option>
                         <option value="Sales">Sales</option>
                         <option value="Marketing">Marketing</option>
                         <option value="Admin">Admin</option>
-                        <option value="บัญชี">บัญชี</option>
+                        <option value="บัญชี">
+                          {t("filters.positionOptions.accounting")}
+                        </option>
                       </select>
                       <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none" />
                     </div>
@@ -1054,7 +1061,7 @@ export default function ResumeDirectoryPage({}: Resumesearch = {}) {
 
                   <div>
                     <label className="block text-xs font-semibold text-slate-500 mb-2">
-                      ระดับการศึกษา
+                      {t("filters.education")}
                     </label>
                     <div className="relative">
                       <select
@@ -1067,18 +1074,12 @@ export default function ResumeDirectoryPage({}: Resumesearch = {}) {
                         }
                         className="w-full h-11 rounded-xl border border-slate-200 bg-white px-4 pr-10 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-200 appearance-none"
                       >
-                        <option value="">เลือกระดับการศึกษา</option>
-                        <option value="ต่ำกว่ามัธยมศึกษาตอนปลาย">
-                          ต่ำกว่ามัธยมศึกษาตอนปลาย
-                        </option>
-                        <option value="มัธยมศึกษาตอนปลาย">
-                          มัธยมศึกษาตอนปลาย
-                        </option>
-                        <option value="ปวช">ประกาศนียบัตรวิชาชีพ (ปวช.)</option>
-                        <option value="ปวส">อนุปริญญา / ปวส.</option>
-                        <option value="ปริญญาตรี">ปริญญาตรี</option>
-                        <option value="ปริญญาโท">ปริญญาโท</option>
-                        <option value="ปริญญาเอก">ปริญญาเอก</option>
+                        <option value="">{t("filters.educationPlaceholder")}</option>
+                        {educationOptions.map((item) => (
+                          <option key={item.id} value={item.id}>
+                            {item.label}
+                          </option>
+                        ))}
                       </select>
                       <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none" />
                     </div>
@@ -1086,7 +1087,7 @@ export default function ResumeDirectoryPage({}: Resumesearch = {}) {
 
                   <div>
                     <label className="block text-xs font-semibold text-slate-500 mb-2">
-                      ประเภทการจ้างงาน
+                      {t("filters.jobTypeLabel")}
                     </label>
                     <div className="relative">
                       <select
@@ -1099,10 +1100,10 @@ export default function ResumeDirectoryPage({}: Resumesearch = {}) {
                         }
                         className="w-full h-11 rounded-xl border border-slate-200 bg-white px-4 pr-10 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-200 appearance-none"
                       >
-                        <option value="">เลือกประเภทการจ้างงาน</option>
+                        <option value="">{t("filters.jobTypePlaceholder")}</option>
                         {JOB_TYPES.map((type) => (
                           <option key={type} value={type}>
-                            {type}
+{jobTypeLabelMap[type] || type}
                           </option>
                         ))}
                       </select>
@@ -1112,7 +1113,7 @@ export default function ResumeDirectoryPage({}: Resumesearch = {}) {
 
                   <div>
                     <label className="block text-xs font-semibold text-slate-500 mb-2">
-                      เพศ
+                      {t("filters.genderLabel")}
                     </label>
                     <div className="relative">
                       <select
@@ -1125,9 +1126,9 @@ export default function ResumeDirectoryPage({}: Resumesearch = {}) {
                         }
                         className="w-full h-11 rounded-xl border border-slate-200 bg-white px-4 pr-10 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-200 appearance-none"
                       >
-                        <option value="">เลือกเพศ</option>
-                        <option value="male">ชาย</option>
-                        <option value="female">หญิง</option>
+                        <option value="">{t("filters.genderPlaceholder")}</option>
+                        <option value="male">{t("filters.gender.male")}</option>
+                        <option value="female">{t("filters.gender.female")}</option>
                       </select>
                       <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none" />
                     </div>
@@ -1135,7 +1136,7 @@ export default function ResumeDirectoryPage({}: Resumesearch = {}) {
 
                   <div>
                     <label className="block text-xs font-semibold text-slate-500 mb-2">
-                      จังหวัด / พื้นที่อาศัย
+                      {t("filters.provinceResidence")}
                     </label>
                     <div className="relative">
                       <select
@@ -1148,7 +1149,7 @@ export default function ResumeDirectoryPage({}: Resumesearch = {}) {
                         }
                         className="w-full h-11 rounded-xl border border-slate-200 bg-white px-4 pr-10 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-200 appearance-none"
                       >
-                        <option value="">เลือกจังหวัด</option>
+                        <option value="">{t("filters.provincePlaceholder")}</option>
                         {PROVINCE_KEYS.filter((key) => key !== "all").map(
                           (key) => (
                             <option key={key} value={key}>
@@ -1163,7 +1164,7 @@ export default function ResumeDirectoryPage({}: Resumesearch = {}) {
 
                   <div>
                     <label className="block text-xs font-semibold text-slate-500 mb-2">
-                      ประสบการณ์ทำงาน
+                      {t("filters.experienceLabel")}
                     </label>
                     <div className="relative">
                       <select
@@ -1178,12 +1179,12 @@ export default function ResumeDirectoryPage({}: Resumesearch = {}) {
                         }
                         className="w-full h-11 rounded-xl border border-slate-200 bg-white px-4 pr-10 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-200 appearance-none"
                       >
-                        <option value="">เลือกประสบการณ์</option>
-                        <option value="0">เด็กจบใหม่ / ไม่มีประสบการณ์</option>
-                        <option value="1-3">1 - 3 ปี</option>
-                        <option value="3-5">3 - 5 ปี</option>
-                        <option value="5-10">5 - 10 ปี</option>
-                        <option value="10+">มากกว่า 10 ปี</option>
+                        <option value="">{t("filters.experiencePlaceholder")}</option>
+                        {experienceOptions.map((item) => (
+                          <option key={item.id} value={item.id}>
+                            {item.label}
+                          </option>
+                        ))}
                       </select>
                       <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none" />
                     </div>
@@ -1191,7 +1192,7 @@ export default function ResumeDirectoryPage({}: Resumesearch = {}) {
 
                   <div>
                     <label className="block text-xs font-semibold text-slate-500 mb-2">
-                      ช่วงเงินเดือนที่ต้องการ
+                      {t("filters.salaryRangeLabel")}
                     </label>
                     <div className="relative">
                       <select
@@ -1204,13 +1205,25 @@ export default function ResumeDirectoryPage({}: Resumesearch = {}) {
                         }
                         className="w-full h-11 rounded-xl border border-slate-200 bg-white px-4 pr-10 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-200 appearance-none"
                       >
-                        <option value="">เลือกช่วงเงินเดือน</option>
-                        <option value="0-10000">ไม่เกิน 10,000 บาท</option>
-                        <option value="10001-15000">10,001 - 15,000 บาท</option>
-                        <option value="15001-20000">15,001 - 20,000 บาท</option>
-                        <option value="20001-30000">20,001 - 30,000 บาท</option>
-                        <option value="30001-50000">30,001 - 50,000 บาท</option>
-                        <option value="50001+">มากกว่า 50,000 บาท</option>
+                        <option value="">{t("filters.salaryRangePlaceholder")}</option>
+                        <option value="0-10000">
+                          {t("filters.salaryRanges.upTo10000")}
+                        </option>
+                        <option value="10001-15000">
+                          {t("filters.salaryRanges.10001to15000")}
+                        </option>
+                        <option value="15001-20000">
+                          {t("filters.salaryRanges.15001to20000")}
+                        </option>
+                        <option value="20001-30000">
+                          {t("filters.salaryRanges.20001to30000")}
+                        </option>
+                        <option value="30001-50000">
+                          {t("filters.salaryRanges.30001to50000")}
+                        </option>
+                        <option value="50001+">
+                          {t("filters.salaryRanges.moreThan50000")}
+                        </option>
                       </select>
                       <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none" />
                     </div>
@@ -1218,7 +1231,7 @@ export default function ResumeDirectoryPage({}: Resumesearch = {}) {
 
                   <div>
                     <label className="block text-xs font-semibold text-slate-500 mb-2">
-                      ทักษะ
+                      {t("filters.skillsLabel")}
                     </label>
                     <input
                       value={filters.skills}
@@ -1228,7 +1241,7 @@ export default function ResumeDirectoryPage({}: Resumesearch = {}) {
                           skills: e.target.value,
                         }))
                       }
-                      placeholder="เลือกทักษะ"
+                      placeholder={t("filters.skillsPlaceholder")}
                       className="w-full h-11 rounded-xl border border-slate-200 bg-white px-4 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-200"
                     />
                   </div>
@@ -1240,7 +1253,7 @@ export default function ResumeDirectoryPage({}: Resumesearch = {}) {
                 <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto px-4 pt-[120px] pb-8">
                   <button
                     type="button"
-                    aria-label="ปิดตัวกรอง"
+                    aria-label={t("filters.closeFilterAria")}
                     onClick={() => setIsFilterPanelOpen(false)}
                     className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm"
                   />
@@ -1249,7 +1262,7 @@ export default function ResumeDirectoryPage({}: Resumesearch = {}) {
                     <div className="sticky top-0 z-20 flex shrink-0 items-center justify-between gap-4 px-6 py-4 border-b border-slate-200 bg-white">
                       <div className="flex items-center gap-2 text-base font-bold text-slate-900">
                         <Filter className="w-5 h-5 text-indigo-600" />
-                        ตัวกรองผู้สมัคร
+                        {t("filters.title")}
                       </div>
                         
                     </div>
@@ -1264,7 +1277,7 @@ export default function ResumeDirectoryPage({}: Resumesearch = {}) {
                         <div className="bg-[#020263] px-5 py-2 rounded-xl shadow-md flex items-center gap-3 shrink-0">
                           <div className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-pulse" />
                           <h3 className="text-sm font-bold text-white uppercase tracking-wider">
-                            ข้อมูลส่วนบุคคล
+                            {t("filters.personalInfo")}
                           </h3>
                         </div>
                         <div className="flex-1 h-[1px] bg-slate-200 ml-4" />
@@ -1292,7 +1305,7 @@ export default function ResumeDirectoryPage({}: Resumesearch = {}) {
                                 setIsLocationOpen(true);
                                 setLocationSearch("");
                               }}
-                              placeholder="จังหวัดที่อาศัยปัจจุบัน"
+                              placeholder={t("filters.currentProvincePlaceholder")}
                               className="w-full h-11 rounded-2xl border border-slate-200 pl-11 pr-4 text-sm text-black bg-white focus:outline-none focus:ring-2 focus:ring-indigo-200 transition-all"
                             />
                             <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
@@ -1384,7 +1397,7 @@ export default function ResumeDirectoryPage({}: Resumesearch = {}) {
                                 setIsDesiredOpen(true);
                                 setDesiredSearch("");
                               }}
-                              placeholder="จังหวัดที่ผู้สมัครสนใจ..."
+                              placeholder={t("filters.desiredProvincePlaceholder")}
                               className="w-full h-11 rounded-2xl border border-slate-200 pl-11 pr-4 text-sm text-black bg-white focus:outline-none focus:ring-2 focus:ring-indigo-200 transition-all"
                             />
                             <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
@@ -1468,12 +1481,12 @@ export default function ResumeDirectoryPage({}: Resumesearch = {}) {
                                 isGenderOpen
                                   ? genderSearch
                                   : filters.gender === "male"
-                                    ? t("filters.gender.male") || "ชาย"
+                                    ? t("filters.gender.male") 
                                     : filters.gender === "female"
-                                      ? t("filters.gender.female") || "หญิง"
+                                      ? t("filters.gender.female") 
                                       : filters.gender === ""
                                         ? ""
-                                        : t("filters.genderAll") || "ทุกเพศ"
+                                        : t("filters.genderAll") 
                               }
                               onChange={(e) => {
                                 setGenderSearch(e.target.value);
@@ -1484,7 +1497,7 @@ export default function ResumeDirectoryPage({}: Resumesearch = {}) {
                                 setGenderSearch("");
                               }}
                               placeholder={
-                                t("filters.genderAll") || "เลือกเพศ..."
+                                t("filters.genderAll") 
                               }
                               // ปรับเป็น rounded-2xl ถาวร และ shadow-none
                               className="w-full h-11 border border-slate-200 pl-11 pr-4 text-sm text-black bg-white rounded-2xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-200 shadow-none"
@@ -1507,15 +1520,15 @@ export default function ResumeDirectoryPage({}: Resumesearch = {}) {
                                 {[
                                   {
                                     value: "",
-                                    label: t("filters.genderAll") || "ทุกเพศ",
+                                    label: t("filters.genderAll") ,
                                   },
                                   {
                                     value: "male",
-                                    label: t("filters.gender.male") || "ชาย",
+                                    label: t("filters.gender.male") ,
                                   },
                                   {
                                     value: "female",
-                                    label: t("filters.gender.female") || "หญิง",
+                                    label: t("filters.gender.female") ,
                                   },
                                 ].map((item) => {
                                   if (
@@ -1571,7 +1584,7 @@ export default function ResumeDirectoryPage({}: Resumesearch = {}) {
                                 ageMin: e.target.value,
                               }))
                             }
-                            placeholder={t("filters.ageMin") || "อายุเริ่มต้น"}
+                            placeholder={t("filters.ageMin") }
                             type="number"
                             className="w-full h-11 rounded-2xl border border-slate-200 pl-11 pr-4 text-sm text-black bg-white focus:outline-none focus:ring-2 focus:ring-indigo-200 transition-all hover:border-indigo-300"
                           />
@@ -1588,7 +1601,7 @@ export default function ResumeDirectoryPage({}: Resumesearch = {}) {
                                 ageMax: e.target.value,
                               }))
                             }
-                            placeholder={t("filters.ageMax") || "อายุสูงสุด"}
+                            placeholder={t("filters.ageMax") }
                             type="number"
                             className="w-full h-11 rounded-2xl border border-slate-200 pl-11 pr-4 text-sm text-black bg-white focus:outline-none focus:ring-2 focus:ring-indigo-200 transition-all hover:border-indigo-300 "
                           />
@@ -1602,7 +1615,7 @@ export default function ResumeDirectoryPage({}: Resumesearch = {}) {
                               type="text"
                               readOnly
                               // ไม่ใช้ disabled แล้ว เพื่อให้เลือกได้เสมอ
-                              value={filters.jobType || "ประเภทการจ้างงาน"}
+                              value={filters.jobType ? jobTypeLabelMap[filters.jobType] || filters.jobType : t("filters.jobTypePlaceholder")}
                               onClick={() => setIsJobTypeOpen(!isJobTypeOpen)}
                               className={`w-full h-11 border pl-11 pr-10 text-sm rounded-2xl transition-all cursor-pointer focus:outline-none bg-white border-slate-200 text-black focus:ring-2 focus:ring-indigo-200 ${
                                 !filters.jobType
@@ -1632,7 +1645,7 @@ export default function ResumeDirectoryPage({}: Resumesearch = {}) {
                                   }}
                                   className="w-full text-left px-4 py-2.5 text-sm rounded-xl transition-colors italic text-slate-400 hover:bg-slate-50"
                                 >
-                                  -- ทั้งหมด --
+                                  {t("filters.all")}
                                 </button>
                                 {JOB_TYPES.map((type) => (
                                   <button
@@ -1651,7 +1664,7 @@ export default function ResumeDirectoryPage({}: Resumesearch = {}) {
                                         : "text-slate-700 hover:bg-slate-50"
                                     }`}
                                   >
-                                    {type}
+{jobTypeLabelMap[type] || type}
                                   </button>
                                 ))}
                               </div>
@@ -1666,19 +1679,7 @@ export default function ResumeDirectoryPage({}: Resumesearch = {}) {
                             <input
                               type="text"
                               readOnly
-                              value={
-                                filters.experience === "0"
-                                  ? "เด็กจบใหม่ / ไม่มีประสบการณ์"
-                                  : filters.experience === "1-3"
-                                    ? "1 - 3 ปี"
-                                    : filters.experience === "3-5"
-                                      ? "3 - 5 ปี"
-                                      : filters.experience === "5-10"
-                                        ? "5 - 10 ปี"
-                                        : filters.experience === "10+"
-                                          ? "มากกว่า 10 ปี"
-                                          : "ประสบการณ์การทำงาน (ทั้งหมด)"
-                              }
+                              value={getExperienceLabel(filters.experience)}
                               onClick={() => setIsExpOpen(!isExpOpen)}
                               className={`w-full h-11 border border-slate-200 pl-11 pr-10 text-sm bg-white cursor-pointer rounded-2xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-200 shadow-none ${
                                 !filters.experience
@@ -1708,19 +1709,10 @@ export default function ResumeDirectoryPage({}: Resumesearch = {}) {
                                   }}
                                   className="w-full text-left px-4 py-2.5 text-sm rounded-xl transition-colors italic text-slate-400 hover:bg-slate-50 hover:text-slate-600"
                                 >
-                                  -- ทั้งหมด --
+                                  {t("filters.all")}
                                 </button>
 
-                                {[
-                                  {
-                                    id: "0",
-                                    label: "เด็กจบใหม่ / ไม่มีประสบการณ์",
-                                  },
-                                  { id: "1-3", label: "1 - 3 ปี" },
-                                  { id: "3-5", label: "3 - 5 ปี" },
-                                  { id: "5-10", label: "5 - 10 ปี" },
-                                  { id: "10+", label: "มากกว่า 10 ปี" },
-                                ].map((item) => (
+                                {experienceOptions.map((item) => (
                                   <button
                                     key={item.id}
                                     type="button"
@@ -1778,8 +1770,8 @@ export default function ResumeDirectoryPage({}: Resumesearch = {}) {
                               }}
                               placeholder={
                                 isExpValid
-                                  ? "ประเภทธุรกิจที่สนใจ"
-                                  : "ต้องมีประสบการณ์ 1 ปีขึ้นไป"
+                                  ? t("filters.businessTypePlaceholder")
+                                  : t("filters.businessTypeDisabled")
                               }
                               className={`w-full h-11 rounded-2xl border pl-11 pr-4 text-sm transition-all ${
                                 !isExpValid
@@ -1858,7 +1850,7 @@ export default function ResumeDirectoryPage({}: Resumesearch = {}) {
                         <div className="bg-[#020263] px-5 py-2 rounded-xl shadow-md flex items-center gap-3 shrink-0">
                           <div className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-pulse" />
                           <h3 className="text-sm font-bold text-white uppercase tracking-wider">
-                            ความสามารถและทักษะ
+                            {t("detailModal.skillsTitle")}
                           </h3>
                         </div>
                         <div className="flex-1 h-[1px] bg-slate-200 ml-4" />
@@ -1885,7 +1877,7 @@ export default function ResumeDirectoryPage({}: Resumesearch = {}) {
                                 setIsLanguageOpen(true);
                                 setLanguageSearch("");
                               }}
-                              placeholder="ทุกภาษา"
+                              placeholder={t("filters.allLanguages")}
                               className="w-full h-11 border border-slate-200 pl-11 pr-4 text-sm text-black bg-white rounded-2xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-200 shadow-none"
                             />
 
@@ -1975,8 +1967,8 @@ export default function ResumeDirectoryPage({}: Resumesearch = {}) {
                               }}
                               placeholder={
                                 filters.language
-                                  ? "เลือกระดับ..."
-                                  : "เลือกภาษาก่อน"
+                                  ? t("filters.languageLevelPlaceholder")
+                                  : t("filters.selectLanguageFirst")
                               }
                               // ปรับ className ให้มีการเปลี่ยนสีพื้นหลังและขอบเมื่อ disabled
                               className={`w-full h-11 border rounded-2xl pl-11 pr-10 text-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-200 shadow-none ${
@@ -2052,15 +2044,15 @@ export default function ResumeDirectoryPage({}: Resumesearch = {}) {
                               readOnly
                               value={
                                 filters.hasDrivingLicense === "l_car"
-                                  ? "ใบขับขี่รถยนต์"
+                                  ? drivingSkillMap.l_car[locale as "th" | "en"]
                                   : filters.hasDrivingLicense === "l_bike"
-                                    ? "ใบขับขี่จักรยานยนต์"
+                                    ? drivingSkillMap.l_bike[locale as "th" | "en"]
                                     : filters.hasDrivingLicense === "l_truck_6"
-                                      ? "ใบขับขี่รถบรรทุก 6 ล้อ"
+                                      ? drivingSkillMap.l_truck_6[locale as "th" | "en"]
                                       : filters.hasDrivingLicense ===
                                           "l_truck_10"
-                                        ? "ใบขับขี่รถบรรทุก 10 ล้อ"
-                                        : "ใบขับขี่ (ทั้งหมด)"
+                                        ? drivingSkillMap.l_truck_10[locale as "th" | "en"]
+                                        : t("filters.drivingLicenseAll")
                               }
                               onClick={() => setIsLicenseOpen(!isLicenseOpen)}
                               // แก้ไข: ใช้ rounded-2xl ตลอดเวลา (ไม่ต้องสลับเป็นเหลี่ยม) เพื่อให้เข้ากับ Dropdown ที่แยกห่างออกมา
@@ -2100,21 +2092,21 @@ export default function ResumeDirectoryPage({}: Resumesearch = {}) {
                                   }}
                                   className="w-full text-left px-4 py-2.5 text-sm rounded-xl transition-colors italic text-slate-400 hover:bg-slate-50 hover:text-slate-600"
                                 >
-                                  -- ทั้งหมด (ล้างค่า) --
+                                  {t("filters.allClear")}
                                 </button>
                                 {[
-                                  { id: "l_car", label: "ใบขับขี่รถยนต์" },
+                                  { id: "l_car", label: drivingSkillMap.l_car[locale as "th" | "en"] },
                                   {
                                     id: "l_bike",
-                                    label: "ใบขับขี่จักรยานยนต์",
+                                    label: drivingSkillMap.l_bike[locale as "th" | "en"],
                                   },
                                   {
                                     id: "l_truck_6",
-                                    label: "ใบขับขี่รถบรรทุก 6 ล้อ",
+                                    label: drivingSkillMap.l_truck_6[locale as "th" | "en"],
                                   },
                                   {
                                     id: "l_truck_10",
-                                    label: "ใบขับขี่รถบรรทุก 10 ล้อ",
+                                    label: drivingSkillMap.l_truck_10[locale as "th" | "en"],
                                   },
                                 ].map((item) => (
                                   <button
@@ -2148,10 +2140,10 @@ export default function ResumeDirectoryPage({}: Resumesearch = {}) {
                               readOnly
                               value={
                                 filters.hasOwnCar === "v_car"
-                                  ? "มีรถยนต์ส่วนตัว"
+                                  ? drivingSkillMap.v_car[locale as "th" | "en"]
                                   : filters.hasOwnCar === "v_bike"
-                                    ? "มีจักรยานยนต์ส่วนตัว"
-                                    : "รถส่วนตัว (ทั้งหมด)"
+                                    ? drivingSkillMap.v_bike[locale as "th" | "en"]
+                                    : t("filters.vehicleAll")
                               }
                               onClick={() => setIsCarOpen(!isCarOpen)}
                               // แก้ไข Class ให้เป็น input สไตล์เดียวกับภาษา
@@ -2191,7 +2183,7 @@ export default function ResumeDirectoryPage({}: Resumesearch = {}) {
                                   }}
                                   className="w-full text-left px-4 py-2.5 text-sm rounded-xl transition-colors italic text-slate-400 hover:bg-slate-50 hover:text-slate-600"
                                 >
-                                  -- ทั้งหมด (ล้างค่า) --
+                                  {t("filters.allClear")}
                                 </button>
                                 <button
                                   type="button"
@@ -2208,7 +2200,7 @@ export default function ResumeDirectoryPage({}: Resumesearch = {}) {
                                       : "text-slate-700 hover:bg-slate-50"
                                   }`}
                                 >
-                                  รถยนต์ส่วนตัว
+                                  {drivingSkillMap.v_car[locale as "th" | "en"]}
                                 </button>
                                 <button
                                   type="button"
@@ -2225,7 +2217,7 @@ export default function ResumeDirectoryPage({}: Resumesearch = {}) {
                                       : "text-slate-700 hover:bg-slate-50"
                                   }`}
                                 >
-                                  จักรยานยนต์ส่วนตัว
+                                  {drivingSkillMap.v_bike[locale as "th" | "en"]}
                                 </button>
                               </div>
                             </div>
@@ -2242,12 +2234,12 @@ export default function ResumeDirectoryPage({}: Resumesearch = {}) {
                               readOnly
                               value={
                                 filters.machinerySkill === "m_backhoe"
-                                  ? "รถแบคโฮ (Backhoe)"
+                                  ? drivingSkillMap.m_backhoe[locale as "th" | "en"]
                                   : filters.machinerySkill === "m_crane"
-                                    ? "รถเครน (Crane)"
+                                    ? drivingSkillMap.m_crane[locale as "th" | "en"]
                                     : filters.machinerySkill === "m_forklift"
-                                      ? "รถยก (Forklift)"
-                                      : "ทักษะเครื่องจักร (ทั้งหมด)"
+                                      ? drivingSkillMap.m_forklift[locale as "th" | "en"]
+                                      : t("filters.machineryAll")
                               }
                               onClick={() =>
                                 setIsMachineryOpen(!isMachineryOpen)
@@ -2282,17 +2274,17 @@ export default function ResumeDirectoryPage({}: Resumesearch = {}) {
                                   }}
                                   className="w-full text-left px-4 py-2.5 text-sm rounded-xl transition-colors italic text-slate-400 hover:bg-slate-50 hover:text-slate-600"
                                 >
-                                  -- ทั้งหมด (ล้างค่า) --
+                                  {t("filters.allClear")}
                                 </button>
                                 {[
                                   {
                                     id: "m_backhoe",
-                                    label: "รถแบคโฮ (Backhoe)",
+                                    label: drivingSkillMap.m_backhoe[locale as "th" | "en"],
                                   },
-                                  { id: "m_crane", label: "รถเครน (Crane)" },
+                                  { id: "m_crane", label: drivingSkillMap.m_crane[locale as "th" | "en"] },
                                   {
                                     id: "m_forklift",
-                                    label: "รถยก (Forklift)",
+                                    label: drivingSkillMap.m_forklift[locale as "th" | "en"],
                                   },
                                 ].map((item) => (
                                   <button
@@ -2348,7 +2340,7 @@ export default function ResumeDirectoryPage({}: Resumesearch = {}) {
                             }
                             placeholder={
                               t("filters.skills") ||
-                              "ระบุทักษะอื่นๆ (เช่น React, Photoshop, บัญชี)"
+                              t("filters.otherSkillsPlaceholder")
                             }
                             className="w-full h-11 rounded-2xl border border-slate-200 pl-11 pr-4 text-sm text-black bg-white transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-200 shadow-none"
                           />
@@ -2364,7 +2356,7 @@ export default function ResumeDirectoryPage({}: Resumesearch = {}) {
                         <div className="bg-[#020263] px-5 py-2 rounded-xl shadow-md flex items-center gap-3 shrink-0">
                           <div className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-pulse" />
                           <h3 className="text-sm font-bold text-white uppercase tracking-wider">
-                            ประวัติการศึกษา
+                            {t("filters.educationHistory")}
                           </h3>
                         </div>
                         <div className="flex-1 h-[1px] bg-slate-200 ml-4" />
@@ -2378,27 +2370,7 @@ export default function ResumeDirectoryPage({}: Resumesearch = {}) {
                             <input
                               type="text"
                               readOnly
-                              value={
-                                filters.educationLevel ===
-                                "ต่ำกว่ามัธยมศึกษาตอนปลาย"
-                                  ? "ต่ำกว่ามัธยมศึกษาตอนปลาย"
-                                  : filters.educationLevel ===
-                                      "มัธยมศึกษาตอนปลาย"
-                                    ? "มัธยมศึกษาตอนปลาย"
-                                    : filters.educationLevel === "ปวช"
-                                      ? "ประกาศนียบัตรวิชาชีพ (ปวช.)"
-                                      : filters.educationLevel === "ปวส"
-                                        ? "อนุปริญญา / ปวส."
-                                        : filters.educationLevel === "ปริญญาตรี"
-                                          ? "ปริญญาตรี"
-                                          : filters.educationLevel ===
-                                              "ปริญญาโท"
-                                            ? "ปริญญาโท"
-                                            : filters.educationLevel ===
-                                                "ปริญญาเอก"
-                                              ? "ปริญญาเอก"
-                                              : "ระดับการศึกษา (ทั้งหมด)"
-                              }
+                              value={getEducationLabel(filters.educationLevel)}
                               onClick={() => setIsEduOpen(!isEduOpen)}
                               className={`w-full h-11 border border-slate-200 pl-11 pr-10 text-sm bg-white cursor-pointer rounded-2xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-200 shadow-none ${
                                 !filters.educationLevel
@@ -2427,26 +2399,9 @@ export default function ResumeDirectoryPage({}: Resumesearch = {}) {
                                   }}
                                   className="w-full text-left px-4 py-2.5 text-sm rounded-xl transition-colors italic text-slate-400 hover:bg-slate-50 hover:text-slate-600"
                                 >
-                                  -- ทั้งหมด --
+                                  {t("filters.all")}
                                 </button>
-                                {[
-                                  {
-                                    id: "ต่ำกว่ามัธยมศึกษาตอนปลาย",
-                                    label: "ต่ำกว่ามัธยมศึกษาตอนปลาย",
-                                  },
-                                  {
-                                    id: "มัธยมศึกษาตอนปลาย",
-                                    label: "มัธยมศึกษาตอนปลาย",
-                                  },
-                                  {
-                                    id: "ปวช",
-                                    label: "ประกาศนียบัตรวิชาชีพ (ปวช.)",
-                                  },
-                                  { id: "ปวส", label: "อนุปริญญา / ปวส." },
-                                  { id: "ปริญญาตรี", label: "ปริญญาตรี" },
-                                  { id: "ปริญญาโท", label: "ปริญญาโท" },
-                                  { id: "ปริญญาเอก", label: "ปริญญาเอก" },
-                                ].map((item) => (
+                                {educationOptions.map((item) => (
                                   <button
                                     key={item.id}
                                     type="button"
@@ -2482,7 +2437,7 @@ export default function ResumeDirectoryPage({}: Resumesearch = {}) {
                                   ? facultySearch
                                   : filters.faculty || ""
                               }
-                              placeholder="ค้นหาคณะ..."
+                              placeholder={t("filters.facultyPlaceholder")}
                               onChange={(e) => setFacultySearch(e.target.value)}
                               onFocus={() => {
                                 setIsFacultyOpen(true);
@@ -2513,7 +2468,7 @@ export default function ResumeDirectoryPage({}: Resumesearch = {}) {
                                   }}
                                   className="w-full text-left px-4 py-2.5 text-sm rounded-xl transition-colors italic text-slate-400 hover:bg-slate-50 hover:text-slate-600"
                                 >
-                                  -- ทั้งหมด --
+                                  {t("filters.all")}
                                 </button>
 
                                 {/* รายการคณะที่ผ่านการกรอง (Search) */}
@@ -2560,7 +2515,7 @@ export default function ResumeDirectoryPage({}: Resumesearch = {}) {
                                 major: e.target.value,
                               }))
                             }
-                            placeholder="ระบุชื่อสาขา (เช่น คอมพิวเตอร์)"
+                            placeholder={t("filters.majorPlaceholder")}
                             className="w-full h-11 rounded-2xl border border-slate-200 pl-11 pr-4 text-sm text-black bg-white transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-200 shadow-none"
                           />
                         </div>
@@ -2577,7 +2532,7 @@ export default function ResumeDirectoryPage({}: Resumesearch = {}) {
                               }))
                             }
                             placeholder={
-                              t("filters.gpa") || "เกรดเฉลี่ยขั้นต่ำ"
+                              t("filters.gpa") 
                             }
                             type="number"
                             step="0.01"
@@ -2597,7 +2552,7 @@ export default function ResumeDirectoryPage({}: Resumesearch = {}) {
                               }))
                             }
                             placeholder={
-                              t("filters.institution") || "ชื่อสถานศึกษา"
+                              t("filters.institution") 
                             }
                             className="w-full h-11 rounded-2xl border border-slate-200 pl-11 pr-4 text-sm text-black bg-white transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-200 shadow-none"
                           />
@@ -2614,7 +2569,7 @@ export default function ResumeDirectoryPage({}: Resumesearch = {}) {
                         onClick={() => setIsFilterPanelOpen(false)}
                         className="inline-flex items-center justify-center h-11 px-6 rounded-2xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-semibold transition-colors"
                       >
-                        ยกเลิก
+                        {t("filters.cancel")}
                       </button>
                       <button
                         type="button"
@@ -2625,7 +2580,7 @@ export default function ResumeDirectoryPage({}: Resumesearch = {}) {
                         className="inline-flex items-center justify-center gap-2 h-11 px-6 rounded-2xl bg-[#020263] hover:bg-[#11117c] text-white font-semibold transition-colors"
                       >
                         <Search className="w-4 h-4" />
-                        ค้นหา
+                        {t("search.btnSearch")}
                       </button>
                     </div>
                   </div>
@@ -2708,8 +2663,8 @@ export default function ResumeDirectoryPage({}: Resumesearch = {}) {
                               {candidate.experience !== null && (
                                 <div className="px-2 py-0.5 rounded-full bg-indigo-50 text-[10px] font-bold text-indigo-600 border border-indigo-100">
                                   {candidate.experience > 0
-                                    ? `ประสบการณ์: ${candidate.experience} ${t("list.ageUnit") || "ปี"}`
-                                    : "ไม่มีประสบการณ์"}
+                                    ? `${t("filters.experienceLabel")}: ${candidate.experience} ${t("list.ageUnit")}`
+                                    : t("filters.experienceOptions.noExperience")}
                                 </div>
                               )}
                             </div>
@@ -2754,7 +2709,7 @@ export default function ResumeDirectoryPage({}: Resumesearch = {}) {
                                     ),
                                   );
                                   alert(
-                                    "ไม่สามารถดำเนินการได้ กรุณาลองใหม่อีกครั้ง",
+                                    t("list.actionError"),
                                   );
                                 }
                               }}
@@ -2889,17 +2844,19 @@ export default function ResumeDirectoryPage({}: Resumesearch = {}) {
                             <div className="flex flex-col gap-y-1.5">
                               {candidate.desiredProvinces &&
                               candidate.desiredProvinces.length > 0 ? (
-                                <div className="flex items-center text-xs group">
-                                  <span className="w-1 h-1 rounded-full bg-yellow-500 mr-2 shrink-0" />
-                                  <span className="text-xs text-slate-500 leading-relaxed">
-                                    {summarizeCardList(
-                                      candidate.desiredProvinces.map((provinceName: any) =>
-                                        getProvinceDisplayText(provinceName),
-                                      ),
-                                      "จังหวัด",
-                                    )}
-                                  </span>
-                                </div>
+                                candidate.desiredProvinces.map(
+                                  (provinceName: any, idx) => (
+                                    <div
+                                      key={idx}
+                                      className="flex items-center text-xs group"
+                                    >
+                                      <span className="w-1 h-1 rounded-full bg-yellow-500 mr-2 shrink-0" />
+                                      <span className="text-xs text-slate-500 leading-relaxed">
+                                        {provinceName}
+                                      </span>
+                                    </div>
+                                  ),
+                                )
                               ) : (
                                 /* Fallback กรณีไม่มีข้อมูล - แสดงจังหวัดปัจจุบัน */
                                 <div className="flex items-center text-xs">
@@ -2923,19 +2880,26 @@ export default function ResumeDirectoryPage({}: Resumesearch = {}) {
                             <div className="flex flex-col gap-y-1.5">
                               {candidate.languages &&
                               candidate.languages.length > 0 ? (
-                                <div className="flex items-center text-xs group">
-                                  {/* จุดนำหน้า (Bullet Point) */}
-                                  <span className="w-1 h-1 rounded-full bg-amber-500 mr-2 shrink-0" />
+                                candidate.languages.map((lang, idx) => (
+                                  <div
+                                    key={idx}
+                                    className="flex items-center text-xs group"
+                                  >
+                                    {/* จุดนำหน้า (Bullet Point) */}
+                                    <span className="w-1 h-1 rounded-full bg-amber-500 mr-2 shrink-0" />
 
-                                  <div className="flex justify-between items-center w-full">
-                                    <span className="text-xs text-slate-500 leading-relaxed">
-                                      {summarizeCardList(
-                                        candidate.languages.map((lang) => lang.language),
-                                        "ภาษา",
+                                    <div className="flex justify-between items-center w-full">
+                                      <span className="text-xs text-slate-500 leading-relaxed">
+                                        {lang.language}
+                                      </span>
+                                      {lang.level && (
+                                        <span className="text-[10px] text-slate-400 font-normal">
+                                          {lang.level}
+                                        </span>
                                       )}
-                                    </span>
+                                    </div>
                                   </div>
-                                </div>
+                                ))
                               ) : (
                                 /* Fallback กรณีไม่มี Array */
                                 <div className="flex items-center text-xs italic text-slate-400">
@@ -2958,26 +2922,32 @@ export default function ResumeDirectoryPage({}: Resumesearch = {}) {
                             <div className="flex flex-col gap-y-1.5">
                               {candidate.drivingSkills &&
                               candidate.drivingSkills.length > 0 ? (
-                                <div className="flex items-center text-xs">
-                                  {/* จุดนำหน้าสีเดียวกับไอคอนรถ (Blue-500) */}
-                                  <span className="w-1 h-1 rounded-full bg-blue-500 mr-2 shrink-0" />
-                                  <span className="text-xs text-slate-500 leading-relaxed">
-                                    {summarizeCardList(
-                                      candidate.drivingSkills.map((skillId: string) => {
-                                        const skillData =
-                                          drivingSkillMap[
-                                            skillId as keyof typeof drivingSkillMap
-                                          ];
-                                        return skillData
-                                          ? locale === "en"
-                                            ? skillData.en
-                                            : skillData.th
-                                          : skillId;
-                                      }),
-                                      "ประเภท",
-                                    )}
-                                  </span>
-                                </div>
+                                candidate.drivingSkills.map(
+                                  (skillId: string) => {
+                                    const skillData =
+                                      drivingSkillMap[
+                                        skillId as keyof typeof drivingSkillMap
+                                      ];
+                                    const label = skillData
+                                      ? locale === "en"
+                                        ? skillData.en
+                                        : skillData.th
+                                      : skillId;
+
+                                    return (
+                                      <div
+                                        key={skillId}
+                                        className="flex items-center text-xs"
+                                      >
+                                        {/* จุดนำหน้าสีเดียวกับไอคอนรถ (Blue-500) */}
+                                        <span className="w-1 h-1 rounded-full bg-blue-500 mr-2 shrink-0" />
+                                        <span className="text-xs text-slate-500 leading-relaxed">
+                                          {label}
+                                        </span>
+                                      </div>
+                                    );
+                                  },
+                                )
                               ) : (
                                 /* กรณีไม่มีข้อมูล */
                                 <div className="flex items-center text-xs italic text-slate-400">

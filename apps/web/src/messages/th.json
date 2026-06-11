@@ -392,7 +392,76 @@
         "fair": "พอใช้",
         "good": "ดี",
         "excellent": "เยี่ยม"
-      }
+      },
+      "positionLabel": "ตำแหน่ง",
+      "positionPlaceholder": "เลือกตำแหน่ง",
+      "educationPlaceholder": "เลือกระดับการศึกษา",
+      "jobTypeLabel": "ประเภทการจ้างงาน",
+      "jobTypePlaceholder": "เลือกประเภทการจ้างงาน",
+      "genderLabel": "เพศ",
+      "genderPlaceholder": "เลือกเพศ",
+      "provinceResidence": "จังหวัด / พื้นที่อาศัย",
+      "provincePlaceholder": "เลือกจังหวัด",
+      "experienceLabel": "ประสบการณ์ทำงาน",
+      "experiencePlaceholder": "เลือกประสบการณ์",
+      "salaryRangeLabel": "ช่วงเงินเดือนที่ต้องการ",
+      "salaryRangePlaceholder": "เลือกช่วงเงินเดือน",
+      "skillsLabel": "ทักษะ",
+      "skillsPlaceholder": "เลือกทักษะ",
+      "closeFilterAria": "ปิดตัวกรอง",
+      "personalInfo": "ข้อมูลส่วนบุคคล",
+      "experienceAll": "ประสบการณ์การทำงาน (ทั้งหมด)",
+      "experienceOptions": {
+        "noExperience": "เด็กจบใหม่ / ไม่มีประสบการณ์",
+        "oneToThree": "1 - 3 ปี",
+        "threeToFive": "3 - 5 ปี",
+        "fiveToTen": "5 - 10 ปี",
+        "moreThanTen": "มากกว่า 10 ปี"
+      },
+      "jobTypeOptions": {
+        "fullTime": "งานประจำ",
+        "partTime": "พาร์ทไทม์",
+        "contract": "สัญญาจ้าง",
+        "freelance": "ฟรีแลนซ์",
+        "internship": "ฝึกงาน"
+      },
+      "educationAll": "ระดับการศึกษา (ทั้งหมด)",
+      "educationOptions": {
+        "lowerThanHighSchool": "ต่ำกว่ามัธยมศึกษาตอนปลาย",
+        "highSchool": "มัธยมศึกษาตอนปลาย",
+        "vocationalCertificate": "ประกาศนียบัตรวิชาชีพ (ปวช.)",
+        "diploma": "อนุปริญญา / ปวส.",
+        "bachelor": "ปริญญาตรี",
+        "master": "ปริญญาโท",
+        "doctorate": "ปริญญาเอก"
+      },
+      "currentProvincePlaceholder": "จังหวัดที่อาศัยปัจจุบัน",
+      "desiredProvincePlaceholder": "จังหวัดที่ผู้สมัครสนใจ...",
+      "businessTypePlaceholder": "ประเภทธุรกิจที่สนใจ",
+      "businessTypeDisabled": "ต้องมีประสบการณ์ 1 ปีขึ้นไป",
+      "languageLevelPlaceholder": "เลือกระดับ...",
+      "selectLanguageFirst": "เลือกภาษาก่อน",
+      "otherSkillsPlaceholder": "ระบุทักษะอื่นๆ (เช่น React, Photoshop, บัญชี)",
+      "facultyPlaceholder": "ค้นหาคณะ...",
+      "majorPlaceholder": "ระบุชื่อสาขา (เช่น คอมพิวเตอร์)",
+      "cancel": "ยกเลิก",
+      "drivingLicenseAll": "ใบขับขี่ (ทั้งหมด)",
+      "vehicleAll": "รถส่วนตัว (ทั้งหมด)",
+      "machineryAll": "ทักษะเครื่องจักร (ทั้งหมด)",
+      "salaryRanges": {
+        "upTo10000": "ไม่เกิน 10,000 บาท",
+        "10001to15000": "10,001 - 15,000 บาท",
+        "15001to20000": "15,001 - 20,000 บาท",
+        "20001to30000": "20,001 - 30,000 บาท",
+        "30001to50000": "30,001 - 50,000 บาท",
+        "moreThan50000": "มากกว่า 50,000 บาท"
+      },
+      "positionOptions": {
+        "accounting": "บัญชี"
+      },
+      "allClear": "ทั้งหมด (ล้างค่า)",
+      "educationHistory": "ประวัติการศึกษา",
+      "workInfo": "ข้อมูลการทำงาน"
     },
     "list": {
       "title": "รายชื่อผู้หางาน",
@@ -420,7 +489,10 @@
       "drivingSkillsTitle": "ทักษะการขับขี่",
       "noDrivingSkill": "ไม่มีข้อมูลทักษะการขับขี่",
       "noProvince": "ไม่ระบุจังหวัด",
-      "address": "ที่อยู่"
+      "address": "ที่อยู่",
+      "actionError": "ไม่สามารถดำเนินการได้ กรุณาลองใหม่อีกครั้ง",
+      "matchedPrefix": "ตรงกับที่คุณหา:",
+      "noExperience": "ไม่มีประสบการณ์"
     },
     "detailModal": {
       "postedAt": "โพสต์เมื่อ {time}",

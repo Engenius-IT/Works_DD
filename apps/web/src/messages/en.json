@@ -392,7 +392,76 @@
         "fair": "Fair",
         "good": "Good",
         "excellent": "Excellent"
-      }
+      },
+      "positionLabel": "Position",
+      "positionPlaceholder": "Select Position",
+      "educationPlaceholder": "Select Education Level",
+      "jobTypeLabel": "Employment Type",
+      "jobTypePlaceholder": "Select Employment Type",
+      "genderLabel": "Gender",
+      "genderPlaceholder": "Select Gender",
+      "provinceResidence": "Province / Residence Area",
+      "provincePlaceholder": "Select Province",
+      "experienceLabel": "Work Experience",
+      "experiencePlaceholder": "Select Experience",
+      "salaryRangeLabel": "Expected Salary Range",
+      "salaryRangePlaceholder": "Select Salary Range",
+      "skillsLabel": "Skills",
+      "skillsPlaceholder": "Select Skills",
+      "closeFilterAria": "Close filters",
+      "personalInfo": "Personal Information",
+      "experienceAll": "Work Experience (All)",
+      "experienceOptions": {
+        "noExperience": "New Graduate / No Experience",
+        "oneToThree": "1 - 3 years",
+        "threeToFive": "3 - 5 years",
+        "fiveToTen": "5 - 10 years",
+        "moreThanTen": "More than 10 years"
+      },
+      "jobTypeOptions": {
+        "fullTime": "Full-time",
+        "partTime": "Part-time",
+        "contract": "Contract",
+        "freelance": "Freelance",
+        "internship": "Internship"
+      },
+      "educationAll": "Education Level (All)",
+      "educationOptions": {
+        "lowerThanHighSchool": "Lower than High School",
+        "highSchool": "High School",
+        "vocationalCertificate": "Vocational Certificate (Por Wor Chor)",
+        "diploma": "Diploma / High Vocational Certificate",
+        "bachelor": "Bachelor's Degree",
+        "master": "Master's Degree",
+        "doctorate": "Doctorate"
+      },
+      "currentProvincePlaceholder": "Current province / residence area",
+      "desiredProvincePlaceholder": "Preferred province...",
+      "businessTypePlaceholder": "Preferred Business Type",
+      "businessTypeDisabled": "Requires at least 1 year of experience",
+      "languageLevelPlaceholder": "Select level...",
+      "selectLanguageFirst": "Select language first",
+      "otherSkillsPlaceholder": "Other skills (e.g., React, Photoshop, Accounting)",
+      "facultyPlaceholder": "Search faculty...",
+      "majorPlaceholder": "Enter major (e.g., Computer Science)",
+      "cancel": "Cancel",
+      "drivingLicenseAll": "Driving License (All)",
+      "vehicleAll": "Personal Vehicle (All)",
+      "machineryAll": "Machinery Skills (All)",
+      "salaryRanges": {
+        "upTo10000": "Up to 10,000 THB",
+        "10001to15000": "10,001 - 15,000 THB",
+        "15001to20000": "15,001 - 20,000 THB",
+        "20001to30000": "20,001 - 30,000 THB",
+        "30001to50000": "30,001 - 50,000 THB",
+        "moreThan50000": "More than 50,000 THB"
+      },
+      "positionOptions": {
+        "accounting": "Accounting"
+      },
+      "allClear": "All (Clear)",
+      "educationHistory": "Education History",
+      "workInfo": "Work Information"
     },
     "list": {
       "title": "Candidate List",
@@ -420,7 +489,10 @@
       "drivingSkillsTitle": "Driving Skills",
       "noDrivingSkill": "No driving skills information",
       "noProvince": "Province not specified",
-      "address": "Address"
+      "address": "Address",
+      "actionError": "Unable to process. Please try again.",
+      "matchedPrefix": "Matched your search:",
+      "noExperience": "No experience"
     },
     "detailModal": {
       "postedAt": "Posted {time}",
