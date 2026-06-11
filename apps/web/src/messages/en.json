@@ -43,7 +43,7 @@
       "employer": "For Employers",
       "jobseeker": "For Job Seekers"
     },
-    "about": "About JobDD",
+    "about": "About WorksDD",
     "aboutSub": {
       "news": "News & Events",
       "contact": "Contact Us",
@@ -307,25 +307,25 @@
   },
   "FAQ": {
     "title": "Frequently Asked Questions",
-    "subtitle": "A collection of questions and answers you might have about using JobDD so you can start searching for jobs with confidence.",
+    "subtitle": "A collection of questions and answers you might have about using WorksDD so you can start searching for jobs with confidence.",
     "stillHaveQuestions": "Still have questions?",
     "contactUs": "Contact Us",
     "questions": {
-      "q1": "What is JobDD?",
-      "a1": "JobDD is a job search platform designed to help you discover new career opportunities quickly and easily with an accurate and user-friendly job recommendation system.",
+      "q1": "What is WorksDD?",
+      "a1": "WorksDD is a job search platform designed to help you discover new career opportunities quickly and easily with an accurate and user-friendly job recommendation system.",
       "q2": "Is registration free?",
       "a2": "For job seekers, registration and use of our entire platform is 100% free with no hidden costs.",
       "q3": "How do I start searching for jobs?",
       "a3": "You can start by typing the job title you're interested in in the search box or choosing from the job categories we've collected. And don't forget to complete your profile to increase your chances of being discovered by top companies.",
       "q4": "How will employers contact me if they're interested in my profile?",
-      "a4": "If you set your profile to public or have submitted a job application, companies will be able to contact you through the contact information you provided or through the messaging system in JobDD.",
+      "a4": "If you set your profile to public or have submitted a job application, companies will be able to contact you through the contact information you provided or through the messaging system in WorksDD.",
       "q5": "Will my personal information be safe?",
       "a5": "We place the highest priority on the security of your personal information. Everything is kept secure and shared only with the companies you choose to apply to."
     }
   },
   "CookieConsent": {
     "title": "We use cookies 🍪",
-    "description": "JobDD uses cookies to present information that matches your interests and to improve your website experience. You can read more details at",
+    "description": "WorksDD uses cookies to present information that matches your interests and to improve your website experience. You can read more details at",
     "policyLink": "Cookie Policy",
     "decline": "Decline Cookies",
     "accept": "Accept All"
