@@ -413,12 +413,8 @@ function GenderAvatar({
   gender: string;
   avatarUrl: string | null;
 }) {
-  const defaultAvatar =
-    gender === "male"
-      ? "/images/avatar_male.webp"
-      : gender === "female"
-        ? "/images/avatar_female.webp"
-        : "/images/Proflie_SeekJobDD.webp";
+  const defaultAvatar = "/images/Proflie_SeekJobDD.webp";
+  
   return (
     <div className="w-14 h-14 rounded-2xl overflow-hidden border border-slate-200 shadow-inner relative bg-slate-100">
       <Image
