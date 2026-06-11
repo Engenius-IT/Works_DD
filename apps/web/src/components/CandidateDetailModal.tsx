@@ -635,7 +635,7 @@ export function CandidateDetailModal({ candidateId, onClose, isBookmarked, onBoo
                             </p>
 
                             <div className="flex gap-3 w-full">
-                              {!contactError?.includes('โควต้า') && (
+                              {!contactError?.includes('โควตา') && (
                                 <button
                                   onClick={() => handleShowContact(true)}
                                   className="flex-[2] py-3.5 bg-red-600 hover:bg-red-700 text-white text-xs rounded-2xl font-black shadow-lg shadow-red-200 transition-all active:scale-95"
