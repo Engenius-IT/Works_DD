@@ -176,3 +176,4 @@ bun run dev
 *   `apps/api/src/upload/upload.service.ts` — Integration กับ Supabase Storage
 *   `apps/api/src/search/search.service.ts` — Prisma portable search
 *   `.env.example` — ตัวอย่าง Environment Variables
+"# JobDD11_1" 
