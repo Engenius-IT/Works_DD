@@ -592,7 +592,8 @@
     "regional_description": "รวมประกาศงานทั้งหมดในภูมิภาค {region}",
     "jobs_found_in_region": "พบ {count} ตำแหน่งงานใน{region}",
     "loading": "กำลังโหลด...",
-    "view_all_jobs": "ดูคนสมัครทั้งหมด",
+    "view_all_jobs": "ดูงานทั้งหมด",
+    "view_all_resumes": "ดูเรซูเม่ทั้งหมด",
     "back_to_categories": "กลับไปหน้าหมวดงาน",
     "filters_label": "ตัวกรอง",
     "jobs_found_count": "พบ {count} ตำแหน่งงานใน{region}",
@@ -611,7 +612,8 @@
     },
     "buttons": {
       "back_home": "กลับหน้าหลัก",
-      "view_all_jobs": "ดูคนสมัครทั้งหมด"
+      "view_all_jobs": "ดูงานทั้งหมด",
+      "view_all_resumes": "ดูเรซูเม่ทั้งหมด"
     },
     "groups": {
       "position": "ตำแหน่งงาน",

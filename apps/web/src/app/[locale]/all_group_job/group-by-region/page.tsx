@@ -580,7 +580,7 @@ export default function AllGroupJobPage() {
             </Link>
             <Link href="/resumes" className="group inline-flex items-center justify-center gap-2.5 px-8 py-3.5 rounded-xl bg-[#020263] text-white font-bold hover:bg-[#0a0a7a] hover:shadow-lg hover:shadow-[#020263]/20 transition-all hover:-translate-y-0.5">
               <LayoutGrid className="w-5 h-5 stroke-2 group-hover:rotate-90 transition-transform duration-300" />
-              {t('buttons.view_all_jobs')}
+              {t('buttons.view_all_resumes')}
             </Link>
           </div>
         </div>
