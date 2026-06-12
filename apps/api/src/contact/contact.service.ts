@@ -5,8 +5,6 @@ import { ContactFormDto } from './dto/contact-form.dto';
 
 @Injectable()
 export class ContactService {
-  private transporter: nodemailer.Transporter;
-
   constructor(private configService: ConfigService) {}
 
   private getTransporter() {
