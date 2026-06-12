@@ -16,7 +16,9 @@ export class ContactService {
 
   async sendContactEmail(dto: ContactFormDto) {
     const { name, email, phone, subject, message } = dto;
-    const recipient = 'hr@engenius.co.th';
+    
+    // ดึงอีเมลผู้รับจาก Environment Variable หรือใช้ค่าเริ่มต้น
+    const recipient = this.configService.get<string>('CONTACT_RECIPIENT_EMAIL', 'hr@engenius.co.th');
 
     if (!this.resend) {
       console.error('Email configuration missing: RESEND_API_KEY is not defined.');
@@ -25,7 +27,7 @@ export class ContactService {
 
     try {
       const { data, error } = await this.resend.emails.send({
-        from: 'WorksDD Contact <onboarding@resend.dev>', // ในช่วงทดสอบต้องใช้เมลนี้ หรือโดเมนที่ Verify แล้ว
+        from: 'WorksDD Contact <onboarding@resend.dev>',
         to: recipient,
         replyTo: email,
         subject: `[Contact Us] ${subject}: จากคุณ ${name}`,
@@ -46,6 +48,7 @@ export class ContactService {
         throw new InternalServerErrorException('ไม่สามารถส่งข้อความได้ในขณะนี้ กรุณาลองใหม่อีกครั้งภายหลัง');
       }
 
+      console.log('Email sent successfully via Resend:', data?.id);
       return { success: true, message: 'Email sent successfully', id: data?.id };
     } catch (error) {
       console.error('Failed to send contact email:', error);
