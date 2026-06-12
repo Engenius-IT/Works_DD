@@ -1,15 +1,19 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ChevronDown, MessageCircleQuestion } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import { Link } from '@/i18n/routing';
+import { Link, useRouter, usePathname } from '@/i18n/routing';
+import { useSearchParams } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext'; // ดึงข้อมูล Auth Context ของโปรเจกต์
 
 export function FAQ() {
   const t = useTranslations('FAQ');
   const { user } = useAuth(); // เรียกใช้งานข้อมูล User ปัจจุบัน
   const [openIndex, setOpenIndex] = useState<number | null>(null);
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
 
   // เช็คว่าเป็นผู้ประกอบการหรือไม่ (ถ้าไม่ใช่ หรือยังไม่ Login จะถือว่าเป็นคนหางาน/Guest)
   const isEmployer = user?.role === 'EMPLOYER';
@@ -24,8 +28,46 @@ export function FAQ() {
     setOpenIndex(openIndex === index ? null : index);
   };
 
+  // ตรวจจับพารามิเตอร์ ?scroll=faq จาก URL และทำการเลื่อนหน้าจอลงมาที่ส่วน FAQ
+  useEffect(() => {
+    const scrollParam = searchParams.get('scroll');
+
+    // เช็กว่า useEffect ทำงานและดึงค่า Parameter ได้หรือไม่
+    console.log('FAQ useEffect triggered', scrollParam);
+
+    if (scrollParam === 'faq') {
+      const timer = setTimeout(() => {
+        const faqElement = document.getElementById('faq');
+        console.log('faqElement found:', !!faqElement);
+
+        if (faqElement) {
+          // คำนวณระยะเยื้อง (Offset) หักลบความสูงของกลุ่ม Navbar ออก 140px
+          const elementPosition = faqElement.getBoundingClientRect().top + window.scrollY;
+          const offsetPosition = elementPosition - 140; 
+
+          window.scrollTo({
+            top: offsetPosition,
+            behavior: 'smooth'
+          });
+
+          // ลบพารามิเตอร์ออกจาก URL โดยใช้ Router ของ Next.js เพื่อป้องกันปัญหา Soft Navigation
+          const newSearchParams = new URLSearchParams(searchParams.toString());
+          newSearchParams.delete('scroll');
+          const newQuery = newSearchParams.toString();
+          const newUrl = newQuery ? `${pathname}?${newQuery}` : pathname;
+          
+          // ลบ URL parameter ทิ้งโดยไม่ทำให้หน้าเว็บรีเฟรชหรือ Scroll กระตุก
+          router.replace(newUrl, { scroll: false });
+        }
+      }, 800); // หน่วงเวลาเป็น 800ms
+      
+      // ทำการเคลียร์ Timeout เผื่อกรณีที่ผู้ใช้สลับหน้าหรือ Component Unmount อย่างรวดเร็ว
+      return () => clearTimeout(timer);
+    }
+  }, [searchParams, pathname, router]);
+
   return (
-    <section className="py-16 bg-white relative overflow-hidden font-sans">
+    <section id="faq" className="py-16 bg-white relative overflow-hidden font-sans">
       {/* Background Decor */}
       <div className="absolute top-0 right-0 w-96 h-96 bg-red-500/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none" />
       <div className="absolute bottom-0 left-0 w-96 h-96 bg-blue-500/5 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2 pointer-events-none" />
