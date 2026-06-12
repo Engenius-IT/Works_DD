@@ -613,7 +613,8 @@
       "view_all_jobs": "View All Candidates"
     },
     "groups": {
-      "position": "resumes",
+      "position": "Job Positions",
+      "resume": "Resumes",
       "storefront": {
         "title": "Front-of-House & Retail",
         "title_href": "Front-of-House & Retail",

@@ -49,7 +49,7 @@
       "contact": "ติดต่อเรา",
       "help": "Help Center"
     },
-    "regionalCandidates": "คนสมัครตามภูมิภาค",
+    "regionalCandidates": "คนสมัครงานภูมิภาค",
     "regionalCandidatesSub": {
       "central": "คนสมัครภาคกลาง",
       "east": "คนสมัครภาคตะวันออก",
@@ -614,7 +614,8 @@
       "view_all_jobs": "ดูคนสมัครทั้งหมด"
     },
     "groups": {
-      "position": "เรซูเม่",
+      "position": "ตำแหน่งงาน",
+      "resume": "เรซูเม่",
       "storefront": {
         "title": "งานหน้าร้าน",
         "title_href": "งานหน้าร้าน",

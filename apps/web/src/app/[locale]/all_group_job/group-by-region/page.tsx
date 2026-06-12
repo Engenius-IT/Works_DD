@@ -512,7 +512,7 @@ function ItemCard({ item, accentColor, hoverBorderColor, countColor }: { item: G
       <span className="flex-1 font-semibold text-gray-700 text-[14px] sm:text-[15px] group-hover:text-gray-900 transition-colors leading-snug">{item.name}</span>
       <div className="shrink-0 text-right">
         <div className={`text-lg sm:text-xl font-black leading-none ${countColor}`}>{formatJobCount(item.count)}</div>
-        <div className="text-[11px] sm:text-xs text-gray-400 font-medium mt-1">{t("groups.position")}</div>
+        <div className="text-[11px] sm:text-xs text-gray-400 font-medium mt-1">{t("groups.resume")}</div>
       </div>
       <div className="shrink-0 opacity-0 group-hover:opacity-100 transition-all duration-300 translate-x-[-4px] group-hover:translate-x-0"><ChevronRight className="w-4 h-4 text-gray-400" /></div>
     </Link>
