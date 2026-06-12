@@ -1,4 +1,3 @@
-
 'use client';
 
 import { Link } from '@/i18n/routing';
@@ -33,6 +32,30 @@ export function SubNavbar({ userRole }: SubNavbarProps) {
             >
               {t('searchResumes')}
             </Link>
+
+            {/* Regional Candidates Dropdown */}
+            <div className="group relative">
+              <Link
+                href="/all_group_job/group-by-region"
+                className="flex items-center gap-1 py-2.5 hover:text-blue-200 transition-colors border-b-2 border-transparent hover:border-blue-200 whitespace-nowrap cursor-pointer"
+              >
+                {t('regionalCandidates')}
+                <svg className="w-4 h-4 ml-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </Link>
+              <div className="absolute top-full left-0 hidden group-hover:block bg-white text-gray-800 shadow-xl rounded-b-lg min-w-48 py-2 z-50 border border-t-0 border-gray-100">
+                {['central', 'east', 'north', 'northeast', 'south', 'west'].map((region) => (
+                  <Link
+                    key={region}
+                    href={`/resumes?region=${region}`}
+                    className="block px-4 py-2 hover:bg-blue-50 hover:text-(--color-primary) text-sm"
+                  >
+                    {t(`regionalCandidatesSub.${region}`)}
+                  </Link>
+                ))}
+              </div>
+            </div>
           </>
         ) : (
           /* (JOBSEEKER) | (Guest) */

@@ -233,6 +233,106 @@ const PROVINCE_KEYS = [
   "ubon_ratchathani",
 ];
 
+const REGION_PROVINCE_KEYS: Record<string, string[]> = {
+  bangkok: [
+    "bangkok",
+    "nakhon_pathom",
+    "nonthaburi",
+    "pathum_thani",
+    "samut_prakan",
+    "samut_sakhon",
+  ],
+  central: [
+    "bangkok",
+    "nakhon_pathom",
+    "nonthaburi",
+    "pathum_thani",
+    "samut_prakan",
+    "samut_sakhon",
+    "chainat",
+    "nakhon_nayok",
+    "nakhon_sawan",
+    "phra_nakhon_si_ayutthaya",
+    "lopburi",
+    "saraburi",
+    "sing_buri",
+    "suphan_buri",
+    "ang_thong",
+    "uthaithani",
+  ],
+  east: [
+    "chanthaburi",
+    "chachoengsao",
+    "chonburi",
+    "trat",
+    "prachinburi",
+    "rayong",
+    "sa_kaeo",
+  ],
+  north: [
+    "kamphaeng_phet",
+    "chiang_rai",
+    "chiang_mai",
+    "tak",
+    "nan",
+    "phayao",
+    "phichit",
+    "phitsanulok",
+    "phetchabun",
+    "phrae",
+    "mae_hong_son",
+    "lampang",
+    "lamphun",
+    "sukhothai",
+    "uttaradit",
+  ],
+  northeast: [
+    "kalasin",
+    "khon_kaen",
+    "chaiyaphum",
+    "nakhon_phanom",
+    "nakhon_ratchasima",
+    "bueng_kan",
+    "buriram",
+    "maha_sarakham",
+    "mukdahan",
+    "yasothon",
+    "roi_et",
+    "loei",
+    "sisaket",
+    "sakon_nakhon",
+    "surin",
+    "nong_khai",
+    "nong_bua_lam_phu",
+    "amnat_charoen",
+    "udon_thani",
+    "ubon_ratchathani",
+  ],
+  south: [
+    "krabi",
+    "chumphon",
+    "trang",
+    "nakhon_si_thammarat",
+    "narathiwat",
+    "pattani",
+    "phang_nga",
+    "phatthalung",
+    "phuket",
+    "yala",
+    "ranong",
+    "songkhla",
+    "satun",
+    "surat_thani",
+  ],
+  west: [
+    "kanchanaburi",
+    "phetchaburi",
+    "prachuap_khiri_khan",
+    "ratchaburi",
+    "samut_songkhram",
+  ],
+};
+
 const FACULTIES = [
   "คณะเกษตรศาสตร์",
   "คณะครุศาสตร์",
@@ -774,7 +874,29 @@ export default function ResumeDirectoryPage({}: Resumesearch = {}) {
       tt("provinces.samut_sakhon"),
     ];
 
+    const selectedRegion = searchParams.get("region") || "";
+    const selectedRegionProvinceNames = selectedRegion
+      ? (REGION_PROVINCE_KEYS[selectedRegion] || []).map((key) =>
+          tt(`provinces.${key}`),
+        )
+      : [];
+
     return candidates.filter((candidate) => {
+      if (selectedRegionProvinceNames.length > 0) {
+        const matchCurrentProvince = selectedRegionProvinceNames.includes(
+          candidate.province,
+        );
+
+        const matchDesiredProvince = candidate.desiredProvinces?.some((dp) => {
+          const candidateProvinceName =
+            typeof dp === "string" ? dp : dp.provinceName;
+
+          return selectedRegionProvinceNames.includes(candidateProvinceName);
+        });
+
+        if (!matchCurrentProvince && !matchDesiredProvince) return false;
+      }
+
       if (filters.desiredProvinces) {
         const target = filters.desiredProvinces;
         const isSearchingVicinity =
@@ -923,7 +1045,7 @@ export default function ResumeDirectoryPage({}: Resumesearch = {}) {
 
       return true;
     });
-  }, [candidates, filters]);
+  }, [candidates, filters, searchParams, tt]);
 
   const resultText = useMemo(
     () => `${filteredCandidates.length.toLocaleString()}`,

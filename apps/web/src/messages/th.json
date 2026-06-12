@@ -48,6 +48,15 @@
       "news": "ข่าวและกิจกรรม",
       "contact": "ติดต่อเรา",
       "help": "Help Center"
+    },
+    "regionalCandidates": "คนสมัครตามภูมิภาค",
+    "regionalCandidatesSub": {
+      "central": "คนสมัครภาคกลาง",
+      "east": "คนสมัครภาคตะวันออก",
+      "north": "คนสมัครภาคเหนือ",
+      "northeast": "คนสมัครภาคตะวันออกเฉียงเหนือ",
+      "south": "คนสมัครภาคใต้",
+      "west": "คนสมัครภาคตะวันตก"
     }
   },
   "ContactUs": {
@@ -583,7 +592,7 @@
     "regional_description": "รวมประกาศงานทั้งหมดในภูมิภาค {region}",
     "jobs_found_in_region": "พบ {count} ตำแหน่งงานใน{region}",
     "loading": "กำลังโหลด...",
-    "view_all_jobs": "ดูงานทั้งหมด",
+    "view_all_jobs": "ดูคนสมัครทั้งหมด",
     "back_to_categories": "กลับไปหน้าหมวดงาน",
     "filters_label": "ตัวกรอง",
     "jobs_found_count": "พบ {count} ตำแหน่งงานใน{region}",
@@ -602,10 +611,10 @@
     },
     "buttons": {
       "back_home": "กลับหน้าหลัก",
-      "view_all_jobs": "ดูงานทั้งหมด"
+      "view_all_jobs": "ดูคนสมัครทั้งหมด"
     },
     "groups": {
-      "position": "ตำแหน่ง",
+      "position": "เรซูเม่",
       "storefront": {
         "title": "งานหน้าร้าน",
         "title_href": "งานหน้าร้าน",
@@ -637,8 +646,8 @@
         }
       },
       "regional": {
-        "title": "งานตามพื้นที่",
-        "subtitle": "ค้นหางานตามภูมิภาคทั่วประเทศไทย",
+        "title": "คนสมัครตามพื้นที่",
+        "subtitle": "ค้นหาผู้สมัครตามภูมิภาคทั่วประเทศไทย",
         "items": {
           "bangkok": "กรุงเทพและปริมณฑล",
           "central": "ภาคกลาง",
