@@ -168,13 +168,19 @@ function TextBlock({ text }: { text: string }) {
   if (isHtml) {
     return (
       <div
-        className="text-[#000000] text-sm leading-relaxed prose prose-sm max-w-none
-          prose-headings:text-gray-800 prose-headings:font-semibold
-          prose-h1:text-xl prose-h2:text-lg prose-h3:text-base
-          prose-ul:pl-5 prose-ol:pl-5 prose-li:my-0.5
-          prose-strong:text-gray-800 prose-em:text-gray-600
-          prose-hr:border-gray-200"
-        dangerouslySetInnerHTML={{ __html: translatedText }}
+       className="
+text-[#000000] text-sm leading-relaxed
+prose prose-sm max-w-none
+prose-headings:text-gray-800 prose-headings:font-semibold
+prose-h1:text-xl prose-h2:text-lg prose-h3:text-base
+prose-ul:pl-5 prose-ol:pl-5 prose-li:my-0.5
+prose-strong:text-gray-800 prose-em:text-gray-600
+prose-hr:border-gray-200
+overflow-hidden
+break-words
+[overflow-wrap:anywhere]
+whitespace-pre-wrap
+"       dangerouslySetInnerHTML={{ __html: translatedText }}
       />
     );
   }

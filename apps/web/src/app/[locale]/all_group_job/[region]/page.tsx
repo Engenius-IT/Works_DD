@@ -151,25 +151,70 @@ function JobCard({
 
   return (
     <div
-      className={`bg-white border-2 rounded-xl overflow-hidden transition-all duration-300 cursor-pointer p-6 ${isSelected
-        ? 'border-[#020263] ring-2 ring-[#020263]/20 shadow-lg scale-[1.01]'
+      className={`bg-white border-2 rounded-3xl overflow-hidden transition-all duration-300 cursor-pointer ${isSelected
+        ? 'border-[#020263] ring-2 ring-[#020263]/20 shadow-lg'
         : 'border-gray-200 drop-shadow-md hover:drop-shadow-xl hover:border-[#020263]'
         }`}
       onClick={() => (onSelect ? onSelect(job) : router.push(`/jobs/${job.slug}`))}
     >
-      <div className="flex items-stretch gap-5 px-6 py-5">
-        <div className="shrink-0 flex items-start pt-0.5">
+      <div className="grid grid-cols-[96px_minmax(0,1fr)] gap-6 p-7">
+        <div className="shrink-0 flex items-start pt-1">
           <CompanyLogo company={job.company} size="lg" />
         </div>
 
-        <div className="flex-1 min-w-0 flex flex-col justify-between gap-3">
-          <h3 className="font-semibold text-[#020263] text-[20px] leading-snug group-hover:text-blue-600 transition-colors line-clamp-2">
-            {job.title}
-          </h3>
+        <div className="min-w-0 flex flex-col gap-4">
+          <div className="flex items-start justify-between gap-4">
+            <h3 className="font-bold text-[#020263] text-[22px] leading-snug group-hover:text-blue-600 transition-colors line-clamp-2 min-w-0">
+              {job.title}
+            </h3>
 
-          <div className="flex flex-col gap-1 text-sm">
-            <div className="flex items-center gap-1.5 text-gray-700">
-              <span className="text-[#000000] font-semibold shrink-0 w-[40px]">บริษัท :</span>
+            <div className="shrink-0 flex flex-col items-end gap-3">
+              <span className="flex items-center gap-1 text-xs text-gray-400 whitespace-nowrap">
+                <svg
+                  className="w-3.5 h-3.5 shrink-0"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth={1.5}
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
+                  />
+                </svg>
+                {timeAgo(job.createdAt)}
+              </span>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onToggleSave(job.id);
+                }}
+                title={isSaved ? 'ยกเลิกบันทึก' : 'บันทึกงาน'}
+                className={`flex items-center gap-1 transition-colors ${isSaved ? 'text-[#E00016] hover:text-[#E00016]/80' : 'text-gray-300 hover:text-[#E00016]/80'
+                  }`}
+              >
+                <svg
+                  className="w-5 h-5"
+                  viewBox="0 0 24 24"
+                  fill={isSaved ? 'currentColor' : 'none'}
+                  stroke="currentColor"
+                  strokeWidth={1.5}
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0 1 11.186 0Z"
+                  />
+                </svg>
+                {saveCount > 0 && <span className="text-xs font-medium">{saveCount}</span>}
+              </button>
+            </div>
+          </div>
+
+          <div className="grid gap-2 text-sm">
+            <div className="grid grid-cols-[88px_minmax(0,1fr)] items-start gap-3 text-gray-700">
+              <span className="text-[#000000] font-semibold">บริษัท :</span>
               <div className="flex items-center gap-1.5 min-w-0">
                 {isVerifiedCompany(job.company) && (
                   <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
@@ -177,14 +222,13 @@ function JobCard({
                 <span className="font-bold text-[#020263] truncate">{job.company.name}</span>
               </div>
             </div>
-            <div className="flex items-start gap-1.5 text-[#020263] ">
-              <span className="text-[#000000] font-bold shrink-0 w-[120px]">
-                สถานที่ปฏิบัติงาน :
-              </span>
-              <span className="text-[#000000] line-clamp-2">
+
+            <div className="grid grid-cols-[88px_minmax(0,1fr)] items-start gap-3 text-[#020263]">
+              <span className="text-[#000000] font-bold">สถานที่ :</span>
+              <span className="text-[#000000] break-words leading-relaxed">
                 {job.companyAddress
-                  ? job.companyAddress.length > 60
-                    ? job.companyAddress.slice(0, 60) + '...'
+                  ? job.companyAddress.length > 80
+                    ? job.companyAddress.slice(0, 80) + '...'
                     : job.companyAddress
                   : job.locationProvince
                     ? job.locationProvince +
@@ -192,9 +236,12 @@ function JobCard({
                     : 'ไม่ระบุสถานที่'}
               </span>
             </div>
-            <div className="flex items-center gap-1.5 text-gray-700">
-              <span className="text-[#000000] font-bold shrink-0 w-[60px]">เงินเดือน :</span>
-              <span className="text-[#000000]">{salaryText(job)}</span>
+
+            <div className="grid grid-cols-[88px_minmax(0,1fr)] items-start gap-3 text-gray-700">
+              <span className="text-[#000000] font-bold">เงินเดือน :</span>
+              <span className="text-[#000000] break-words leading-relaxed">
+                {salaryText(job)}
+              </span>
             </div>
           </div>
 
@@ -236,7 +283,7 @@ function JobCard({
           </div>
 
           {job.transportation && job.transportation.length > 0 && (
-            <div className="flex flex-wrap items-center gap-1.5 mt-2">
+            <div className="flex flex-wrap items-center gap-1.5">
               {job.transportation.map((t) => {
                 const iconMap: Record<string, React.ElementType> = {
                   รถเมย์: Bus,
@@ -260,70 +307,30 @@ function JobCard({
               })}
             </div>
           )}
-        </div>
 
-        <div className="shrink-0 flex flex-col items-end justify-between gap-4 min-w-[160px]">
-          <div className="flex flex-col items-end gap-1.5">
-            {isNew && (
-              <span className="inline-block w-fit text-xs font-semibold text-white whitespace-nowrap bg-[#10B981] px-10 py-1 rounded-full hover:bg-[#16A34A]/80 transition-all duration-300 cursor-pointer">
+          <div className="flex items-center justify-between gap-4 pt-2">
+            {isNew ? (
+              <span className="inline-block w-fit text-xs font-semibold text-white whitespace-nowrap bg-[#10B981] px-5 py-1.5 rounded-full hover:bg-[#16A34A]/80 transition-all duration-300 cursor-pointer">
                 สมัครด่วน
               </span>
+            ) : (
+              <span />
             )}
-            <span className="flex items-center gap-1 text-xs text-gray-400 whitespace-nowrap">
-              <svg
-                className="w-3.5 h-3.5 shrink-0"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth={1.5}
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
-                />
-              </svg>
-              {timeAgo(job.createdAt)}
-            </span>
+
             <button
               onClick={(e) => {
                 e.stopPropagation();
-                onToggleSave(job.id);
+                if (onSelect) {
+                  onSelect(job);
+                } else {
+                  router.push(`/jobs/${job.slug}`);
+                }
               }}
-              title={isSaved ? 'ยกเลิกบันทึก' : 'บันทึกงาน'}
-              className={`flex items-center gap-1 mt-1 transition-colors ${isSaved ? 'text-[#E00016] hover:text-[#E00016]/80' : 'text-gray-300 hover:text-[#E00016]/80'
-                }`}
+              className="bg-[#E00016] hover:bg-[#A80010]/80 text-white text-sm font-semibold px-7 py-3 rounded-full transition-colors shadow-sm whitespace-nowrap"
             >
-              <svg
-                className="w-5 h-5"
-                viewBox="0 0 24 24"
-                fill={isSaved ? 'currentColor' : 'none'}
-                stroke="currentColor"
-                strokeWidth={1.5}
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0 1 11.186 0Z"
-                />
-              </svg>
-              {saveCount > 0 && <span className="text-xs font-medium">{saveCount}</span>}
+              อ่านรายละเอียดงาน
             </button>
           </div>
-
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              if (onSelect) {
-                onSelect(job);
-              } else {
-                router.push(`/jobs/${job.slug}`);
-              }
-            }}
-            className="bg-[#E00016] hover:bg-[#A80010]/80 text-white text-xs font-semibold px-5 py-2.5 rounded-full transition-colors shadow-sm whitespace-nowrap w-full text-center"
-          >
-            อ่านรายละเอียดงาน
-          </button>
         </div>
       </div>
     </div>
@@ -364,13 +371,13 @@ function TextBlock({ content }: { content?: string }) {
   if (isHtml) {
     return (
       <div
-        className="prose prose-sm max-w-none text-gray-700 prose-p:leading-relaxed prose-li:my-1 marker:text-[#020263]"
+        className="prose prose-sm max-w-none overflow-x-hidden break-words text-gray-700 prose-p:leading-relaxed prose-p:break-words prose-li:my-1 prose-li:break-words marker:text-[#020263] [&_*]:max-w-full [&_*]:break-words"
         dangerouslySetInnerHTML={{ __html: content }}
       />
     );
   }
   return (
-    <div className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">{content}</div>
+    <div className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap break-words overflow-x-hidden">{content}</div>
   );
 }
 
@@ -384,7 +391,7 @@ function DetailSection({
   children: React.ReactNode;
 }) {
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm hover:shadow-md transition-shadow">
+    <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm hover:shadow-md transition-shadow overflow-hidden">
       <div className="flex items-center gap-2.5 mb-5 pb-4 border-b border-gray-100">
         <div className="p-2 bg-[#020263]/5 rounded-xl text-[#020263]">
           <Icon className="w-5 h-5" />
@@ -492,7 +499,7 @@ function JobDetailPanel({
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-4 sm:p-6 custom-scrollbar">
+      <div className="flex-1 overflow-y-auto p-4 sm:p-6 pr-6 sm:pr-8 custom-scrollbar">
         {detailLoading ? (
           <SkeletonSection />
         ) : (
@@ -920,7 +927,7 @@ function RegionJobsContent() {
         <div className="flex gap-5 items-start">
           {/* Left: Job list */}
           <div
-            className={`flex flex-col gap-4 transition-all duration-300 ${selectedJob ? 'w-[45%] shrink-0' : 'w-full'}`}
+            className="flex flex-col gap-4 transition-all duration-300 w-full"
           >
             {!loading && jobs.length > 0 && (
               <div className="flex flex-col gap-4">
@@ -978,28 +985,25 @@ function RegionJobsContent() {
             )}
           </div>
 
-          {/* Right: Detail panel (sticky) */}
           {selectedJob && (
-            <div
-              ref={rightPanelRef}
-              className="flex-1 sticky top-6 h-[calc(100vh-6rem)] bg-white rounded-2xl border-2 border-[#020263]/20 shadow-xl overflow-hidden flex flex-col animate-in slide-in-from-right-4 duration-300"
-              style={{ minWidth: 0 }}
-            >
-              <JobDetailPanel
-                job={selectedJob}
-                detailJob={detailJob}
-                detailLoading={detailLoading}
-                onClose={() => {
-                  setSelectedJob(null);
-                  setDetailJob(null);
-                  setApplyStatus('idle');
-                }}
-                onApply={handleApply}
-                isApplying={isApplying}
-                applyStatus={applyStatus}
-              />
-            </div>
-          )}
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+    <div className="w-full max-w-6xl h-[90vh] overflow-hidden bg-white rounded-3xl shadow-2xl">
+      <JobDetailPanel
+        job={selectedJob}
+        detailJob={detailJob}
+        detailLoading={detailLoading}
+        onClose={() => {
+          setSelectedJob(null);
+          setDetailJob(null);
+          setApplyStatus('idle');
+        }}
+        onApply={handleApply}
+        isApplying={isApplying}
+        applyStatus={applyStatus}
+      />
+    </div>
+  </div>
+)}
         </div>
       </main>
     </>
