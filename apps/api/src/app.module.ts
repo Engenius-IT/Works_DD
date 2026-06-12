@@ -16,6 +16,7 @@ import { AdminModule } from './admin/admin.module';
 import { CookieConsentModule } from './cookie-consent/cookie-consent.module';
 import { PackagesModule } from './packages/packages.module';
 import { PaymentModule } from './payments/payment.module';
+import { ContactModule } from './contact/contact.module';
 
 @Module({
   imports: [
@@ -45,6 +46,7 @@ import { PaymentModule } from './payments/payment.module';
     BookmarksModule,
     PackagesModule,
     PaymentModule,
+    ContactModule,
   ],
 })
 export class AppModule { }
