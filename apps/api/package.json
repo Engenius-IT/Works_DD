@@ -25,8 +25,8 @@
   "dependencies": {
     "@google/genai": "^1.50.1",
     "@google/generative-ai": "^0.24.1",
-    "@jobsabuy/shared-types": "workspace:*",
-    "@jobsabuy/validators": "workspace:*",
+    "@jobsabuy/shared-types": "*" ,
+    "@jobsabuy/validators": "*" ,
     "@nestjs/common": "^11.0.0",
     "@nestjs/config": "^4.0.0",
     "@nestjs/core": "^11.0.0",
@@ -39,6 +39,7 @@
     "class-validator": "^0.14.0",
     "express": "^5.0.1",
     "multer": "^2.0.2",
+    "resend": "^4.1.2",
     "mysql2": "^3.11.3",
     "omise": "^1.1.0",
     "pdf-parse": "^1.1.1",

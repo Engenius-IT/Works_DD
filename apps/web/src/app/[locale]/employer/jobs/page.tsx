@@ -17,6 +17,7 @@ import {
   MoreVertical,
   Rocket,
   Search,
+  History,
 } from 'lucide-react';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
@@ -241,9 +242,82 @@ export default function EmployerJobsPage() {
   const [message, setMessage] = useState('');
   const [activeTab, setActiveTab] = useState('all');
   const [selectedJobIndex, setSelectedJobIndex] = useState(0);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState(''); // สำหรับกรองข้อมูลจริง (ทำงานเมื่อกด Enter/เลือก)
+  const [inputText, setInputText] = useState(''); // สำหรับเก็บค่าระหว่างที่ผู้ใช้กำลังพิมพ์
+  const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState('newest'); // <-- Added Sort State
+  // --- เพิ่ม State สำหรับ Search History ---
+  const [searchHistory, setSearchHistory] = useState<string[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+
+  // โหลดประวัติจาก Local Storage เมื่อเปิดหน้าเว็บ
+  useEffect(() => {
+    const savedHistory = localStorage.getItem('jobSearchHistory');
+    if (savedHistory) {
+      try {
+        setSearchHistory(JSON.parse(savedHistory));
+      } catch (e) {}
+    }
+  }, []);
+
+  // --- สร้างรายการคำแนะนำ (Suggestions) โดยรวบคำซ้ำพิมพ์เล็ก/พิมพ์ใหญ่ ---
+    const getSuggestions = () => {
+      const query = inputText.toLowerCase().trim();
+      if (!query) return [];
+
+      const uniqueMap = new Map<string, { text: string; type: 'history' | 'job' }>();
+
+      // 1. ประวัติที่ตรงกัน (เอาอันที่พิมพ์มาแสดง)
+      searchHistory.forEach((h) => {
+        if (h.toLowerCase().includes(query)) {
+          uniqueMap.set(h.toLowerCase(), { text: h, type: 'history' });
+        }
+      });
+
+      // 2. ชื่อตำแหน่งงานในระบบ (ไม่ให้ซ้ำกับประวัติ และรวบคำที่สะกดเหมือนกันแต่พิมพ์เล็กใหญ่ต่างกัน)
+      jobs.forEach((j) => {
+        const lowerTitle = j.title.toLowerCase();
+        if (lowerTitle.includes(query) && !uniqueMap.has(lowerTitle)) {
+          uniqueMap.set(lowerTitle, { text: j.title, type: 'job' });
+        }
+      });
+
+      return Array.from(uniqueMap.values()).slice(0, 6); // แสดงสูงสุด 6 รายการ
+    };
+
+    const suggestions = getSuggestions();
+
+    // ฟังก์ชันสั่งค้นหาจริง และบันทึกประวัติ
+    const executeSearch = (term: string) => {
+      const trimmedTerm = term.trim();
+      setSearchQuery(trimmedTerm); // สั่งให้ระบบกรองข้อมูล
+      setInputText(trimmedTerm); // เปลี่ยนคำในช่องค้นหาให้ตรงกับสิ่งที่เลือก
+      setSelectedJobIndex(0);
+      setShowSuggestions(false);
+
+      if (!trimmedTerm) return;
+
+      // ลบคำซ้ำเดิมออก (ไม่สนใจพิมพ์เล็กพิมพ์ใหญ่) แล้วเอาคำที่หาล่าสุดไปไว้บนสุด
+      const newHistory = [
+        trimmedTerm,
+        ...searchHistory.filter((h) => h.toLowerCase() !== trimmedTerm.toLowerCase()),
+      ];
+      setSearchHistory(newHistory);
+      localStorage.setItem('jobSearchHistory', JSON.stringify(newHistory));
+    };
+
+    const handleSuggestionClick = (term: string) => {
+      executeSearch(term);
+    };
+
+    // ฟังก์ชันลบประวัติรายตัว
+    const removeHistory = (termToRemove: string, e: React.MouseEvent) => {
+      e.stopPropagation(); // ป้องกันไม่ให้ทะลุไปกดคลิกที่ตัวเลือก
+      const newHistory = searchHistory.filter((term) => term !== termToRemove);
+      setSearchHistory(newHistory);
+      localStorage.setItem('jobSearchHistory', JSON.stringify(newHistory));
+    };
+
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -311,17 +385,26 @@ export default function EmployerJobsPage() {
     setTimeout(() => setMessage(''), 3000);
   };
 
-  /* Filtered and Sorted jobs */
+/* Filtered and Sorted jobs */
   const filteredJobs = jobs
     .filter((j) => {
-      // Tab "ปิดรับสมัครแล้ว" ให้โชว์แต่งานที่ status = 'CLOSED'
-      if (activeTab === 'CLOSED') return j.status === 'CLOSED';
-      // Tab อื่นๆ ให้โชว์งานที่ยังไม่ปิดรับสมัคร (status !== 'CLOSED')
-      if (j.status === 'CLOSED') return false;
+      // --- 1. เช็คเงื่อนไขตาม Tab ---
+      if (activeTab === 'CLOSED') {
+        if (j.status !== 'CLOSED') return false; // ถ้าอยู่แท็บปิดรับสมัคร แต่งานยังไม่ปิด ให้ซ่อน
+      } else {
+        if (j.status === 'CLOSED') return false; // ถ้าอยู่แท็บอื่น แต่งานปิดแล้ว ให้ซ่อน
+        if (activeTab !== 'all' && j.jobType !== activeTab) return false; // กรองตามประเภทงาน
+      }
 
-      // Filter by JobType if not "all"
-      if (activeTab !== 'all') return j.jobType === activeTab;
-      return true;
+      // --- 2. เช็คเงื่อนไขตามคำค้นหา (Search) ---
+      if (searchQuery) {
+        const keyword = searchQuery.toLowerCase().trim();
+        if (!j.title.toLowerCase().includes(keyword)) {
+          return false; // ถ้าชื่อตำแหน่งงาน ไม่มีคำที่ค้นหา ให้ซ่อน
+        }
+      }
+
+      return true; // ถ้าผ่านทุกเงื่อนไข ให้แสดงผล
     })
     .sort((a, b) => {
       if (sortBy === 'popular') return b.viewCount - a.viewCount;
@@ -389,8 +472,8 @@ export default function EmployerJobsPage() {
           </div>
         )}
 
-        {/* ─── Empty State ─── */}
-        {filteredJobs.length === 0 ? (
+{/* ─── Empty State แบบโกลบอล (โชว์เมื่อผู้ใช้ยังไม่เคยลงประกาศงานเลยสักงานเดียว) ─── */}
+        {jobs.length === 0 ? (
           <div className="text-center py-20">
             <div className="text-5xl mb-4">📋</div>
             <div className="text-gray-500 font-medium mb-2">ยังไม่มีประกาศงาน</div>
@@ -405,259 +488,286 @@ export default function EmployerJobsPage() {
         ) : (
           /* ─── Grid Layout ─── */
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-            {/* ───── Card 1: Job Detail (2 cols) ───── */}
-            <div className="lg:col-span-2 bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-              {/* If multiple jobs, allow selection */}
-              {filteredJobs.length > 1 && (
-                <div className="px-5 pt-4 pb-2 border-b border-gray-100">
-                  <div className="flex gap-2 mb-3">
-                    <div className="relative flex-1">
-                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
-                      <input
-                        type="text"
-                        value={searchQuery}
-                        onChange={(e) => {
-                          setSearchQuery(e.target.value);
+            {/* ───── Card 1: Job Detail & Search (2 cols) ───── */}
+            <div className="lg:col-span-2 flex flex-col gap-5">
+              
+              {/* --- กล่องค้นหา (แยกออกมาเป็นกล่องด้านบนสุด) --- */}
+              <div className="bg-white rounded-xl shadow-sm border border-gray-100 px-5 pt-4 pb-2">
+                <div className="flex gap-2 mb-3">
+                  <div className="relative flex-1">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                    
+                    <input
+                      type="text"
+                      value={inputText}
+                      onChange={(e) => {
+                        setInputText(e.target.value);
+                        setShowSuggestions(true);
+                        if (e.target.value === '') {
+                           setSearchQuery('');
+                           setSelectedJobIndex(0);
+                        }
+                      }}
+                      onFocus={() => setShowSuggestions(true)}
+                      onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          executeSearch(inputText);
+                        }
+                      }}
+                      placeholder="ค้นหาชื่อตำแหน่งงาน... (กด Enter เพื่อค้นหา)"
+                      className={`w-full pl-9 pr-10 py-2 text-sm border focus:outline-none transition-all
+                        ${
+                          inputText 
+                            ? 'bg-[#020263] text-white border-[#00003D] placeholder:text-gray-400' 
+                            : 'bg-white text-gray-800 border-gray-200 focus:border-[#020263] focus:ring-1 focus:ring-[#020263]'
+                        }
+                        ${showSuggestions && suggestions.length > 0 ? 'rounded-t-lg border-b-0' : 'rounded-lg'}
+                      `}
+                    />
+
+                    {inputText && (
+                      <button
+                        onClick={() => {
+                          setInputText('');
+                          setSearchQuery('');
                           setSelectedJobIndex(0);
+                          setShowSuggestions(false);
                         }}
-                        placeholder="ค้นหาชื่อตำแหน่งงาน..."
-                        className="w-full text-white pl-9 pr-4 py-2 text-sm bg-[#020263] border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00003D] focus:border-[#00003D] placeholder:text-gray-400 transition-all"
-                      />
-                      {searchQuery && (
-                        <button
-                          onClick={() => {
-                            setSearchQuery('');
-                            setSelectedJobIndex(0);
-                          }}
-                          className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
-                        >
-                          <XCircle className="w-4 h-4" />
-                        </button>
-                      )}
-                    </div>
-                    {/* Sort Dropdown */}
-                    <div className="relative shrink-0">
-                      <select
-                        value={sortBy}
-                        onChange={(e) => {
-                          setSortBy(e.target.value);
-                          setSelectedJobIndex(0);
-                        }}
-                        className="appearance-none pl-3 pr-8 py-2 bg-white border border-gray-200 text-gray-600 text-sm rounded-lg focus:outline-none focus:ring-2 focus:ring-[#020263] min-w-[130px]"
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white transition-colors z-10"
                       >
-                        <option value="newest">เพิ่มล่าสุด</option>
-                        <option value="applicants">มีผู้สมัครเยอะสุด</option>
-                        <option value="popular">ยอดเข้าชมเยอะสุด</option>
-                      </select>
-                      <ChevronDown className="w-4 h-4 text-gray-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-                    </div>
+                        <XCircle className="w-4 h-4" />
+                      </button>
+                    )}
+
+                    {/* Dropdown Autocomplete */}
+                    {showSuggestions && suggestions.length > 0 && (
+                      <div className="absolute top-full left-0 right-0 bg-white border border-gray-200 border-t-0 rounded-b-lg shadow-lg z-50 overflow-hidden">
+                        <ul>
+                          {suggestions.map((item, index) => (
+                            <li 
+                              key={index}
+                              onMouseDown={(e) => {
+                                e.preventDefault(); 
+                                handleSuggestionClick(item.text);
+                              }}
+                              className="flex items-center gap-3 px-4 py-2.5 hover:bg-slate-50 cursor-pointer transition-colors text-sm text-gray-700"
+                            >
+                              {item.type === 'history' ? (
+                                <History className="w-4 h-4 text-gray-400 shrink-0" />
+                              ) : (
+                                <Search className="w-4 h-4 text-gray-400 shrink-0" />
+                              )}
+                              <span className="truncate">{item.text}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
                   </div>
-                  {/* Job pills */}
-                  <div className="flex gap-2 overflow-x-auto pb-1">
-                    {filteredJobs
-                      .filter((job) => job.title.toLowerCase().includes(searchQuery.toLowerCase()))
-                      .map((job) => {
-                        const originalIdx = filteredJobs.indexOf(job);
-                        return (
-                          <button
-                            key={job.id}
-                            onClick={() => {
-                              setSelectedJobIndex(originalIdx);
-                              setDropdownOpen(false);
-                            }}
-                            className={`whitespace-nowrap text-xs px-3 py-1.5 rounded-full font-medium transition-colors ${originalIdx === selectedJobIndex
-                              ? 'bg-[#020263] text-white'
-                              : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
-                              }`}
-                          >
-                            {job.title}
-                          </button>
-                        );
-                      })}
-                    {filteredJobs.filter((job) =>
-                      job.title.toLowerCase().includes(searchQuery.toLowerCase()),
-                    ).length === 0 && (
-                        <p className="text-xs text-gray-400 py-1">ไม่พบตำแหน่งงานที่ค้นหา</p>
-                      )}
+                  
+                  {/* Sort Dropdown */}
+                  <div className="relative shrink-0">
+                    <select
+                      value={sortBy}
+                      onChange={(e) => {
+                        setSortBy(e.target.value);
+                        setSelectedJobIndex(0);
+                      }}
+                      className="appearance-none pl-3 pr-8 py-2 bg-white border border-gray-200 text-gray-600 text-sm rounded-lg focus:outline-none focus:ring-2 focus:ring-[#020263] min-w-[130px]"
+                    >
+                      <option value="newest">เพิ่มล่าสุด</option>
+                      <option value="applicants">มีผู้สมัครเยอะสุด</option>
+                      <option value="popular">ยอดเข้าชมเยอะสุด</option>
+                    </select>
+                    <ChevronDown className="w-4 h-4 text-gray-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                   </div>
                 </div>
-              )}
-
-              {selectedJob && (
-                <div className="p-5">
-                  <div className="flex flex-col sm:flex-row gap-5">
-                    {/* Thumbnail placeholder */}
-                    <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-xl border border-gray-100 bg-white flex items-center justify-center shrink-0 overflow-hidden shadow-sm">
-                      {selectedJob.company?.logoUrl ? (
-                        <img
-                          src={selectedJob.company.logoUrl}
-                          alt={selectedJob.company.name}
-                          className="w-full h-full object-contain p-2"
-                        />
-                      ) : (
-                        <div className="w-full h-full bg-[#020263] text-white flex items-center justify-center text-xl font-bold">
-                          {selectedJob.company?.name?.charAt(0)?.toUpperCase() || '?'}
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Info */}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-start justify-between gap-2">
-                        <h2 className="font-bold text-[#020263] text-base leading-snug">
-                          {selectedJob.title}
-                        </h2>
-                        <div className="relative">
-                          <button
-                            onClick={() => setDropdownOpen(!dropdownOpen)}
-                            className="text-gray-400 hover:text-gray-600 transition-colors p-1 rounded-full hover:bg-gray-100"
-                          >
-                            <MoreVertical className="w-5 h-5" />
-                          </button>
-                          {dropdownOpen && (
-                            <>
-                              <div className="fixed inset-0 z-10" onClick={() => setDropdownOpen(false)}></div>
-                              <div className="absolute right-0 mt-1 w-40 bg-white border border-gray-100 rounded-xl shadow-lg z-20 py-1 overflow-hidden">
-                                <button
-                                  onClick={() => {
-                                    setDropdownOpen(false);
-                                    close(selectedJob.id);
-                                  }}
-                                  disabled={actionLoading === selectedJob.id}
-                                  className="w-full text-left px-4 py-2.5 text-sm text-[#E00016] hover:bg-[#E00016]/10 transition-colors disabled:opacity-50 flex items-center gap-2 font-medium"
-                                >
-                                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
-                                  </svg>
-                                  ปิดรับสมัคร (เลิกเผยแพร่)
-                                </button>
-                              </div>
-                            </>
-                          )}
-                        </div>
-                      </div>
-
-                      {/* Badges */}
-                      <div className="flex flex-wrap gap-2 mt-2">
-                        <span
-                          className={`text-[11px] px-2.5 py-0.5 rounded-full font-medium ${STATUS_LABEL[selectedJob.status]?.color || 'bg-gray-100 text-gray-600'
-                            }`}
-                        >
-                          {STATUS_LABEL[selectedJob.status]?.label || selectedJob.status}
-                        </span>
-                        <span className="text-[11px] px-2.5 py-0.5 rounded-full font-medium bg-gray-100 text-gray-500">
-                          {JOB_TYPE_LABEL[selectedJob.jobType] || selectedJob.jobType}
-                        </span>
-                      </div>
-
-                      {/* Details */}
-                      <div className="mt-3 space-y-1.5 text-xs text-gray-500">
-                        <div className="flex items-center gap-1.5">
-                          <svg
-                            className="w-3.5 h-3.5 text-gray-400 shrink-0"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                            strokeWidth={2}
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8V7m0 1v8m0 0v1"
-                            />
-                          </svg>
-                          <span>
-                            เงินเดือน:{' '}
-                            {selectedJob.salaryVisible && selectedJob.salaryMin
-                              ? `${selectedJob.salaryMin.toLocaleString()}${selectedJob.salaryMax ? `–${selectedJob.salaryMax.toLocaleString()}` : '+'} บาท`
-                              : 'ตามตกลง/ความสามารถ'}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-1.5">
-                          <svg
-                            className="w-3.5 h-3.5 text-gray-400 shrink-0"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                            strokeWidth={2}
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z"
-                            />
-                          </svg>
-                          <span>จำนวนที่รับ: {selectedJob.positions || 1} อัตรา</span>
-                        </div>
-                        <div className="flex items-center gap-1.5">
-                          <svg
-                            className="w-3.5 h-3.5 text-gray-400 shrink-0"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                            strokeWidth={2}
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"
-                            />
-                          </svg>
-                          <span>รีโพสต์ล่าสุด: {formatDate(selectedJob.createdAt)}</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Footer */}
-                  <div className="flex items-center justify-between mt-5 pt-4 border-t border-gray-100">
-                    <ApplicantAvatars count={selectedJob._count?.applications || 0} />
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => router.push(`/employer/jobs/${selectedJob.id}/edit`)}
-                        className="flex items-center gap-1.5 px-4 py-2 text-xs font-medium text-white bg-[#E00016] hover:bg-[#A80010] border border-gray-200 rounded-lg  transition-colors"
+                
+                {/* Search History Pills */}
+                <div className="flex gap-2 overflow-x-auto pb-2 items-center min-h-[36px] scrollbar-hide">
+                  {searchHistory.length > 0 ? (
+                    searchHistory.map((term, idx) => (
+                      <div
+                        key={idx}
+                        onClick={() => executeSearch(term)}
+                        className="flex items-center gap-1.5 whitespace-nowrap text-xs px-3 py-1.5 rounded-full font-medium transition-colors bg-gray-100 text-gray-600 hover:bg-gray-200 hover:text-[#020263] cursor-pointer border border-transparent hover:border-gray-300 shrink-0 group"
                       >
-                        <PenSquare className="w-3.5 h-3.5" />
-                        แก้ไข
-                      </button>
-                      {(selectedJob.status === 'DRAFT' || selectedJob.status === 'CLOSED') && (
+                        <span>{term}</span>
                         <button
-                          onClick={() => publish(selectedJob.id)}
-                          disabled={actionLoading === selectedJob.id}
-                          className="flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-white bg-[#020263] rounded-lg hover:bg-[#00003D] transition-colors disabled:opacity-60"
+                          onClick={(e) => removeHistory(term, e)}
+                          className="text-gray-400 hover:text-red-500 transition-colors p-0.5 rounded-full focus:outline-none opacity-60 group-hover:opacity-100"
+                          title="ลบประวัติ"
                         >
-                          {selectedJob.status === 'CLOSED' ? <RefreshCcw className="w-3.5 h-3.5" /> : <Send className="w-3.5 h-3.5" />}
-                          {actionLoading === selectedJob.id ? '...' : (selectedJob.status === 'CLOSED' ? 'รีโพสต์งาน' : 'เผยแพร่')}
+                          <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                          </svg>
                         </button>
-                      )}
-                      {selectedJob.status === 'ACTIVE' && (
-                        <>
-                          <button
-                            onClick={() => publish(selectedJob.id)}
-                            className="flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-slate-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
-                          >
-                            <RefreshCcw className="w-3.5 h-3.5" />
-                            รีโพสต์งาน(ปิดใช้งาน)
-                          </button>
-                          {/* <button
-                            onClick={() =>
-                              router.push(`/employer/jobs/${selectedJob.id}/applications`)
-                            }
-                            className="flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-white bg-[#020263] border border-transparent rounded-lg hover:bg-[#00003D] transition-colors"
-                          >
-                            <Users className="w-3.5 h-3.5" />
-                            ผู้สมัคร
-                          </button> */}
-                        </>
-                      )}
-                    </div>
+                      </div>
+                    ))
+                  ) : (
+                    <span className="text-xs text-gray-400 py-1">พิมพ์คำค้นหาแล้วกด Enter เพื่อบันทึกประวัติ</span>
+                  )}
+                </div>
+              </div>
+
+              {/* --- แสดงรายการประกาศงานแบบ List (วนลูป) --- */}
+              {filteredJobs.length === 0 ? (
+                <div className="bg-white rounded-xl shadow-sm border border-gray-100 flex-1 flex flex-col items-center justify-center py-20 px-4 text-center">
+                  <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center shadow-sm border border-gray-100 mb-4">
+                    <Search className="w-8 h-8 text-gray-300" />
                   </div>
+                  <p className="text-[#020263] font-bold text-base">ไม่พบตำแหน่งงานที่ตรงกับ "{searchQuery}"</p>
+                  <p className="text-gray-500 text-sm mt-1">ลองเปลี่ยนคำค้นหา หรือตรวจสอบการสะกดอีกครั้ง</p>
+                </div>
+              ) : (
+                <div className="flex flex-col gap-4">
+                  {filteredJobs.map((job, index) => {
+                    const isSelected = index === selectedJobIndex;
+                    
+                    return (
+                      <div 
+                        key={job.id}
+                        onClick={() => setSelectedJobIndex(index)}
+                        className={`bg-white rounded-xl border transition-all cursor-pointer p-5 
+                          ${isSelected 
+                            ? 'border-[#020263] ring-1 ring-[#020263]/10 shadow-md' 
+                            : 'border-gray-100 hover:border-gray-300 shadow-sm hover:shadow-md'
+                          }`}
+                      >
+                        <div className="flex flex-col sm:flex-row gap-5">
+                          {/* Thumbnail */}
+                          <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-xl border border-gray-100 bg-white flex items-center justify-center shrink-0 overflow-hidden shadow-sm">
+                            {job.company?.logoUrl ? (
+                              <img
+                                src={job.company.logoUrl}
+                                alt={job.company.name}
+                                className="w-full h-full object-contain p-2"
+                              />
+                            ) : (
+                              <div className="w-full h-full bg-[#020263] text-white flex items-center justify-center text-xl font-bold">
+                                {job.company?.name?.charAt(0)?.toUpperCase() || '?'}
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Info */}
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-start justify-between gap-2">
+                              <h2 className="font-bold text-[#020263] text-base leading-snug group-hover:text-[#E00016] transition-colors">
+                                {job.title}
+                              </h2>
+                              <div className="relative">
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation(); // ไม่ให้ทะลุไปกดเลือกการ์ด
+                                    setOpenDropdownId(openDropdownId === job.id ? null : job.id);
+                                  }}
+                                  className="text-gray-400 hover:text-gray-600 transition-colors p-1 rounded-full hover:bg-gray-100"
+                                >
+                                  <MoreVertical className="w-5 h-5" />
+                                </button>
+                                {openDropdownId === job.id && (
+                                  <>
+                                    <div className="fixed inset-0 z-10" onClick={(e) => { e.stopPropagation(); setOpenDropdownId(null); }}></div>
+                                    <div className="absolute right-0 mt-1 w-40 bg-white border border-gray-100 rounded-xl shadow-lg z-20 py-1 overflow-hidden">
+                                      <button
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          setOpenDropdownId(null);
+                                          close(job.id);
+                                        }}
+                                        disabled={actionLoading === job.id}
+                                        className="w-full text-left px-4 py-2.5 text-sm text-[#E00016] hover:bg-[#E00016]/10 transition-colors disabled:opacity-50 flex items-center gap-2 font-medium"
+                                      >
+                                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                          <path strokeLinecap="round" strokeLinejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+                                        </svg>
+                                        ปิดรับสมัคร (เลิกเผยแพร่)
+                                      </button>
+                                    </div>
+                                  </>
+                                )}
+                              </div>
+                            </div>
+
+                            {/* Badges */}
+                            <div className="flex flex-wrap gap-2 mt-2">
+                              <span className={`text-[11px] px-2.5 py-0.5 rounded-full font-medium ${STATUS_LABEL[job.status]?.color || 'bg-gray-100 text-gray-600'}`}>
+                                {STATUS_LABEL[job.status]?.label || job.status}
+                              </span>
+                              <span className="text-[11px] px-2.5 py-0.5 rounded-full font-medium bg-gray-100 text-gray-500">
+                                {JOB_TYPE_LABEL[job.jobType] || job.jobType}
+                              </span>
+                            </div>
+
+                            {/* Details */}
+                            <div className="mt-3 space-y-1.5 text-xs text-gray-500">
+                              <div className="flex items-center gap-1.5">
+                                <svg className="w-3.5 h-3.5 text-gray-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8V7m0 1v8m0 0v1" />
+                                </svg>
+                                <span>
+                                  เงินเดือน: {job.salaryVisible && job.salaryMin ? `${job.salaryMin.toLocaleString()}${job.salaryMax ? `–${job.salaryMax.toLocaleString()}` : '+'} บาท` : 'ตามตกลง/ความสามารถ'}
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-1.5">
+                                <svg className="w-3.5 h-3.5 text-gray-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" />
+                                </svg>
+                                <span>จำนวนที่รับ: {job.positions || 1} อัตรา</span>
+                              </div>
+                              <div className="flex items-center gap-1.5">
+                                <svg className="w-3.5 h-3.5 text-gray-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                <span>รีโพสต์ล่าสุด: {formatDate(job.createdAt)}</span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Footer */}
+                        <div className="flex items-center justify-between mt-5 pt-4 border-t border-gray-100">
+                          <ApplicantAvatars count={job._count?.applications || 0} />
+                          <div className="flex gap-2">
+                            <button
+                              onClick={(e) => { e.stopPropagation(); router.push(`/employer/jobs/${job.id}/edit`); }}
+                              className="flex items-center gap-1.5 px-4 py-2 text-xs font-medium text-white bg-[#E00016] hover:bg-[#A80010] border border-gray-200 rounded-lg transition-colors"
+                            >
+                              <PenSquare className="w-3.5 h-3.5" />
+                              แก้ไข
+                            </button>
+                            {(job.status === 'DRAFT' || job.status === 'CLOSED') && (
+                              <button
+                                onClick={(e) => { e.stopPropagation(); publish(job.id); }}
+                                disabled={actionLoading === job.id}
+                                className="flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-white bg-[#020263] rounded-lg hover:bg-[#00003D] transition-colors disabled:opacity-60"
+                              >
+                                {job.status === 'CLOSED' ? <RefreshCcw className="w-3.5 h-3.5" /> : <Send className="w-3.5 h-3.5" />}
+                                {actionLoading === job.id ? '...' : (job.status === 'CLOSED' ? 'รีโพสต์งาน' : 'เผยแพร่')}
+                              </button>
+                            )}
+                            {job.status === 'ACTIVE' && (
+                              <button
+                                onClick={(e) => { e.stopPropagation(); publish(job.id); }}
+                                className="flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-slate-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+                              >
+                                <RefreshCcw className="w-3.5 h-3.5" />
+                                รีโพสต์งาน(ปิดใช้งาน)
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               )}
             </div>
 
             {/* ───── Card 2: Reach Chart + Summary (1 col) ───── */}
-            <div className="lg:col-span-1 space-y-5">
+            <div className="lg:col-span-1 space-y-5 sticky top-24 self-start">
               <EngagementCard
                 views={selectedJob?.viewCount || 0}
                 likes={selectedJob?._count?.savedBy || 0}

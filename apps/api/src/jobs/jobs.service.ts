@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException, BadRequestException, HttpException, HttpStatus, } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateJobDto } from './dto/create-job.dto';
 import { UpdateJobDto } from './dto/update-job.dto';
@@ -656,7 +656,7 @@ export class JobsService {
   }
 
   /**
-   * Publish a draft job
+   * Publish a draft job (เช็กสิทธิ์และหักโควตา AC ราย 24 ชั่วโมง)
    */
   async publish(id: string, userId: string) {
     const job = await this.prisma.job.findUnique({
@@ -672,13 +672,102 @@ export class JobsService {
       throw new ForbiddenException('คุณไม่มีสิทธิ์เผยแพร่งานนี้');
     }
 
-    return this.prisma.job.update({
-      where: { id },
-      data: {
+    const company = job.company;
+    if (!company) {
+      throw new BadRequestException('ไม่พบข้อมูลบริษัทของท่าน');
+    }
+
+    // 1. ดึงข้อมูลแพ็กเกจปัจจุบันของบริษัทมาเช็ก
+    const pkg = await this.prisma.companyPackage.findUnique({
+      where: { companyId: company.id },
+    });
+
+    if (!pkg || !pkg.startDate) {
+      throw new BadRequestException('ไม่พบข้อมูลแพ็กเกจการใช้งาน หรือแพ็กเกจหมดอายุแล้ว');
+    }
+
+    // 2. คำนวณรอบรีเซ็ต 24 ชม. ถอดตาม Logic ฝั่ง CC เป๊ะ ๆ
+    const now = new Date();
+    const purchaseDate = new Date(pkg.startDate);
+
+    const resetToday = new Date(now);
+    resetToday.setHours(
+      purchaseDate.getHours(),
+      purchaseDate.getMinutes(),
+      purchaseDate.getSeconds(),
+      purchaseDate.getMilliseconds()
+    );
+
+    let lastResetPoint: Date;
+    if (now >= resetToday) {
+      lastResetPoint = resetToday;
+    } else {
+      lastResetPoint = new Date(resetToday);
+      lastResetPoint.setDate(lastResetPoint.getDate() - 1);
+    }
+
+    // 3. นับจำนวนงานที่กดเปิดใช้งาน (ACTIVE) ไปแล้วในรอบเวลานี้
+    const usedInCycle = await this.prisma.job.count({
+      where: {
+        companyId: company.id,
         status: 'ACTIVE',
-        publishedAt: new Date(),
+        publishedAt: { gte: lastResetPoint },
       },
     });
+
+    // 4. สรุปโควตาสูงสุดที่ใช้ได้ในรอบ (โควตาหลัก + โบนัส)
+    const maxQuota = pkg.acQuotaTotal + (pkg.bonusQuotaAC || 0);
+
+    // 5. ดักกรณีโควตาเต็ม -> คำนวณเวลาที่เหลือส่งกลับไปให้หน้าบ้านแสดงผล
+    if (usedInCycle >= maxQuota) {
+      const nextResetPoint = new Date(lastResetPoint);
+      nextResetPoint.setDate(nextResetPoint.getDate() + 1);
+
+      const diffMs = nextResetPoint.getTime() - now.getTime();
+      const hours = Math.floor(diffMs / (1000 * 60 * 60));
+      const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+
+      throw new HttpException(
+        {
+          statusCode: HttpStatus.BAD_REQUEST,
+          message: `ขออภัย คุณใช้งานโควตาลงประกาศงาน (AC) หมดแล้วในรอบวันนี้ กรุณารออีก ${hours} ชม. ${minutes} น. เพื่อใช้งานระบบใหม่อีกครั้ง`,
+          resetIn: { hours, minutes },
+          resetAt: purchaseDate.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }),
+        },
+        HttpStatus.BAD_REQUEST
+      );
+    }
+
+    // 6. รันด้วยระบบ Database Transaction ป้องกันปัญหาแต้มลดแต่งานไม่เปิด หรือ งานเปิดแต่แต้มไม่ลด
+    const [updatedJob] = await this.prisma.$transaction([
+      // คำสั่งที่ 1: อัปเดตงานให้เปิดใช้งานจริง
+      this.prisma.job.update({
+        where: { id },
+        data: {
+          status: 'ACTIVE',
+          publishedAt: new Date(),
+        },
+        include: {
+          company: {
+            select: {
+              id: true,
+              name: true,
+              slug: true,
+              logoUrl: true,
+              isVerified: true,
+              verificationStatus: true,
+            },
+          },
+        },
+      }),
+      // คำสั่งที่ 2: บันทึกแต้มที่ถูกใช้งานจริงเพิ่มเข้าตารางแพ็กเกจบริษัท
+      this.prisma.companyPackage.update({
+        where: { id: pkg.id },
+        data: { acQuotaUsed: usedInCycle + 1 },
+      }),
+    ]);
+
+    return updatedJob;
   }
 
   /**
