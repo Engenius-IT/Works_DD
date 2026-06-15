@@ -8,6 +8,7 @@
     "forEmployers": "For Employers",
     "hello": "Hello,",
     "employerBackend": "Employer Workspace",
+    "adminDashboard": "Admin Dashboard",
     "profile": "Profile",
     "editProfile": "Edit Profile",
     "savedJobs": "Saved Jobs",
@@ -48,6 +49,15 @@
       "news": "News & Events",
       "contact": "Contact Us",
       "help": "Help Center"
+    },
+    "regionalCandidates": "Candidates by Region",
+    "regionalCandidatesSub": {
+      "central": "Candidates in Central Region",
+      "east": "Candidates in Eastern Region",
+      "north": "Candidates in Northern Region",
+      "northeast": "Candidates in Northeastern Region",
+      "south": "Candidates in Southern Region",
+      "west": "Candidates in Western Region"
     }
   },
   "ContactUs": {
@@ -583,6 +593,7 @@
     "jobs_found_in_region": "Found {count} positions in {region}",
     "loading": "Loading...",
     "view_all_jobs": "View All Jobs",
+    "view_all_resumes": "View All Resumes",
     "back_to_categories": "Back to Categories",
     "filters_label": "Filters",
     "jobs_found_count": "Found {count} positions in {region}",
@@ -601,10 +612,12 @@
     },
     "buttons": {
       "back_home": "Home",
-      "view_all_jobs": "View All Jobs"
+      "view_all_jobs": "View All Jobs",
+      "view_all_resumes": "View All Resumes"
     },
     "groups": {
-      "position": "positions",
+      "position": "Job Positions",
+      "resume": "Resumes",
       "storefront": {
         "title": "Front-of-House & Retail",
         "title_href": "Front-of-House & Retail",
@@ -636,8 +649,8 @@
         }
       },
       "regional": {
-        "title": "Jobs by Location",
-        "subtitle": "Search for jobs across all regions of Thailand",
+        "title": "Candidates by Region",
+        "subtitle": "Search candidates by region across Thailand",
         "items": {
           "bangkok": "Bangkok & Vicinity",
           "central": "Central Thailand",

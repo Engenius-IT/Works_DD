@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from '@/i18n/routing';
 import { useAuth } from '@/context/AuthContext';
+import { useLocale } from 'next-intl';
 import { Navbar } from '@/components/Navbar';
 import { Footer } from '@/components/Footer';
 import { SearchableSelect } from '@/components/SearchableSelect';
@@ -24,53 +25,73 @@ import {
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
 
-const profileSteps = [
-  { icon: User, label: 'ข้อมูลส่วนบุคคล', completed: true, active: false },
-  { icon: GraduationCap, label: 'ประวัติการศึกษา', completed: true, active: false },
-  { icon: Briefcase, label: 'ตำแหน่ง/ประวัติการทำงาน', completed: false, active: true },
-  { icon: Languages, label: 'ความสามารถทางภาษา', completed: false, active: false },
-  { icon: Car, label: 'ทักษะการขับขี่', completed: false, active: false },
-  { icon: Award, label: 'ใบประกาศนียบัตร', completed: false, active: false },
+const getProfileSteps = (locale: 'th' | 'en') => [
+  { 
+    icon: User, 
+    label: locale === 'en' ? 'Personal Information' : 'ข้อมูลส่วนบุคคล', 
+    completed: true, 
+    active: false, 
+    path: '/profile' 
+  },
+  { 
+    icon: GraduationCap, 
+    label: locale === 'en' ? 'Education History' : 'ประวัติการศึกษา', 
+    completed: true, 
+    active: false, 
+    path: '/profile/education' 
+  },
+  { 
+    icon: Briefcase, 
+    label: locale === 'en' ? 'Work History' : 'ตำแหน่ง/ประวัติการทำงาน', 
+    completed: false, 
+    active: true, 
+    path: '/profile/work-history' 
+  },
+  { 
+    icon: Languages, 
+    label: locale === 'en' ? 'Language Skills' : 'ความสามารถทางภาษา', 
+    completed: false, 
+    active: false, 
+    path: '/profile/languages' 
+  },
+  { 
+    icon: Car, 
+    label: locale === 'en' ? 'Driving Skills' : 'ทักษะการขับขี่', 
+    completed: false, 
+    active: false, 
+    path: '/profile/driving' 
+  },
+  { 
+    icon: Award, 
+    label: locale === 'en' ? 'Certificates' : 'ใบประกาศนียบัตร', 
+    completed: false, 
+    active: false, 
+    path: '/profile/certificates' 
+  },
 ];
 
-const BUSINESS_TYPES = [
-
-  'เทคโนโลยีสารสนเทศ',
-  'การเงิน/ธนาคาร',
-  'การผลิต/อุตสาหกรรม',
-  'ค้าปลีก/ค้าส่ง',
-  'อาหารและเครื่องดื่ม',
-  'การศึกษา',
-  'สุขภาพ/การแพทย์',
-  'อสังหาริมทรัพย์/ก่อสร้าง',
-  'โลจิสติกส์/ขนส่ง',
-  'สื่อ/โฆษณา/ประชาสัมพันธ์',
-  'โทรคมนาคม',
-  'การท่องเที่ยว/โรงแรม',
-  'ประกันภัย',
-  'พลังงาน',
-  'เกษตรกรรม',
-  'ราชการ/รัฐวิสาหกิจ',
-  'องค์กรไม่แสวงหาผลกำไร',
-
-  'อีคอมเมิร์ซ/แพลตฟอร์มออนไลน์',
-  'บริการวิชาชีพ (ที่ปรึกษา/กฎหมาย/บัญชี)',
-  'บริการจัดหางาน/ทรัพยากรบุคคล',
-  'ยานยนต์และชิ้นส่วน',
-  'สินค้าอุปโภคบริโภค (FMCG)',
-  'นำเข้าและส่งออก',
-  'ความงาม/แฟชั่น/สปา',
-  'บันเทิง/ศิลปะ/นันทนาการ',
-  'เหมืองแร่/ปิโตรเคมี/เคมีภัณฑ์',
-  'บริการรักษาความปลอดภัย/จัดการอาคาร',
-
-  'อื่นๆ'
+const BUSINESS_TYPES_TH = [
+  'เทคโนโลยีสารสนเทศ', 'การเงิน/ธนาคาร', 'การผลิต/อุตสาหกรรม', 'ค้าปลีก/ค้าส่ง', 'อาหารและเครื่องดื่ม',
+  'การศึกษา', 'สุขภาพ/การแพทย์', 'อสังหาริมทรัพย์/ก่อสร้าง', 'โลจิสติกส์/ขนส่ง', 'สื่อ/โฆษณา/ประชาสัมพันธ์',
+  'โทรคมนาคม', 'การท่องเที่ยว/โรงแรม', 'ประกันภัย', 'พลังงาน', 'เกษตรกรรม', 'ราชการ/รัฐวิสาหกิจ',
+  'องค์กรไม่แสวงหาผลกำไร', 'อีคอมเมิร์ซ/แพลตฟอร์มออนไลน์', 'บริการวิชาชีพ (ที่ปรึกษา/กฎหมาย/บัญชี)',
+  'บริการจัดหางาน/ทรัพยากรบุคคล', 'ยานยนต์และชิ้นส่วน', 'สินค้าอุปโภคบริโภค (FMCG)', 'นำเข้าและส่งออก',
+  'ความงาม/แฟชั่น/สปา', 'บันเทิง/ศิลปะ/นันทนาการ', 'เหมืองแร่/ปิโตรเคมี/เคมีภัณฑ์',
+  'บริการรักษาความปลอดภัย/จัดการอาคาร', 'อื่นๆ'
 ];
 
+const BUSINESS_TYPES_EN = [
+  'Information Technology', 'Finance / Banking', 'Manufacturing / Industrial', 'Retail / Wholesale',
+  'Food & Beverage', 'Education', 'Healthcare / Medical', 'Real Estate / Construction',
+  'Logistics / Transportation', 'Media / Advertising / PR', 'Telecommunications', 'Tourism / Hospitality',
+  'Insurance', 'Energy', 'Agriculture', 'Government / State Enterprise', 'Non-Profit Organization',
+  'E-Commerce / Online Platform', 'Professional Services (Consulting/Legal/Accounting)',
+  'Recruitment / HR Services', 'Automotive & Parts', 'Consumer Goods (FMCG)', 'Import & Export',
+  'Beauty / Fashion / Spa', 'Entertainment / Arts / Recreation', 'Mining / Petrochemical / Chemicals',
+  'Security Services / Facility Management', 'Other'
+];
 
-
-// Job types
-const JOB_TYPES = [
+const JOB_TYPES_TH = [
   'งานประจำ (Full-time)',
   'งานพาร์ทไทม์ (Part-time)',
   'สัญญาจ้าง (Contract)',
@@ -78,25 +99,86 @@ const JOB_TYPES = [
   'ฝึกงาน (Internship)',
 ];
 
-const months = [
-  'มกราคม',
-  'กุมภาพันธ์',
-  'มีนาคม',
-  'เมษายน',
-  'พฤษภาคม',
-  'มิถุนายน',
-  'กรกฎาคม',
-  'สิงหาคม',
-  'กันยายน',
-  'ตุลาคม',
-  'พฤศจิกายน',
-  'ธันวาคม',
+const JOB_TYPES_EN = [
+  'Full-time',
+  'Part-time',
+  'Contract',
+  'Freelance',
+  'Internship',
 ];
+
+const monthsTh = [
+  'มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน',
+  'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม',
+];
+
+const monthsEn = [
+  'January', 'February', 'March', 'April', 'May', 'June',
+  'July', 'August', 'September', 'October', 'November', 'December',
+];
+
+// แปลภาษาหน้า Work History
+const translations = {
+  th: {
+    completeness: 'ความสมบูรณ์ของโปรไฟล์',
+    success: 'สำเร็จ',
+    saved: 'บันทึกข้อมูลเรียบร้อยแล้ว ✓',
+    error: 'เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง',
+    saveAndNext: 'บันทึกและถัดไป',
+    saving: 'กำลังบันทึก...',
+    backBtn: 'ย้อนกลับ',
+    addWorkHistory: 'เพิ่มประวัติการทำงาน',
+    jobPreferenceTitle: 'ฝากประวัติ (ตำแหน่งงานที่สนใจ)',
+    jobPreferenceDesc: 'ระบุตำแหน่งงานและประเภทงานที่คุณสนใจ (สูงสุด 3 ตำแหน่ง) เพื่อโอกาสในการจับคู่กับงานที่ตรงใจที่สุด',
+    seqOrder: 'ลำดับที่',
+    position: 'ตำแหน่งงาน',
+    jobType: 'ประเภทงาน',
+    addPosition: 'เพิ่มตำแหน่งงาน',
+    maxPosition: 'ระบุครบ 3 ตำแหน่งแล้ว',
+    companyName: 'ชื่อบริษัท',
+    businessType: 'ประเภทธุรกิจ',
+    workHistoryLabel: 'ประวัติการทำงาน',
+    startDate: 'วันที่เริ่ม',
+    endDate: 'วันที่สิ้นสุด',
+    currentLocationWork: 'ทำงานที่นี่อยู่ในปัจจุบัน',
+    currentWord: 'ปัจจุบัน',
+    placeholderSelect: 'โปรดเลือก',
+    placeholderInput: 'โปรดระบุ',
+    month: 'เดือน',
+    year: 'ปี'
+  },
+  en: {
+    completeness: 'Profile Completeness',
+    success: 'Success',
+    saved: 'Information saved successfully ✓',
+    error: 'An error occurred, please try again.',
+    saveAndNext: 'Save & Next',
+    saving: 'Saving...',
+    backBtn: 'Back',
+    addWorkHistory: 'Add Work History',
+    jobPreferenceTitle: 'Job Preferences (Desired Positions)',
+    jobPreferenceDesc: 'Specify the position and job type you are interested in (up to 3 positions) for the best job matching opportunities.',
+    seqOrder: 'Order',
+    position: 'Position',
+    jobType: 'Job Type',
+    addPosition: 'Add Position',
+    maxPosition: '3 positions specified',
+    companyName: 'Company Name',
+    businessType: 'Business Type',
+    workHistoryLabel: 'Work History',
+    startDate: 'Start Date',
+    endDate: 'End Date',
+    currentLocationWork: 'Currently working here',
+    currentWord: 'Present',
+    placeholderSelect: 'Please select',
+    placeholderInput: 'Please specify',
+    month: 'Month',
+    year: 'Year'
+  }
+};
 
 const currentYear = new Date().getFullYear() + 543;
 const years = Array.from({ length: 50 }, (_, i) => String(currentYear - i));
-const monthOptions = months.map((month, index) => ({ value: String(index + 1), label: month }));
-const yearOptions = years.map((year) => ({ value: year, label: year }));
 
 interface SavedWorkEntry {
   id: string;
@@ -156,6 +238,18 @@ function createJobPreference(): JobPreference {
 export default function WorkHistoryPage() {
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
+  const locale = useLocale() as 'th' | 'en';
+  const t = translations[locale] || translations.th;
+
+  const profileSteps = getProfileSteps(locale);
+
+  const businessTypes = locale === 'en' ? BUSINESS_TYPES_EN : BUSINESS_TYPES_TH;
+  const jobTypes = locale === 'en' ? JOB_TYPES_EN : JOB_TYPES_TH;
+  const monthsList = locale === 'en' ? monthsEn : monthsTh;
+
+  const monthOptions = monthsList.map((month, index) => ({ value: String(index + 1), label: month }));
+  const yearOptions = years.map((year) => ({ value: year, label: year }));
+
   const [entries, setEntries] = useState<WorkEntry[]>([createEntry()]);
   const [jobPreferences, setJobPreferences] = useState<JobPreference[]>([createJobPreference()]);
   const [saving, setSaving] = useState(false);
@@ -164,7 +258,6 @@ export default function WorkHistoryPage() {
   const [completionPercent, setCompletionPercent] = useState(34);
   const circumference = 2 * Math.PI * 54;
   const strokeDashoffset = circumference - (completionPercent / 100) * circumference;
-
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -201,7 +294,6 @@ export default function WorkHistoryPage() {
       })
       .catch(() => { });
 
-    // Fetch job preferences
     fetch(`${API_URL}/users/me/job-preferences`, {
       headers: { Authorization: `Bearer ${token}` },
     })
@@ -258,7 +350,6 @@ export default function WorkHistoryPage() {
     try {
       const token = localStorage.getItem('accessToken');
 
-      // Save Work History
       const validEntries = entries.filter((e) => e.company && e.company.trim() !== '');
       const res1 = await fetch(`${API_URL}/users/me/work-histories`, {
         method: 'PUT',
@@ -272,7 +363,6 @@ export default function WorkHistoryPage() {
       });
       if (!res1.ok) throw new Error('Save work history failed');
 
-      // Save Job Preferences
       const validPreferences = jobPreferences.filter((e) => e.position && e.position.trim() !== '');
       const res2 = await fetch(`${API_URL}/users/me/job-preferences`, {
         method: 'PUT',
@@ -287,16 +377,28 @@ export default function WorkHistoryPage() {
       if (!res2.ok) throw new Error('Save job preferences failed');
 
       setSaving(false);
-      setMessage({ type: 'success', text: 'บันทึกข้อมูลเรียบร้อยแล้ว ✓' });
+      setMessage({ type: 'success', text: t.saved });
       setCompletionPercent(50);
-      setTimeout(() => router.push('/profile/languages'), 1000);
+
+      setTimeout(() => {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        router.push('/profile/languages');
+      }, 1000);
     } catch {
       setSaving(false);
-      setMessage({ type: 'error', text: 'เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง' });
+      setMessage({ type: 'error', text: t.error });
     }
   };
 
-  const handleBack = () => router.push('/profile/education');
+  const handleStepClick = (path: string) => {
+    window.scrollTo(0, 0);
+    router.push(path);
+  };
+
+  const handleBack = () => {
+    window.scrollTo(0, 0);
+    router.push('/profile/education');
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 font-sans">
@@ -309,7 +411,6 @@ export default function WorkHistoryPage() {
           background: 'linear-gradient(135deg, #0a1628 0%, #0e2a5e 40%, #1a3a7a 70%, #243b82 100%)',
         }}
       >
-        {/* Decorative background elements */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           <div
             className="absolute -top-20 -right-20 w-72 h-72 rounded-full opacity-[0.07]"
@@ -326,16 +427,13 @@ export default function WorkHistoryPage() {
         </div>
 
         <div className="max-w-5xl mx-auto px-4 sm:px-6 py-10 md:py-14 relative z-10">
-          {/* Header */}
           <div className="flex items-center gap-3 mb-8">
             <div className="w-1 h-6 rounded-full bg-linear-to-b from-blue-400 to-cyan-400" />
             <h2 className="text-white text-2xl md:text-3xl lg:text-4xl font-semibold tracking-wide">
-              ความสมบูรณ์ของโปรไฟล์
+              {t.completeness}
             </h2>
           </div>
 
-
-          {/* Main Glass Card */}
           <div
             className="rounded-2xl border border-white/10 p-6 md:p-8"
             style={{ background: 'rgba(255,255,255,0.05)', backdropFilter: 'blur(20px)' }}
@@ -377,7 +475,7 @@ export default function WorkHistoryPage() {
                     <span className="text-3xl md:text-4xl font-bold text-white">
                       {completionPercent}%
                     </span>
-                    <span className="text-[10px] text-blue-300/80 mt-0.5">สำเร็จ</span>
+                    <span className="text-[10px] text-blue-300/80 mt-0.5">{t.success}</span>
                   </div>
                 </div>
                 <div
@@ -394,6 +492,8 @@ export default function WorkHistoryPage() {
                     return (
                       <button
                         key={index}
+                        type="button"
+                        onClick={() => handleStepClick(step.path)}
                         className={`group relative flex sm:flex-col items-center gap-3 sm:gap-2.5 p-3 sm:p-4 rounded-xl transition-all duration-300 cursor-pointer
                           ${step.active
                             ? 'bg-white/15 border border-white/20 shadow-lg shadow-blue-500/10'
@@ -455,33 +555,28 @@ export default function WorkHistoryPage() {
 
       {/* Main Content */}
       <div className="max-w-4xl mx-auto px-4 py-8">
-        {/* position input */}
-        {/* [ส่วนที่ 1] ฝากประวัติ - ย้ายขึ้นมาไว้ก่อน */}
+        {/* ฝากประวัติ */}
         <div className="bg-white rounded-xl shadow-md border border-gray-200 p-6 md:p-8 mb-10">
           <div className="flex items-center gap-2 mb-6">
             <FileText className="w-5 h-5 text-blue-600" />
-            <h2 className="text-xl font-bold text-gray-800">ฝากประวัติ (ตำแหน่งงานที่สนใจ)</h2>
+            <h2 className="text-xl font-bold text-gray-800">{t.jobPreferenceTitle}</h2>
           </div>
 
           <div className="pl-0 md:pl-7">
             <p className="text-sm text-gray-500 mb-6">
-              ระบุตำแหน่งงานและประเภทงานที่คุณสนใจ (สูงสุด 3 ตำแหน่ง) เพื่อโอกาสในการจับคู่กับงานที่ตรงใจที่สุด
+              {t.jobPreferenceDesc}
             </p>
 
             <div className="space-y-4">
               {jobPreferences.map((pref, index) => (
                 <div key={pref.id} className="p-5 bg-gray-50 rounded-xl border border-gray-200 relative group">
-
-                  {/* Header ของแต่ละตำแหน่ง: แสดงลำดับและปุ่มจัดการ */}
                   <div className="flex items-center justify-between mb-4">
-                    <span className="text-xs font-bold text-blue-600 uppercase tracking-wider">ลำดับที่ {index + 1}</span>
+                    <span className="text-xs font-bold text-blue-600 uppercase tracking-wider">{t.seqOrder} {index + 1}</span>
                     <div className="flex items-center gap-2">
-                      {/* ปุ่มเลื่อนลำดับ */}
                       <div className="flex items-center bg-white border border-gray-200 rounded-md">
                         <button onClick={() => moveJobPreference(index, 'up')} disabled={index === 0} className="p-1 text-gray-400 hover:text-blue-600 disabled:opacity-20"><ArrowUp className="w-4 h-4" /></button>
                         <button onClick={() => moveJobPreference(index, 'down')} disabled={index === jobPreferences.length - 1} className="p-1 text-gray-400 hover:text-blue-600 disabled:opacity-20"><ArrowDown className="w-4 h-4" /></button>
                       </div>
-                      {/* ปุ่มลบ */}
                       {jobPreferences.length > 1 && (
                         <button onClick={() => removeJobPreference(pref.id)} className="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors"><Trash2 className="w-4 h-4" /></button>
                       )}
@@ -489,28 +584,25 @@ export default function WorkHistoryPage() {
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {/* ตำแหน่งงาน */}
                     <div>
-                      <label className="block text-sm font-bold text-gray-700 mb-2">ตำแหน่งงาน</label>
+                      <label className="block text-sm font-bold text-gray-700 mb-2">{t.position}</label>
                       <input
                         type="text"
                         value={pref.position}
                         onChange={(e) => updateJobPreference(pref.id, e.target.value)}
-                        placeholder="เช่น Graphic Designer"
+                        placeholder={t.placeholderInput}
                         className="w-full bg-white border border-gray-300 text-gray-700 py-2.5 px-3 rounded-lg focus:ring-1 focus:ring-blue-500 outline-none placeholder-gray-400"
                       />
                     </div>
-
-                    {/* ประเภทงาน (เพิ่มเข้ามาใหม่) */}
                     <div>
-                      <label className="block text-sm font-bold text-gray-700 mb-2">ประเภทงาน</label>
+                      <label className="block text-sm font-bold text-gray-700 mb-2">{t.jobType}</label>
                       <SearchableSelect
-                        placeholder="โปรดเลือก"
+                        placeholder={t.placeholderSelect}
                         value={pref.jobType || ''}
                         onChange={(val) => {
                           setJobPreferences(prev => prev.map(p => p.id === pref.id ? { ...p, jobType: val } : p));
                         }}
-                        options={JOB_TYPES.map((j) => ({ value: j, label: j }))}
+                        options={jobTypes.map((j) => ({ value: j, label: j }))}
                       />
                     </div>
                   </div>
@@ -518,7 +610,6 @@ export default function WorkHistoryPage() {
               ))}
             </div>
 
-            {/* ปุ่มเพิ่มตำแหน่ง พร้อมล็อคไว้ที่ 3 ตำแหน่งตามที่คุยกัน */}
             <button
               onClick={addJobPreference}
               disabled={jobPreferences.length >= 3}
@@ -528,7 +619,7 @@ export default function WorkHistoryPage() {
                 }`}
             >
               <Plus className="w-4 h-4" />
-              {jobPreferences.length >= 3 ? 'ระบุครบ 3 ตำแหน่งแล้ว' : 'เพิ่มตำแหน่งงาน'}
+              {jobPreferences.length >= 3 ? t.maxPosition : t.addPosition}
             </button>
           </div>
         </div>
@@ -539,11 +630,10 @@ export default function WorkHistoryPage() {
             key={entry.id}
             className="bg-white rounded-xl shadow-md border border-gray-200 p-6 md:p-8 mb-6"
           >
-            {/* Card header */}
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-base font-bold text-gray-800 flex items-center gap-2">
                 <Briefcase className="w-4 h-4 text-blue-600" />
-                ประวัติการทำงาน
+                {t.workHistoryLabel}
               </h2>
               {entries.length > 1 && (
                 <button
@@ -556,65 +646,62 @@ export default function WorkHistoryPage() {
               )}
             </div>
 
-            {/* Row 1: Company & Business Type */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
               <div>
-                <label className="block text-sm font-bold text-gray-700 mb-2">ชื่อบริษัท</label>
+                <label className="block text-sm font-bold text-gray-700 mb-2">{t.companyName}</label>
                 <input
                   type="text"
                   value={entry.company}
                   onChange={(e) => updateEntry(entry.id, 'company', e.target.value)}
-                  placeholder="โปรดเลือก"
+                  placeholder={t.placeholderInput}
                   className="w-full bg-gray-100 border border-gray-300 text-gray-700 py-2.5 px-3 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 placeholder-gray-400"
                 />
               </div>
               <div>
-                <label className="block text-sm font-bold text-gray-700 mb-2">ประเภทธุรกิจ</label>
+                <label className="block text-sm font-bold text-gray-700 mb-2">{t.businessType}</label>
                 <SearchableSelect
-                  placeholder="โปรดเลือก"
+                  placeholder={t.placeholderSelect}
                   value={entry.businessType}
                   onChange={(val) => updateEntry(entry.id, 'businessType', val)}
-                  options={BUSINESS_TYPES.map((b) => ({ value: b, label: b }))}
+                  options={businessTypes.map((b) => ({ value: b, label: b }))}
                 />
               </div>
             </div>
 
-            {/* Row 2: Position & Job Type */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
               <div>
-                <label className="block text-sm font-bold text-gray-700 mb-2">ตำแหน่ง</label>
+                <label className="block text-sm font-bold text-gray-700 mb-2">{t.position}</label>
                 <input
                   type="text"
                   value={entry.position}
                   onChange={(e) => updateEntry(entry.id, 'position', e.target.value)}
-                  placeholder="โปรดระบุ"
+                  placeholder={t.placeholderInput}
                   className="w-full bg-gray-100 border border-gray-300 text-gray-700 py-2.5 px-3 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 placeholder-gray-400"
                 />
               </div>
               <div>
-                <label className="block text-sm font-bold text-gray-700 mb-2">ประเภทงาน</label>
+                <label className="block text-sm font-bold text-gray-700 mb-2">{t.jobType}</label>
                 <SearchableSelect
-                  placeholder="โปรดระบุ"
+                  placeholder={t.placeholderSelect}
                   value={entry.jobType}
                   onChange={(val) => updateEntry(entry.id, 'jobType', val)}
-                  options={JOB_TYPES.map((j) => ({ value: j, label: j }))}
+                  options={jobTypes.map((j) => ({ value: j, label: j }))}
                 />
               </div>
             </div>
 
-            {/* Row 3: Start Date & End Date */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
               <div>
-                <label className="block text-sm font-bold text-gray-700 mb-2">วันที่เริ่ม</label>
+                <label className="block text-sm font-bold text-gray-700 mb-2">{t.startDate}</label>
                 <div className="grid grid-cols-2 gap-2">
                   <SearchableSelect
-                    placeholder="เดือน"
+                    placeholder={t.month}
                     value={entry.startMonth}
                     onChange={(val) => updateEntry(entry.id, 'startMonth', val)}
                     options={monthOptions}
                   />
                   <SearchableSelect
-                    placeholder="ปี"
+                    placeholder={t.year}
                     value={entry.startYear}
                     onChange={(val) => updateEntry(entry.id, 'startYear', val)}
                     options={yearOptions}
@@ -623,21 +710,21 @@ export default function WorkHistoryPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-bold text-gray-700 mb-2">วันที่สิ้นสุด</label>
+                <label className="block text-sm font-bold text-gray-700 mb-2">{t.endDate}</label>
                 {entry.isCurrent ? (
                   <div className="flex items-center h-[42px] px-3 bg-blue-50 border border-blue-200 rounded-lg text-blue-700 text-sm font-medium">
-                    ปัจจุบัน
+                    {t.currentWord}
                   </div>
                 ) : (
                   <div className="grid grid-cols-2 gap-2">
                     <SearchableSelect
-                      placeholder="เดือน"
+                      placeholder={t.month}
                       value={entry.endMonth}
                       onChange={(val) => updateEntry(entry.id, 'endMonth', val)}
                       options={monthOptions}
                     />
                     <SearchableSelect
-                      placeholder="ปี"
+                      placeholder={t.year}
                       value={entry.endYear}
                       onChange={(val) => updateEntry(entry.id, 'endYear', val)}
                       options={yearOptions}
@@ -651,23 +738,21 @@ export default function WorkHistoryPage() {
                     onChange={(e) => updateEntry(entry.id, 'isCurrent', e.target.checked)}
                     className="w-4 h-4 accent-blue-600"
                   />
-                  <span className="text-sm text-gray-600">ทำงานที่นี่อยู่ในปัจจุบัน</span>
+                  <span className="text-sm text-gray-600">{t.currentLocationWork}</span>
                 </label>
               </div>
             </div>
           </div>
         ))}
 
-        {/* Add more button */}
         <button
           onClick={addEntry}
           className="w-full border-2 border-dashed border-gray-300 hover:border-blue-400 text-gray-500 hover:text-blue-600 rounded-xl py-4 flex items-center justify-center gap-2 transition-colors mb-8"
         >
           <Plus className="w-5 h-5" />
-          <span className="font-medium">เพิ่มประวัติการทำงาน</span>
+          <span className="font-medium">{t.addWorkHistory}</span>
         </button>
 
-        {/* Message */}
         {message && (
           <div
             className={`mb-6 p-4 rounded-lg text-sm font-medium ${message.type === 'success'
@@ -679,13 +764,12 @@ export default function WorkHistoryPage() {
           </div>
         )}
 
-        {/* Action buttons */}
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
           <button
             onClick={handleBack}
             className="px-8 py-3 rounded-lg border border-gray-300 text-gray-600 font-medium hover:bg-gray-100 transition-colors"
           >
-            ย้อนกลับ
+            {t.backBtn}
           </button>
           <button
             onClick={handleSubmit}
@@ -695,10 +779,10 @@ export default function WorkHistoryPage() {
             {saving ? (
               <>
                 <Loader2 className="w-5 h-5 animate-spin" />
-                กำลังบันทึก...
+                {t.saving}
               </>
             ) : (
-              'บันทึกและถัดไป'
+              t.saveAndNext
             )}
           </button>
         </div>

@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from '@/i18n/routing';
 import { useAuth } from '@/context/AuthContext';
+import { useLocale } from 'next-intl';
 import { Navbar } from '@/components/Navbar';
 import { Footer } from '@/components/Footer';
 import {
@@ -22,14 +23,73 @@ import {
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
 
-const profileSteps = [
-  { icon: User, label: 'ข้อมูลส่วนบุคคล', completed: true, active: false },
-  { icon: GraduationCap, label: 'ประวัติการศึกษา', completed: true, active: false },
-  { icon: Briefcase, label: 'ประวัติการทำงาน', completed: true, active: false },
-  { icon: Languages, label: 'ความสามารถทางภาษา', completed: true, active: false },
-  { icon: Car, label: 'ทักษะการขับขี่', completed: true, active: false },
-  { icon: Award, label: 'ใบประกาศนียบัตร', completed: false, active: true },
-];
+const menuLabels = {
+  th: {
+    personal: 'ข้อมูลส่วนบุคคล',
+    education: 'ประวัติการศึกษา',
+    work: 'ประวัติการทำงาน',
+    language: 'ความสามารถทางภาษา',
+    driving: 'ทักษะการขับขี่',
+    certificates: 'ใบประกาศนียบัตร',
+  },
+  en: {
+    personal: 'Personal Information',
+    education: 'Education History',
+    work: 'Work History',
+    language: 'Language Skills',
+    driving: 'Driving Skills',
+    certificates: 'Certificates',
+  }
+};
+
+const translations = {
+  th: {
+    completeness: 'ความสมบูรณ์ของโปรไฟล์',
+    success: 'สำเร็จ',
+    start: 'เริ่มต้น',
+    complete: 'สมบูรณ์',
+    certTitle: 'ใบประกาศนียบัตร / เกียรติบัตร ที่',
+    certName: 'ชื่อใบประกาศนียบัตร / เกียรติบัตร',
+    certPlaceholder: 'เช่น AWS Certified Solutions Architect',
+    issuedBy: 'ออกโดย',
+    issuedByPlaceholder: 'เช่น Amazon Web Services',
+    issueYear: 'ปีที่ได้รับ',
+    pleaseSelect: 'โปรดเลือก',
+    uploadTitle: 'อัพโหลดรูปเกียรติบัตร',
+    uploadClick: 'คลิกเพื่ออัพโหลดรูปภาพ',
+    uploadSupport: 'รองรับ JPG, PNG, WEBP (ขนาดไม่เกิน 5MB)',
+    errorSize: 'ขนาดไฟล์เกิน 5MB กรุณาเลือกไฟล์ใหม่',
+    addCertificate: 'เพิ่มใบประกาศนียบัตร',
+    saved: 'บันทึกใบประกาศนียบัตรเรียบร้อยแล้ว — โปรไฟล์สมบูรณ์ 100% ✓',
+    error: 'เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง',
+    backBtn: 'ย้อนกลับ',
+    saveBtn: 'บันทึก',
+    saving: 'กำลังบันทึก...'
+  },
+  en: {
+    completeness: 'Profile Completeness',
+    success: 'Success',
+    start: 'Start',
+    complete: 'Complete',
+    certTitle: 'Certificate / Award ',
+    certName: 'Certificate / Award Name',
+    certPlaceholder: 'e.g. AWS Certified Solutions Architect',
+    issuedBy: 'Issued By',
+    issuedByPlaceholder: 'e.g. Amazon Web Services',
+    issueYear: 'Issue Year',
+    pleaseSelect: 'Please select',
+    uploadTitle: 'Upload Certificate Image',
+    uploadClick: 'Click to upload image',
+    uploadSupport: 'Supports JPG, PNG, WEBP (under 5MB)',
+    errorSize: 'File size exceeds 5MB, please select a new file.',
+    addCertificate: 'Add Certificate',
+    saved: 'Certificates saved successfully — Profile 100% complete ✓',
+    error: 'An error occurred, please try again.',
+    backBtn: 'Back',
+    saveBtn: 'Save',
+    saving: 'Saving...'
+  }
+};
 
 interface CertificateEntry {
   id: string;
@@ -52,7 +112,6 @@ function getErrorMessage(error: unknown, fallback: string) {
   if (error instanceof Error && error.message) {
     return error.message;
   }
-
   return fallback;
 }
 
@@ -73,6 +132,9 @@ function createEntry(): CertificateEntry {
 export default function CertificatesPage() {
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
+  const locale = useLocale() as 'th' | 'en';
+  const t = translations[locale] || translations.th;
+
   const [entries, setEntries] = useState<CertificateEntry[]>([createEntry()]);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
@@ -81,6 +143,15 @@ export default function CertificatesPage() {
   const [completionPercent, setCompletionPercent] = useState(83);
   const circumference = 2 * Math.PI * 54;
   const strokeDashoffset = circumference - (completionPercent / 100) * circumference;
+
+  const profileSteps = [
+    { icon: User, label: menuLabels[locale].personal, completed: true, active: false, path: '/profile' },
+    { icon: GraduationCap, label: menuLabels[locale].education, completed: true, active: false, path: '/profile/education' },
+    { icon: Briefcase, label: menuLabels[locale].work, completed: true, active: false, path: '/profile/work-history' },
+    { icon: Languages, label: menuLabels[locale].language, completed: true, active: false, path: '/profile/languages' },
+    { icon: Car, label: menuLabels[locale].driving, completed: true, active: false, path: '/profile/driving' },
+    { icon: Award, label: menuLabels[locale].certificates, completed: false, active: true, path: '/profile/certificates' },
+  ];
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -170,15 +241,13 @@ export default function CertificatesPage() {
         return;
       }
 
-      // Filter out entries without name
       const validEntries = entries.filter((e) => e.name && e.name.trim() !== '');
 
-      // Upload any new image files first
       const itemsWithUrls = await Promise.all(
         validEntries.map(async (entry) => {
           let imageUrl: string | undefined =
             entry.imagePreview && !entry.imageFile
-              ? entry.imagePreview // already a URL from previous save
+              ? entry.imagePreview 
               : undefined;
           if (entry.imageFile) {
             imageUrl = await uploadImage(entry.imageFile, token);
@@ -200,6 +269,7 @@ export default function CertificatesPage() {
         },
         body: JSON.stringify({ items: itemsWithUrls }),
       });
+
       if (!res.ok) {
         if (res.status === 401 || res.status === 404) {
           localStorage.removeItem('accessToken');
@@ -209,20 +279,36 @@ export default function CertificatesPage() {
         const errData = await res.json().catch(() => null);
         throw new Error(errData?.message || 'บันทึกไม่สำเร็จ');
       }
+
       setSaving(false);
       setMessage({
         type: 'success',
-        text: 'บันทึกใบประกาศนียบัตรเรียบร้อยแล้ว — โปรไฟล์สมบูรณ์ 100% ✓',
+        text: t.saved,
       });
+
       setCompletionPercent(100);
-      setTimeout(() => router.push('/profilefull'), 2000);
+
+      // เพิ่มคำสั่งดึงหน้าจอกลับขึ้นด้านบนสุด ก่อนที่จะเริ่มทำการย้ายหน้าเพจไป /profilefull
+      setTimeout(() => {
+        window.scrollTo({ top: 0, behavior: 'smooth' }); // บังคับเลื่อนหน้าขึ้นด้านบนแบบนุ่มนวล
+        router.push('/profilefull');
+      }, 2000);
+
     } catch (error: unknown) {
       setSaving(false);
-      setMessage({ type: 'error', text: getErrorMessage(error, 'เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง') });
+      setMessage({ type: 'error', text: getErrorMessage(error, t.error) });
     }
   };
 
-  const handleBack = () => router.push('/profile/driving');
+  const handleBack = () => {
+    window.scrollTo(0, 0); // เลื่อนขึ้นบนเมื่อกดย้อนกลับเช่นกัน
+    router.push('/profile/driving');
+  };
+
+  const handleStepClick = (path: string) => {
+    window.scrollTo(0, 0); // เลื่อนขึ้นบนเมื่อกดสลับเมนูด้านบน
+    router.push(path);
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 font-sans">
@@ -236,25 +322,16 @@ export default function CertificatesPage() {
         }}
       >
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div
-            className="absolute -top-20 -right-20 w-72 h-72 rounded-full opacity-[0.07]"
-            style={{ background: 'radial-gradient(circle, #60a5fa, transparent)' }}
-          />
-          <div
-            className="absolute -bottom-32 -left-16 w-80 h-80 rounded-full opacity-[0.05]"
-            style={{ background: 'radial-gradient(circle, #818cf8, transparent)' }}
-          />
-          <div
-            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full opacity-[0.03]"
-            style={{ background: 'radial-gradient(circle, #93c5fd, transparent)' }}
-          />
+          <div className="absolute -top-20 -right-20 w-72 h-72 rounded-full opacity-[0.07]" style={{ background: 'radial-gradient(circle, #60a5fa, transparent)' }} />
+          <div className="absolute -bottom-32 -left-16 w-80 h-80 rounded-full opacity-[0.05]" style={{ background: 'radial-gradient(circle, #818cf8, transparent)' }} />
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full opacity-[0.03]" style={{ background: 'radial-gradient(circle, #93c5fd, transparent)' }} />
         </div>
 
         <div className="max-w-5xl mx-auto px-4 sm:px-6 py-10 md:py-14 relative z-10">
           <div className="flex items-center gap-3 mb-8">
             <div className="w-1 h-6 rounded-full bg-linear-to-b from-blue-400 to-cyan-400" />
             <h2 className="text-white text-2xl md:text-3xl lg:text-4xl font-semibold tracking-wide">
-              ความสมบูรณ์ของโปรไฟล์
+              {t.completeness}
             </h2>
           </div>
 
@@ -267,45 +344,24 @@ export default function CertificatesPage() {
               <div className="relative shrink-0">
                 <div className="relative w-32 h-32 md:w-36 md:h-36">
                   <svg className="w-full h-full -rotate-90" viewBox="0 0 120 120">
+                    <circle cx="60" cy="60" r="54" fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="8" />
                     <circle
-                      cx="60"
-                      cy="60"
-                      r="54"
-                      fill="none"
-                      stroke="rgba(255,255,255,0.08)"
-                      strokeWidth="8"
-                    />
-                    <circle
-                      cx="60"
-                      cy="60"
-                      r="54"
-                      fill="none"
-                      stroke="url(#progressGradient)"
-                      strokeWidth="8"
-                      strokeLinecap="round"
-                      strokeDasharray={circumference}
-                      strokeDashoffset={strokeDashoffset}
+                      cx="60" cy="60" r="54" fill="none" stroke="url(#progressGradient)" strokeWidth="8"
+                      strokeLinecap="round" strokeDasharray={circumference} strokeDashoffset={strokeDashoffset}
                       className="transition-all duration-1000 ease-out"
                     />
                     <defs>
                       <linearGradient id="progressGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                        <stop offset="0%" stopColor="#60a5fa" />
-                        <stop offset="50%" stopColor="#38bdf8" />
-                        <stop offset="100%" stopColor="#22d3ee" />
+                        <stop offset="0%" stopColor="#60a5fa" /><stop offset="50%" stopColor="#38bdf8" /><stop offset="100%" stopColor="#22d3ee" />
                       </linearGradient>
                     </defs>
                   </svg>
                   <div className="absolute inset-0 flex flex-col items-center justify-center">
-                    <span className="text-3xl md:text-4xl font-bold text-white">
-                      {completionPercent}%
-                    </span>
-                    <span className="text-[10px] text-blue-300/80 mt-0.5">สำเร็จ</span>
+                    <span className="text-3xl md:text-4xl font-bold text-white">{completionPercent}%</span>
+                    <span className="text-[10px] text-blue-300/80 mt-0.5">{t.success}</span>
                   </div>
                 </div>
-                <div
-                  className="absolute inset-0 rounded-full opacity-20 blur-xl"
-                  style={{ background: 'radial-gradient(circle, #38bdf8, transparent)' }}
-                />
+                <div className="absolute inset-0 rounded-full opacity-20 blur-xl" style={{ background: 'radial-gradient(circle, #38bdf8, transparent)' }} />
               </div>
 
               {/* Steps */}
@@ -316,6 +372,8 @@ export default function CertificatesPage() {
                     return (
                       <button
                         key={index}
+                        type="button"
+                        onClick={() => handleStepClick(step.path)}
                         className={`group relative flex sm:flex-col items-center gap-3 sm:gap-2.5 p-3 sm:p-4 rounded-xl transition-all duration-300 cursor-pointer
                           ${step.active ? 'bg-white/15 border border-white/20 shadow-lg shadow-blue-500/10' : 'hover:bg-white/6 border border-transparent'}`}
                       >
@@ -326,14 +384,10 @@ export default function CertificatesPage() {
                           {step.completed ? (
                             <Check className="w-5 h-5 text-white" strokeWidth={2.5} />
                           ) : (
-                            <Icon
-                              className={`w-5 h-5 ${step.active ? 'text-blue-300' : 'text-white/30'}`}
-                            />
+                            <Icon className={`w-5 h-5 ${step.active ? 'text-blue-300' : 'text-white/30'}`} />
                           )}
                         </div>
-                        <span
-                          className={`text-xs sm:text-[11px] sm:text-center leading-tight font-medium transition-colors ${step.active || step.completed ? 'text-white' : 'text-white/40 group-hover:text-white/60'}`}
-                        >
+                        <span className={`text-xs sm:text-[11px] sm:text-center leading-tight font-medium transition-colors ${step.active || step.completed ? 'text-white' : 'text-white/40 group-hover:text-white/60'}`}>
                           {step.label}
                         </span>
                         {step.active && (
@@ -354,8 +408,8 @@ export default function CertificatesPage() {
                     />
                   </div>
                   <div className="flex justify-between mt-2 text-[10px] text-white/30">
-                    <span>เริ่มต้น</span>
-                    <span>สมบูรณ์</span>
+                    <span>{t.start}</span>
+                    <span>{t.complete}</span>
                   </div>
                 </div>
               </div>
@@ -364,111 +418,72 @@ export default function CertificatesPage() {
         </div>
       </div>
 
-      {/* Main Content */}
+      {/* Main Content Form */}
       <div className="max-w-4xl mx-auto px-4 py-8">
         {entries.map((entry, idx) => (
-          <div
-            key={entry.id}
-            className="bg-white rounded-xl shadow-md border border-gray-200 p-6 md:p-8 mb-6"
-          >
-            {/* Card header */}
+          <div key={entry.id} className="bg-white rounded-xl shadow-md border border-gray-200 p-6 md:p-8 mb-6">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-base font-bold text-gray-800 flex items-center gap-2">
                 <Award className="w-4 h-4 text-blue-600" />
-                ใบประกาศนียบัตร / เกียรติบัตร ที่ {idx + 1}
+                {t.certTitle} {idx + 1}
               </h2>
               {entries.length > 1 && (
-                <button
-                  onClick={() => removeEntry(entry.id)}
-                  className="text-red-400 hover:text-red-600 transition-colors p-1"
-                  title="ลบรายการนี้"
-                >
+                <button onClick={() => removeEntry(entry.id)} className="text-red-400 hover:text-red-600 transition-colors p-1" title="ลบรายการนี้">
                   <Trash2 className="w-4 h-4" />
                 </button>
               )}
             </div>
 
-            {/* Row 1: Certificate Name */}
             <div className="mb-6">
-              <label className="block text-sm font-bold text-gray-700 mb-2">
-                ชื่อใบประกาศนียบัตร / เกียรติบัตร
-              </label>
+              <label className="block text-sm font-bold text-gray-700 mb-2">{t.certName}</label>
               <input
                 type="text"
                 value={entry.name}
                 onChange={(e) => updateEntry(entry.id, 'name', e.target.value)}
-                placeholder="เช่น AWS Certified Solutions Architect"
+                placeholder={t.certPlaceholder}
                 className="w-full bg-gray-100 border border-gray-300 text-gray-700 py-2.5 px-3 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 placeholder-gray-400"
               />
             </div>
 
-            {/* Row 2: Issued By & Year */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
               <div>
-                <label className="block text-sm font-bold text-gray-700 mb-2">ออกโดย</label>
+                <label className="block text-sm font-bold text-gray-700 mb-2">{t.issuedBy}</label>
                 <input
                   type="text"
                   value={entry.issuedBy}
                   onChange={(e) => updateEntry(entry.id, 'issuedBy', e.target.value)}
-                  placeholder="เช่น Amazon Web Services"
+                  placeholder={t.issuedByPlaceholder}
                   className="w-full bg-gray-100 border border-gray-300 text-gray-700 py-2.5 px-3 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 placeholder-gray-400"
                 />
               </div>
               <div>
-                <label className="block text-sm font-bold text-gray-700 mb-2">ปีที่ได้รับ</label>
+                <label className="block text-sm font-bold text-gray-700 mb-2">{t.issueYear}</label>
                 <div className="relative">
                   <select
                     value={entry.issueYear}
                     onChange={(e) => updateEntry(entry.id, 'issueYear', e.target.value)}
                     className="w-full appearance-none bg-gray-100 border border-gray-300 text-gray-700 py-2.5 px-3 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer"
                   >
-                    <option value="">โปรดเลือก</option>
-                    {years.map((y) => (
-                      <option key={y} value={y}>
-                        {y}
-                      </option>
-                    ))}
+                    <option value="">{t.pleaseSelect}</option>
+                    {years.map((y) => <option key={y} value={y}>{y}</option>)}
                   </select>
-                  <svg
-                    className="absolute right-2 top-3 w-4 h-4 text-gray-400 pointer-events-none"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M19 9l-7 7-7-7"
-                    />
+                  <svg className="absolute right-2 top-3 w-4 h-4 text-gray-400 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                   </svg>
                 </div>
               </div>
             </div>
 
-            {/* Row 3: Image Upload */}
             <div>
-              <label className="block text-sm font-bold text-gray-700 mb-2">
-                อัพโหลดรูปเกียรติบัตร
-              </label>
-
+              <label className="block text-sm font-bold text-gray-700 mb-2">{t.uploadTitle}</label>
               {entry.imagePreview ? (
                 <div className="relative group">
                   <div className="relative w-full h-48 md:h-64 rounded-lg overflow-hidden border border-gray-200 bg-gray-50">
-                    <img
-                      src={entry.imagePreview}
-                      alt="Certificate preview"
-                      className="w-full h-full object-contain"
-                    />
-                    {/* Remove overlay */}
-                    <button
-                      onClick={() => removeImage(entry.id)}
-                      className="absolute top-2 right-2 w-8 h-8 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center shadow-lg transition-colors opacity-0 group-hover:opacity-100"
-                    >
+                    <img src={entry.imagePreview} alt="Certificate preview" className="w-full h-full object-contain" />
+                    <button onClick={() => removeImage(entry.id)} className="absolute top-2 right-2 w-8 h-8 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center shadow-lg transition-colors opacity-0 group-hover:opacity-100">
                       <X className="w-4 h-4" />
                     </button>
                   </div>
-                  <p className="text-xs text-gray-500 mt-1">{entry.imageFile?.name}</p>
                 </div>
               ) : (
                 <button
@@ -479,20 +494,12 @@ export default function CertificatesPage() {
                   <div className="w-12 h-12 rounded-full bg-gray-100 group-hover:bg-blue-50 flex items-center justify-center transition-colors">
                     <Upload className="w-6 h-6 text-gray-400 group-hover:text-blue-500 transition-colors" />
                   </div>
-                  <span className="text-sm text-gray-500 group-hover:text-blue-600 font-medium transition-colors">
-                    คลิกเพื่ออัพโหลดรูปภาพ
-                  </span>
-                  <span className="text-xs text-gray-400">
-                    รองรับ JPG, PNG, WEBP (ขนาดไม่เกิน 5MB)
-                  </span>
+                  <span className="text-sm text-gray-500 group-hover:text-blue-600 font-medium transition-colors">{t.uploadClick}</span>
+                  <span className="text-xs text-gray-400">{t.uploadSupport}</span>
                 </button>
               )}
-
-              {/* Hidden file input */}
               <input
-                ref={(el) => {
-                  fileInputRefs.current[entry.id] = el;
-                }}
+                ref={(el) => { fileInputRefs.current[entry.id] = el; }}
                 type="file"
                 accept="image/jpeg,image/png,image/webp"
                 className="hidden"
@@ -500,7 +507,7 @@ export default function CertificatesPage() {
                   const file = e.target.files?.[0];
                   if (file) {
                     if (file.size > 5 * 1024 * 1024) {
-                      setMessage({ type: 'error', text: 'ขนาดไฟล์เกิน 5MB กรุณาเลือกไฟล์ใหม่' });
+                      setMessage({ type: 'error', text: t.errorSize });
                       return;
                     }
                     handleImageUpload(entry.id, file);
@@ -511,48 +518,21 @@ export default function CertificatesPage() {
           </div>
         ))}
 
-        {/* Add more button */}
-        <button
-          onClick={addEntry}
-          className="w-full border-2 border-dashed border-gray-300 hover:border-blue-400 text-gray-500 hover:text-blue-600 rounded-xl py-4 flex items-center justify-center gap-2 transition-colors mb-8"
-        >
+        <button onClick={addEntry} className="w-full border-2 border-dashed border-gray-300 hover:border-blue-400 text-gray-500 hover:text-blue-600 rounded-xl py-4 flex items-center justify-center gap-2 transition-colors mb-8">
           <Plus className="w-5 h-5" />
-          <span className="font-medium">เพิ่มใบประกาศนียบัตร</span>
+          <span className="font-medium">{t.addCertificate}</span>
         </button>
 
-        {/* Message */}
         {message && (
-          <div
-            className={`mb-6 p-4 rounded-lg text-sm font-medium ${message.type === 'success'
-              ? 'bg-green-50 border border-green-200 text-green-700'
-              : 'bg-red-50 border border-red-200 text-red-700'
-              }`}
-          >
+          <div className={`mb-6 p-4 rounded-lg text-sm font-medium ${message.type === 'success' ? 'bg-green-50 border border-green-200 text-green-700' : 'bg-red-50 border border-red-200 text-red-700'}`}>
             {message.text}
           </div>
         )}
 
-        {/* Action buttons */}
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
-          <button
-            onClick={handleBack}
-            className="px-8 py-3 rounded-lg border border-gray-300 text-gray-600 font-medium hover:bg-gray-100 transition-colors"
-          >
-            ย้อนกลับ
-          </button>
-          <button
-            onClick={handleSubmit}
-            disabled={saving}
-            className="bg-[#d32f2f] hover:bg-[#b71c1c] text-white px-12 py-3 rounded-lg font-bold text-lg shadow-md transition-colors disabled:opacity-60 flex items-center justify-center gap-2"
-          >
-            {saving ? (
-              <>
-                <Loader2 className="w-5 h-5 animate-spin" />
-                กำลังบันทึก...
-              </>
-            ) : (
-              'บันทึก'
-            )}
+          <button onClick={handleBack} className="px-8 py-3 rounded-lg border border-gray-300 text-gray-600 font-medium hover:bg-gray-100 transition-colors">{t.backBtn}</button>
+          <button onClick={handleSubmit} disabled={saving} className="bg-[#d32f2f] hover:bg-[#b71c1c] text-white px-12 py-3 rounded-lg font-bold text-lg shadow-md transition-colors disabled:opacity-60 flex items-center justify-center gap-2">
+            {saving ? <><Loader2 className="w-5 h-5 animate-spin" /> {t.saving}</> : t.saveBtn}
           </button>
         </div>
       </div>

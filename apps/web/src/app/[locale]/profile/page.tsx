@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from '@/i18n/routing';
+import { useParams } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { Navbar } from '@/components/Navbar';
 import { Footer } from '@/components/Footer';
@@ -34,11 +35,9 @@ function getErrorMessage(error: unknown, fallback: string) {
   if (error instanceof Error && error.message) {
     return error.message;
   }
-
   return fallback;
 }
 
-// วางไว้ด้านบน ใต้พวก import
 interface ProfileForm {
   birthDay: string;
   birthMonth: string;
@@ -65,6 +64,534 @@ interface ProfileForm {
 
 export default function ProfilePage() {
   const router = useRouter();
+  const params = useParams();
+  const locale = (params?.locale === 'en' ? 'en' : 'th') as 'th' | 'en';
+
+  // ใช้ Dictionary สำหรับแปลข้อความแบบ Static ป้องกันข้อมูลฟอร์มหาย
+  const TRANSLATIONS: Record<string, Record<string, string>> = {
+    th: {
+      'ความสมบูรณ์ของโปรไฟล์': 'ความสมบูรณ์ของโปรไฟล์',
+      'สำเร็จ': 'สำเร็จ',
+      'เริ่มต้น': 'เริ่มต้น',
+      'สมบูรณ์': 'สมบูรณ์',
+      'กำลังบันทึก...': 'กำลังบันทึก...',
+      'บันทึกและถัดไป': 'บันทึกและถัดไป',
+      'ข้อมูลส่วนบุคคล': 'ข้อมูลส่วนบุคคล',
+      'ประวัติการศึกษา': 'ประวัติการศึกษา',
+      'ประวัติการทำงาน': 'ประวัติการทำงาน',
+      'ความสามารถทางภาษา': 'ความสามารถทางภาษา',
+      'ทักษะการขับขี่': 'ทักษะการขับขี่',
+      'ใบประกาศนียบัตร': 'ใบประกาศนียบัตร',
+      'เปลี่ยนรูป': 'เปลี่ยนรูป',
+      'เพิ่มชื่อของคุณ': 'เพิ่มชื่อของคุณ',
+      'วัน/เดือน/ปีที่เกิด': 'วัน/เดือน/ปีที่เกิด',
+      'วัน': 'วัน',
+      'เดือน': 'เดือน',
+      'ปี': 'ปี',
+      'ส่วนสูง (ซม.)': 'ส่วนสูง (ซม.)',
+      'น้ำหนัก (กก.)': 'น้ำหนัก (กก.)',
+      'ประสบการณ์ (ปี)': 'ประสบการณ์ (ปี)',
+      'โปรดระบุ': 'โปรดระบุ',
+      'เงินเดือนที่ต้องการ': 'เงินเดือนที่ต้องการ',
+      'ระบุเป็นตัวเลข (เช่น 25000)': 'ระบุเป็นตัวเลข (เช่น 25000)',
+      'เพศ': 'เพศ',
+      'โปรดเลือก': 'โปรดเลือก',
+      'ชาย': 'ชาย',
+      'หญิง': 'หญิง',
+      'อื่นๆ': 'อื่นๆ',
+      'เบอร์โทรศัพท์มือถือ': 'เบอร์โทรศัพท์มือถือ',
+      'LINE ID': 'LINE ID',
+      '(ไม่บังคับ)': '(ไม่บังคับ)',
+      'สัญชาติ': 'สัญชาติ',
+      'พิมพ์เพื่อค้นหา...': 'พิมพ์เพื่อค้นหา...',
+      'ศาสนา': 'ศาสนา',
+      'สถานภาพสมรส': 'สถานภาพสมรส',
+      'โสด': 'โสด',
+      'สมรส': 'สมรส',
+      'สถานภาพทางทหาร': 'สถานภาพทางทหาร',
+      'ได้รับการยกเว้น': 'ได้รับการยกเว้น',
+      'ผ่านการเกณฑ์ทหารแล้ว': 'ผ่านการเกณฑ์ทหารแล้ว',
+      'ยังไม่ผ่านการเกณฑ์ทหาร': 'ยังไม่ผ่านการเกณฑ์ทหาร',
+      'จังหวัดที่สนใจทำงาน (เลือกได้หลายที่)': 'จังหวัดที่สนใจทำงาน (เลือกได้หลายที่)',
+      'จังหวัด': 'Province',
+      'อำเภอ / เขต': 'District',
+      'ตำบล / แขวง': 'Sub-district',
+      'รหัสไปรษณีย์': 'Postal Code',
+      'อัพโหลดรูปภาพโปรไฟล์สำเร็จ ✓': 'อัพโหลดรูปภาพโปรไฟล์สำเร็จ ✓',
+      'บันทึกข้อมูลเรียบร้อยแล้ว ✓': 'บันทึกข้อมูลเรียบร้อยแล้ว ✓',
+      'มกราคม': 'มกราคม',
+      'กุมภาพันธ์': 'กุมภาพันธ์',
+      'มีนาคม': 'มีนาคม',
+      'เมษายน': 'เมษายน',
+      'พฤษภาคม': 'พฤษภาคม',
+      'มิถุนายน': 'มิถุนายน',
+      'กรกฎาคม': 'กรกฎาคม',
+      'สิงหาคม': 'สิงหาคม',
+      'กันยายน': 'กันยายน',
+      'ตุลาคม': 'ตุลาคม',
+      'พฤศจิกายน': 'พฤศจิกายน',
+      'ธันวาคม': 'ธันวาคม',
+      'ไทย': 'ไทย',
+      'กัมพูชา': 'กัมพูชา',
+      'เกาหลีใต้': 'เกาหลีใต้',
+      'เกาหลีเหนือ': 'เกาหลีเหนือ',
+      'จีน': 'จีน',
+      'ญี่ปุ่น': 'ญี่ปุ่น',
+      'เนปาล': 'เนปาล',
+      'บังกลาเทศ': 'บังกลาเทศ',
+      'บรูไน': 'บรูไน',
+      'ปากีสถาน': 'ปากีสถาน',
+      'พม่า': 'พม่า',
+      'ฟิลิปปินส์': 'ฟิลิปปินส์',
+      'มองโกเลีย': 'มองโกเลีย',
+      'มาเลเซีย': 'มาเลเซีย',
+      'ลาว': 'ลาว',
+      'เวียดนาม': 'เวียดนาม',
+      'ศรีลังกา': 'ศรีลังกา',
+      'สิงคโปร์': 'สิงคโปร์',
+      'อัฟกานิสถาน': 'อัฟกานิสถาน',
+      'อินเดีย': 'อินเดีย',
+      'อินโดนีเซีย': 'อินโดนีเซีย',
+      'อเมริกัน': 'อเมริกัน',
+      'อังกฤษ': 'อังกฤษ',
+      'ออสเตรเลีย': 'ออสเตรเลีย',
+      'แคนาดา': 'แคนาดา',
+      'ฝรั่งเศส': 'ฝรั่งเศส',
+      'เยอรมัน': 'เยอรมัน',
+      'รัสเซีย': 'รัสเซีย',
+      'แอลเบเนีย': 'แอลเบเนีย',
+      'แอลจีเรีย': 'แอลจีเรีย',
+      'อันดอร์รา': 'อันดอร์รา',
+      'แองโกลา': 'แองโกลา',
+      'แอนติกาและบาร์บูดา': 'แอนติกาและบาร์บูดา',
+      'อาร์เจนตินา': 'อาร์เจนตินา',
+      'อาร์เมเนีย': 'อาร์เมเนีย',
+      'ออสเตรีย': 'ออสเตรีย',
+      'อาเซอร์ไบจาน': 'อาเซอร์ไบจาน',
+      'บาฮามาส': 'บาฮามาส',
+      'บาห์เรน': 'บาห์เรน',
+      'บาร์เบโดส': 'บาร์เบโดส',
+      'เบลารุส': 'เบลารุส',
+      'เบลเยียม': 'เบลเยียม',
+      'เบลีซ': 'เบลีซ',
+      'เบนิน': 'เบนิน',
+      'ภูฏาน': 'ภูฏาน',
+      'โบลิเวีย': 'โบลิเวีย',
+      'บอสเนียและเฮอร์เซโกวีนา': 'บอสเนียและเฮอร์เซโกวีนา',
+      'บอตสวานา': 'บอตสวานา',
+      'บราซิล': 'บราซิล',
+      'บัลแกเรีย': 'บัลแกเรีย',
+      'บูร์กินาฟาโซ': 'บูร์กินาฟาโซ',
+      'บุรุนดี': 'บุรุนดี',
+      'กาบูเวร์ดี': 'กาบูเวร์ดี',
+      'แคเมอรูน': 'แคเมอรูน',
+      'สาธารณรัฐแอฟริกากลาง': 'สาธารณรัฐแอฟริกากลาง',
+      'ชาด': 'ชาด',
+      'ชิลี': 'ชิลี',
+      'โคลอมเบีย': 'โคลอมเบีย',
+      'คอโมโรส': 'คอโมโรส',
+      'คองโก': 'คองโก',
+      'สาธารณรัฐประชาธิปไตยคองโก': 'สาธารณรัฐประชาธิปไตยคองโก',
+      'คอสตาริกา': 'คอสตาริกา',
+      'โกตดิวัวร์': 'โกตดิวัวร์',
+      'โครเอเชีย': 'โครเอเชีย',
+      'คิวบา': 'คิวบา',
+      'ไซปรัส': 'ไซปรัส',
+      'เช็ก': 'เช็ก',
+      'เดนมาร์ก': 'เดนมาร์ก',
+      'จิบูตี': 'จิบูตี',
+      'โดมินิกา': 'โดมินิกา',
+      'สาธารณรัฐโดมินิกัน': 'สาธารณรัฐโดมินิกัน',
+      'เอกวาดอร์': 'เอกวาดอร์',
+      'อียิปต์': 'อียิปต์',
+      'เอลซัลวาดอร์': 'เอลซัลวาดอร์',
+      'อิเควทอเรียลกินี': 'อิเควทอเรียลกินี',
+      'เอริเทรีย': 'เอริเทรีย',
+      'เอสโตเนีย': 'เอสโตเนีย',
+      'เอสวาตีนี': 'Swazi',
+      'เอธิโอเปีย': 'Ethiopian',
+      'ฟิจิ': 'Fijian',
+      'ฟินแลนด์': 'Finnish',
+      'กาบอง': 'Gabonese',
+      'แกมเบีย': 'Gambian',
+      'จอร์เจีย': 'Georgian',
+      'กานา': 'Ghanaian',
+      'กรีซ': 'Greek',
+      'เกรเนดา': 'Grenadian',
+      'กัวเตมาลา': 'Guatemalan',
+      'กินี': 'Guinean',
+      'กินี-บิสเซา': 'Bissau-Guinean',
+      'กายอานา': 'Guyanese',
+      'เฮติ': 'Haitian',
+      'ฮอนดูรัส': 'Honduran',
+      'ฮังการี': 'Hungarian',
+      'ไอซ์แลนด์': 'Icelandic',
+      'อิหร่าน': 'Iranian',
+      'อิรัก': 'Iraqi',
+      'ไอร์แลนด์': 'Irish',
+      'อิสราเอล': 'Israeli',
+      'อิตาลี': 'Italian',
+      'จาเมกา': 'Jamaican',
+      'จอร์แดน': 'Jordanian',
+      'คาซัคสถาน': 'Kazakhstani',
+      'เคนยา': 'Kenyan',
+      'คิริบาส': 'I-Kiribati',
+      'โคโซโว': 'Kosovar',
+      'คูเวต': 'Kuwaiti',
+      'คีร์กีซสถาน': 'Kyrgyzstani',
+      'ลัตเวีย': 'Latvian',
+      'เลบานอน': 'Lebanese',
+      'เลโซโท': 'Basotho',
+      'ไลบีเรีย': 'Liberian',
+      'ลิเบีย': 'Libyan',
+      'ลิกเตนสไตน์': 'Liechtensteiner',
+      'ลิทัวเนีย': 'Lithuanian',
+      'ลักเซมเบิร์ก': 'Luxembourgish',
+      'มาดากัสการ์': 'Malagasy',
+      'มาลาวี': 'Malawian',
+      'มัลดีฟส์': 'Maldivian',
+      'มาลี': 'Malian',
+      'มอลตา': 'Maltese',
+      'หมู่เกาะมาร์แชลล์': 'Marshallese',
+      'มอริเตเนีย': 'Mauritanian',
+      'มอริเชียส': 'Mauritian',
+      'เม็กซิโก': 'Mexican',
+      'ไมโครนีเซีย': 'Micronesian',
+      'มอลโดวา': 'Moldovan',
+      'โมนาโก': 'Monégasque',
+      'มอนเตเนโกร': 'Montenegrin',
+      'โมร็อกโก': 'Moroccan',
+      'โมซัมบิก': 'Mozambican',
+      'นามิเบีย': 'Namibian',
+      'นาอูรู': 'Nauruan',
+      'เนเธอร์แลนด์': 'Dutch',
+      'นิวซีแลนด์': 'New Zealand',
+      'นิการากัว': 'Nicaraguan',
+      'ไนเจอร์': 'Nigerien',
+      'ไนจีเรีย': 'Nigerian',
+      'มาซิโดเนียเหนือ': 'Macedonian',
+      'นอร์เวย์': 'Norwegian',
+      'โอมาน': 'Omani',
+      'ปาเลา': 'Palauan',
+      'ปาเลสไตน์': 'Palestinian',
+      'ปานามา': 'Panamanian',
+      'ปาปัวนิวกินี': 'Papua New Guinean',
+      'ปารากวัย': 'Paraguayan',
+      'เปรู': 'Peruvian',
+      'โปแลนด์': 'Polish',
+      'โปรตุเกส': 'Portuguese',
+      'กาตาร์': 'Qatari',
+      'โรมาเนีย': 'Romanian',
+      'รวันดา': 'Rwandan',
+      'เซนต์คิตส์และเนวิส': 'Saint Kitts and Nevis',
+      'เซนต์ลูเชีย': 'Saint Lucian',
+      'เซนต์วินเซนต์และเกรนาดีนส์': 'Vincentian',
+      'ซามัว': 'Samoan',
+      'ซานมารีโน': 'Sammarinese',
+      'เซาตูเมและปรินซิปี': 'São Toméan',
+      'ซาอุดีอาระเบีย': 'Saudi Arabian',
+      'เซเนกัล': 'Senegalese',
+      'เซอร์เบีย': 'Serbian',
+      'เซเชลส์': 'Seychellois',
+      'เซียร์ราลีโอน': 'Sierra Leonean',
+      'สโลวาเกีย': 'Slovak',
+      'สโลวีเนีย': 'Slovenian',
+      'หมู่เกาะโซโลมอน': 'Solomon Islander',
+      'โซมาเลีย': 'Somali',
+      'แอฟริกาใต้': 'South African',
+      'ซูดานใต้': 'South Sudanese',
+      'สเปน': 'Spanish',
+      'ซูดาน': 'Sudanese',
+      'ซูรินาม': 'Surinamese',
+      'สวีเดน': 'Swedish',
+      'สวิตเซอร์แลนด์': 'Swiss',
+      'ซีเรีย': 'Syrian',
+      'ไต้หวัน': 'Taiwanese',
+      'ทาจิกิสถาน': 'Tajikistani',
+      'แทนซาเนีย': 'Tanzanian',
+      'ติมอร์-เลสเต': 'East Timorese',
+      'โตโก': 'Togolese',
+      'ตองกา': 'Tongan',
+      'ตรินิแดดและโตเบโก': 'Trinidadian and Tobagonian',
+      'ตูนิเซีย': 'Tunisian',
+      'ตุรกี': 'Turkish',
+      'เติร์กเมนิสถาน': 'Turkmen',
+      'ตูวาลู': 'Tuvaluan',
+      'ยูกันดา': 'Ugandan',
+      'ยูเครน': 'Ukrainian',
+      'สหรัฐอาหรับเอมิเรตส์': 'Emirati',
+      'อุรุกวัย': 'Uruguayan',
+      'อุซเบกิสถาน': 'Uzbekistani',
+      'วานูอาตู': 'Vanuatuan',
+      'นครรัฐวาติกัน': 'Vatican", "Vatican City',
+      'เวเนซุเอลา': 'Venezuelan',
+      'เยเมน': 'Yemeni',
+      'แซมเบีย': 'Zambian',
+      'ซิมบับเว': 'Zimbabwean',
+    },
+    en: {
+      'ความสมบูรณ์ของโปรไฟล์': 'Profile Completion',
+      'สำเร็จ': 'Success',
+      'เริ่มต้น': 'Start',
+      'สมบูรณ์': 'Complete',
+      'กำลังบันทึก...': 'Saving...',
+      'บันทึกและถัดไป': 'Save & Next',
+      'ข้อมูลส่วนบุคคล': 'Personal Information',
+      'ประวัติการศึกษา': 'Education History',
+      'ประวัติการทำงาน': 'Work History',
+      'ความสามารถทางภาษา': 'Language Skills',
+      'ทักษะการขับขี่': 'Driving Skills',
+      'ใบประกาศนียบัตร': 'Certificates',
+      'เปลี่ยนรูป': 'Change Photo',
+      'เพิ่มชื่อของคุณ': 'Add your name',
+      'วัน/เดือน/ปีที่เกิด': 'Date of Birth',
+      'วัน': 'Day',
+      'เดือน': 'Month',
+      'ปี': 'Year',
+      'ส่วนสูง (ซม.)': 'Height (cm.)',
+      'น้ำหนัก (กก.)': 'Weight (kg.)',
+      'ประสบการณ์ (ปี)': 'Experience (years)',
+      'โปรดระบุ': 'Please specify',
+      'เงินเดือนที่ต้องการ': 'Expected Salary',
+      'ระบุเป็นตัวเลข (เช่น 25000)': 'Enter numbers only (e.g. 25000)',
+      'เพศ': 'Gender',
+      'โปรดเลือก': 'Please select',
+      'ชาย': 'Male',
+      'หญิง': 'Female',
+      'อื่นๆ': 'Other',
+      'เบอร์โทรศัพท์มือถือ': 'Mobile Phone Number',
+      'LINE ID': 'LINE ID',
+      '(không bắt buộc)': '(Optional)',
+      '(ไม่บังคับ)': '(Optional)',
+      'สัญชาติ': 'Nationality',
+      'พิมพ์เพื่อค้นหา...': 'Type to search...',
+      'ศาสนา': 'Religion',
+      'สถานภาพสมรส': 'Marital Status',
+      'โสด': 'Single',
+      'สมรส': 'Married',
+      'สถานภาพทางทหาร': 'Military Status',
+      'ได้รับการยกเว้น': 'Exempted',
+      'ผ่านการเกณฑ์ทหารแล้ว': 'Completed',
+      'ยังไม่ผ่านการเกณฑ์ทหาร': 'Not yet completed',
+      'จังหวัดที่สนใจทำงาน (เลือกได้หลายที่)': 'Preferred Work Locations (Multiple choices)',
+      'อัพโหลดรูปภาพโปรไฟล์สำเร็จ ✓': 'Profile picture uploaded successfully ✓',
+      'บันทึกข้อมูลเรียบร้อยแล้ว ✓': 'Data saved successfully ✓',
+      'มกราคม': 'January',
+      'กุมภาพันธ์': 'February',
+      'มีนาคม': 'March',
+      'เมษายน': 'April',
+      'พฤษภาคม': 'May',
+      'มิถุนายน': 'June',
+      'กรกฎาคม': 'July',
+      'สิงหาคม': 'August',
+      'กันยายน': 'September',
+      'ตุลาคม': 'October',
+      'พฤศจิกายน': 'November',
+      'ธันวาคม': 'December',
+      'ไทย': 'Thai',
+      'กัมพูชา': 'Cambodian',
+      'เกาหลีใต้': 'South Korean',
+      'เกาหลีเหนือ': 'North Korean',
+      'จีน': 'Chinese',
+      'ญี่ปุ่น': 'Japanese',
+      'เนปาล': 'Nepalese',
+      'บังกลาเทศ': 'Bangladeshi',
+      'บรูไน': 'Bruneian',
+      'ปากีสถาน': 'Pakistani',
+      'พม่า': 'Myanmar',
+      'ฟิลิปปินส์': 'Filipino',
+      'มองโกเลีย': 'Mongolian',
+      'มาเลเซีย': 'Malaysian',
+      'ลาว': 'Lao',
+      'เวียดนาม': 'Vietnamese',
+      'ศรีลังกา': 'Sri Lankan',
+      'สิงคโปร์': 'Singaporean',
+      'อัฟกานิสถาน': 'Afghan',
+      'อินเดีย': 'Indian',
+      'อินโดนีเซีย': 'Indonesian',
+      'อเมริกัน': 'American',
+      'อังกฤษ': 'British',
+      'ออสเตรเลีย': 'Australian',
+      'แคนาดา': 'Canadian',
+      'ฝรั่งเศส': 'French',
+      'เยอรมัน': 'German',
+      'รัสเซีย': 'Russian',
+      'แอลเบเนีย': 'Albanian',
+      'แอลจีเรีย': 'Algerian',
+      'อันดอร์รา': 'Andorran',
+      'แองโกลา': 'Angolan',
+      'แอนติกาและบาร์บูดา': 'Antiguan and Barbudan',
+      'อาร์เจนตินา': 'Argentine',
+      'อาร์เมเนีย': 'Armenian',
+      'ออสเตรีย': 'Austrian',
+      'อาเซอร์ไบจาน': 'Azerbaijani',
+      'บาฮามาส': 'Bahamian',
+      'บาห์เรน': 'Bahraini',
+      'บาร์เบโดส': 'Barbadian',
+      'เบลารุส': 'Belarusian',
+      'เบลเยียม': 'Belgian',
+      'เบลีซ': 'Belizean',
+      'เบนิน': 'Beninese',
+      'ภูฏาน': 'Bhutanese',
+      'โบลิเวีย': 'Bolivian',
+      'บอสเนียและเฮอร์เซโกวีนา': 'Bosnian and Herzegovinian',
+      'บอตสวานา': 'Botswanan',
+      'บราซิล': 'Brazilian',
+      'บัลแกเรีย': 'Bulgarian',
+      'บูร์กินาฟาโซ': 'Burkinabé',
+      'บุรุนดี': 'Burundian',
+      'กาบูเวร์ดี': 'Cape Verdean',
+      'แคเมอรูน': 'Cameroonian',
+      'สาธารณรัฐแอฟริกากลาง': 'Central African',
+      'ชาด': 'Chadian',
+      'ชิลี': 'Chilean',
+      'โคลอมเบีย': 'Colombian',
+      'คอโมโรส': 'Comoran',
+      'คองโก': 'Congolese',
+      'สาธารณรัฐประชาธิปไตยคองโก': 'Congolese',
+      'คอสตาริกา': 'Costa Rican',
+      'โกตดิวัวร์': 'Ivorian',
+      'โครเอเชีย': 'Croatian',
+      'คิวบา': 'Cuban',
+      'ไซปรัส': 'Cypriot',
+      'เช็ก': 'Czech',
+      'เดนมาร์ก': 'Danish',
+      'จิบูตี': 'Djiboutian',
+      'โดมินิกา': 'Dominican',
+      'สาธารณรัฐโดมินิกัน': 'Dominican',
+      'เอกวาดอร์': 'Ecuadorean',
+      'อียิปต์': 'Egyptian',
+      'เอลซัลวาดอร์': 'Salvadoran',
+      'อิเควทอเรียลกินี': 'Equatoguinean',
+      'เอริเทรีย': 'Eritrean',
+      'เอสโตเนีย': 'Estonian',
+      'เอสวาตีนี': 'Swazi',
+      'เอธิโอเปีย': 'Ethiopian',
+      'ฟิจิ': 'Fijian',
+      'ฟินแลนด์': 'Finnish',
+      'กาบอง': 'Gabonese',
+      'แกมเบีย': 'Gambian',
+      'จอร์เจีย': 'Georgian',
+      'กานา': 'Ghanaian',
+      'กรีซ': 'Greek',
+      'เกรเนดา': 'Grenadian',
+      'กัวเตมาลา': 'Guatemalan',
+      'กินี': 'Guinean',
+      'กินี-บิสเซา': 'Bissau-Guinean',
+      'กายอานา': 'Guyanese',
+      'เฮติ': 'Haitian',
+      'ฮอนดูรัส': 'Honduran',
+      'ฮังการี': 'Hungarian',
+      'ไอซ์แลนด์': 'Icelandic',
+      'อิหร่าน': 'Iranian',
+      'อิรัก': 'Iraqi',
+      'ไอร์แลนด์': 'Irish',
+      'อิสราเอล': 'Israeli',
+      'อิตาลี': 'Italian',
+      'จาเมกา': 'Jamaican',
+      'จอร์แดน': 'Jordanian',
+      'คาซัคสถาน': 'Kazakhstani',
+      'เคนยา': 'Kenyan',
+      'คิริบาส': 'I-Kiribati',
+      'โคโซโว': 'Kosovar',
+      'คูเวต': 'Kuwaiti',
+      'คีร์กีซสถาน': 'Kyrgyzstani',
+      'ลัตเวีย': 'Latvian',
+      'เลบานอน': 'Lebanese',
+      'เลโซโท': 'Basotho',
+      'ไลบีเรีย': 'Liberian',
+      'ลิเบีย': 'Libyan',
+      'ลิกเตนสไตน์': 'Liechtensteiner',
+      'ลิทัวเนีย': 'Lithuanian',
+      'ลักเซมเบิร์ก': 'Luxembourgish',
+      'มาดากัสการ์': 'Malagasy',
+      'มาลาวี': 'Malawian',
+      'มัลดีฟส์': 'Maldivian',
+      'มาลี': 'Malian',
+      'มอลตา': 'Maltese',
+      'หมู่เกาะมาร์แชลล์': 'Marshallese',
+      'มอริเตเนีย': 'Mauritanian',
+      'มอริเชียส': 'Mauritian',
+      'เม็กซิโก': 'Mexican',
+      'ไมโครนีเซีย': 'Micronesian',
+      'มอลโดวา': 'Moldovan',
+      'โมนาโก': 'Monégasque',
+      'มอนเตเนโกร': 'Montenegrin',
+      'โมร็อกโก': 'Moroccan',
+      'โมซัมบิก': 'Mozambican',
+      'นามิเบีย': 'Namibian',
+      'นาอูรู': 'Nauruan',
+      'เนเธอร์แลนด์': 'Dutch',
+      'นิวซีแลนด์': 'New Zealand',
+      'นิการากัว': 'Nicaraguan',
+      'ไนเจอร์': 'Nigerien',
+      'ไนจีเรีย': 'Nigerian',
+      'มาซิโดเนียเหนือ': 'Macedonian',
+      'นอร์เวย์': 'Norwegian',
+      'โอมาน': 'Omani',
+      'ปาเลา': 'Palauan',
+      'ปาเลสไตน์': 'Palestinian',
+      'ปานามา': 'Panamanian',
+      'ปาปัวนิวกินี': 'Papua New Guinean',
+      'ปารากวัย': 'Paraguayan',
+      'เปรู': 'Peruvian',
+      'โปแลนด์': 'Polish',
+      'โปรตุเกส': 'Portuguese',
+      'กาตาร์': 'Qatari',
+      'โรมาเนีย': 'Romanian',
+      'รวันดา': 'Rwandan',
+      'เซนต์คิตส์และเนวิส': 'Saint Kitts and Nevis',
+      'เซนต์ลูเชีย': 'Saint Lucian',
+      'เซนต์วินเซนต์และเกรนาดีนส์': 'Vincentian',
+      'ซามัว': 'Samoan',
+      'ซานมารีโน': 'Sammarinese',
+      'เซาตูเมและปรินซิปี': 'São Toméan',
+      'ซาอุดีอาระเบีย': 'Saudi Arabian',
+      'เซเนกัล': 'Senegalese',
+      'เซอร์เบีย': 'Serbian',
+      'เซเชลส์': 'Seychellois',
+      'เซียร์ราลีโอน': 'Sierra Leonean',
+      'สโลวาเกีย': 'Slovak',
+      'สโลวีเนีย': 'Slovenian',
+      'หมู่เกาะโซโลมอน': 'Solomon Islander',
+      'โซมาเลีย': 'Somali',
+      'แอฟริกาใต้': 'South African',
+      'ซูดานใต้': 'South Sudanese',
+      'สเปน': 'Spanish',
+      'ซูดาน': 'Sudanese',
+      'ซูรินาม': 'Surinamese',
+      'สวีเดน': 'Swedish',
+      'สวิตเซอร์แลนด์': 'Swiss',
+      'ซีเรีย': 'Syrian',
+      'ไต้หวัน': 'Taiwanese',
+      'ทาจิกิสถาน': 'Tajikistani',
+      'แทนซาเนีย': 'Tanzanian',
+      'ติมอร์-เลสเต': 'East Timorese',
+      'โตโก': 'Togolese',
+      'ตองกา': 'Tongan',
+      'ตรินิแดดและโตเบโก': 'Trinidadian and Tobagonian',
+      'ตูนิเซีย': 'Tunisian',
+      'ตุรกี': 'Turkish',
+      'เติร์กเมนิสถาน': 'Turkmen',
+      'ตูวาลู': 'Tuvaluan',
+      'ยูกันดา': 'Ugandan',
+      'ยูเครน': 'Ukrainian',
+      'สหรัฐอาหรับเอมิเรตส์': 'Emirati',
+      'อุรุกวัย': 'Uruguayan',
+      'อุซเบกิสถาน': 'Uzbekistani',
+      'วานูอาตู': 'Vanuatuan',
+      'นครรัฐวาติกัน': 'Vatican", "Vatican City',
+      'เวเนซุเอลา': 'Venezuelan',
+      'เยเมน': 'Yemeni',
+      'แซมเบีย': 'Zambian',
+      'ซิมบับเว': 'Zimbabwean',
+    }
+  };
+
+  const t = (key: string) => {
+    return TRANSLATIONS[locale]?.[key] || key;
+  };
+
   const { user, loading: authLoading, setUser } = useAuth();
 
   const [form, setForm] = useState<ProfileForm>({
@@ -91,43 +618,40 @@ export default function ProfilePage() {
     desiredProvinces: [],
   });
 
-
   const [saving, setSaving] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
-  // Dropdown data
-  const days = Array.from({ length: 31 }, (_, i) => i + 1);
   const months = [
-    'มกราคม',
-    'กุมภาพันธ์',
-    'มีนาคม',
-    'เมษายน',
-    'พฤษภาคม',
-    'มิถุนายน',
-    'กรกฎาคม',
-    'สิงหาคม',
-    'กันยายน',
-    'ตุลาคม',
-    'พฤศจิกายน',
-    'ธันวาคม',
+    'มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน',
+    'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม',
   ];
+  const days = Array.from({ length: 31 }, (_, i) => i + 1);
   const years = Array.from({ length: 100 }, (_, i) => 2567 - i);
 
   const profileSteps = [
-    { icon: User, label: 'ข้อมูลส่วนบุคคล', completed: true, active: true },
-    { icon: GraduationCap, label: 'ประวัติการศึกษา', completed: false, active: false },
-    { icon: Briefcase, label: 'ประวัติการทำงาน', completed: false, active: false },
-    { icon: Languages, label: 'ความสามารถทางภาษา', completed: false, active: false },
-    { icon: Car, label: 'ทักษะการขับขี่', completed: false, active: false },
-    { icon: Award, label: 'ใบประกาศนียบัตร', completed: false, active: false },
+    { icon: User, label: t('ข้อมูลส่วนบุคคล'), completed: true, active: true, path: '/profile' },
+    { icon: GraduationCap, label: t('ประวัติการศึกษา'), completed: false, active: false, path: '/profile/education' },
+    { icon: Briefcase, label: t('ประวัติการทำงาน'), completed: false, active: false, path: '/profile/work-history' },
+    { icon: Languages, label: t('ความสามารถทางภาษา'), completed: false, active: false, path: '/profile/languages' },
+    { icon: Car, label: t('ทักษะการขับขี่'), completed: false, active: false, path: '/profile/driving' },
+    { icon: Award, label: t('ใบประกาศนียบัตร'), completed: false, active: false, path: '/profile/certificates' },
+  ];
+
+
+  const stepRoutes = [
+    '/profile',
+    '/profile/education',
+    '/profile/work-history',
+    '/profile/languages',
+    '/profile/driving',
+    '/profile/certificates',
   ];
 
   const [completionPercent, setCompletionPercent] = useState(0);
   const circumference = 2 * Math.PI * 54;
   const strokeDashoffset = circumference - (completionPercent / 100) * circumference;
 
-  // Redirect if not logged in or if EMPLOYER
   useEffect(() => {
     if (!authLoading && !user) {
       router.push('/login');
@@ -159,7 +683,7 @@ export default function ProfilePage() {
 
         provincesArray = rawData.map((p: any) => {
           if (typeof p === 'string') return p;
-          return p.provinceName; // ดึง field provinceName จาก Object ของ Prisma
+          return p.provinceName;
         });
 
         const p = data?.profile || data;
@@ -207,19 +731,16 @@ export default function ProfilePage() {
     fetchProfile();
   }, [user]);
 
-
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>,
   ) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  // Avatar upload handler
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Validate size (e.g., max 5MB)
     if (file.size > 5 * 1024 * 1024) {
       setMessage({ type: 'error', text: 'ขนาดไฟล์รูปภาพต้องไม่เกิน 5MB' });
       return;
@@ -252,9 +773,8 @@ export default function ProfilePage() {
       }
 
       const data = await res.json();
-      setMessage({ type: 'success', text: 'อัพโหลดรูปภาพโปรไฟล์สำเร็จ ✓' });
+      setMessage({ type: 'success', text: t('อัพโหลดรูปภาพโปรไฟล์สำเร็จ ✓') });
 
-      // Update global user context so Navbar/Dropdown update instantly
       if (user) {
         setUser({ ...user, avatarUrl: data.avatarUrl });
       }
@@ -265,7 +785,6 @@ export default function ProfilePage() {
     }
   };
 
-  // Submit handler
   const handleSubmit = async () => {
     setSaving(true);
     setMessage(null);
@@ -275,10 +794,8 @@ export default function ProfilePage() {
       return;
     }
 
-    // Build birthDate from day/month/year
     let birthDate: string | undefined;
     if (form.birthDay && form.birthMonth && form.birthYear) {
-      // Convert Buddhist year to CE year
       const ceYear = Number(form.birthYear) - 543;
       const month = String(form.birthMonth).padStart(2, '0');
       const day = String(form.birthDay).padStart(2, '0');
@@ -303,7 +820,6 @@ export default function ProfilePage() {
       postalCode: form.postalCode || null,
       religion: form.religion || null,
       expectedSalary: form.expectedSalary !== '' ? Number(form.expectedSalary) : null,
-      //drivingSkills: form.drivingSkills || null,
     };
 
     try {
@@ -318,7 +834,6 @@ export default function ProfilePage() {
 
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
-        // If user not found (token stale), clear and redirect to login
         if (res.status === 401 || res.status === 404) {
           localStorage.removeItem('accessToken');
           router.push('/login');
@@ -338,7 +853,7 @@ export default function ProfilePage() {
 
       if (!resProvince.ok) throw new Error('บันทึกจังหวัดที่สนใจไม่สำเร็จ');
 
-      setMessage({ type: 'success', text: 'บันทึกข้อมูลเรียบร้อยแล้ว ✓' });
+      setMessage({ type: 'success', text: t('บันทึกข้อมูลเรียบร้อยแล้ว ✓') });
       setCompletionPercent(17);
       setTimeout(() => router.push('/profile/education'), 1000);
     } catch (error: unknown) {
@@ -359,7 +874,6 @@ export default function ProfilePage() {
           background: 'linear-gradient(135deg, #0a1628 0%, #0e2a5e 40%, #1a3a7a 70%, #243b82 100%)',
         }}
       >
-        {/* Decorative background elements */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           <div
             className="absolute -top-20 -right-20 w-72 h-72 rounded-full opacity-[0.07]"
@@ -376,12 +890,15 @@ export default function ProfilePage() {
         </div>
 
         <div className="max-w-5xl mx-auto px-4 sm:px-6 py-10 md:py-14 relative z-10">
-          {/* Header */}
-          <div className="flex items-center gap-3 mb-8">
-            <div className="w-1 h-6 rounded-full bg-linear-to-b from-blue-400 to-cyan-400" />
-            <h2 className="text-white text-2xl md:text-3xl lg:text-4xl font-semibold tracking-wide">
-              ความสมบูรณ์ของโปรไฟล์
-            </h2>
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+            <div className="flex items-center gap-3">
+              <div className="w-1 h-6 rounded-full bg-linear-to-b from-blue-400 to-cyan-400" />
+              <h2 className="text-white text-2xl md:text-3xl lg:text-4xl font-semibold tracking-wide">
+                {t('ความสมบูรณ์ของโปรไฟล์')}
+              </h2>
+            </div>
+
+
           </div>
 
           {/* Main Glass Card */}
@@ -394,7 +911,6 @@ export default function ProfilePage() {
               <div className="relative shrink-0">
                 <div className="relative w-32 h-32 md:w-36 md:h-36">
                   <svg className="w-full h-full -rotate-90" viewBox="0 0 120 120">
-                    {/* Background track */}
                     <circle
                       cx="60"
                       cy="60"
@@ -403,7 +919,6 @@ export default function ProfilePage() {
                       stroke="rgba(255,255,255,0.08)"
                       strokeWidth="8"
                     />
-                    {/* Progress arc */}
                     <circle
                       cx="60"
                       cy="60"
@@ -416,7 +931,6 @@ export default function ProfilePage() {
                       strokeDashoffset={strokeDashoffset}
                       className="transition-all duration-1000 ease-out"
                     />
-                    {/* Gradient definition */}
                     <defs>
                       <linearGradient id="progressGradient" x1="0%" y1="0%" x2="100%" y2="100%">
                         <stop offset="0%" stopColor="#60a5fa" />
@@ -425,15 +939,13 @@ export default function ProfilePage() {
                       </linearGradient>
                     </defs>
                   </svg>
-                  {/* Center text */}
                   <div className="absolute inset-0 flex flex-col items-center justify-center">
                     <span className="text-3xl md:text-4xl font-bold text-white">
                       {completionPercent}%
                     </span>
-                    <span className="text-[10px] text-blue-300/80 mt-0.5">สำเร็จ</span>
+                    <span className="text-[10px] text-blue-300/80 mt-0.5">{t('สำเร็จ')}</span>
                   </div>
                 </div>
-                {/* Glow behind the ring */}
                 <div
                   className="absolute inset-0 rounded-full opacity-20 blur-xl"
                   style={{ background: 'radial-gradient(circle, #38bdf8, transparent)' }}
@@ -448,13 +960,13 @@ export default function ProfilePage() {
                     return (
                       <button
                         key={index}
+                        onClick={() => router.push(stepRoutes[index])}
                         className={`group relative flex sm:flex-col items-center gap-3 sm:gap-2.5 p-3 sm:p-4 rounded-xl transition-all duration-300 cursor-pointer
                           ${step.active
                             ? 'bg-white/15 border border-white/20 shadow-lg shadow-blue-500/10'
                             : 'hover:bg-white/6 border border-transparent'
                           }`}
                       >
-                        {/* Step number badge */}
                         <div
                           className={`relative shrink-0 w-10 h-10 sm:w-11 sm:h-11 rounded-xl flex items-center justify-center transition-all duration-300
                           ${step.completed
@@ -473,24 +985,17 @@ export default function ProfilePage() {
                           )}
                         </div>
 
-                        {/* Label */}
                         <span
                           className={`text-xs sm:text-[11px] sm:text-center leading-tight font-medium transition-colors
                           ${step.active || step.completed ? 'text-white' : 'text-white/40 group-hover:text-white/60'}`}
                         >
-                          {step.label}
+                          {t(step.label)}
                         </span>
-
-                        {/* Active indicator dot for mobile */}
-                        {step.active && (
-                          <div className="sm:hidden ml-auto w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
-                        )}
                       </button>
                     );
                   })}
                 </div>
 
-                {/* Progress bar under steps - visible on desktop */}
                 <div className="hidden sm:block mt-5">
                   <div className="h-1.5 bg-white/6 rounded-full overflow-hidden">
                     <div
@@ -502,8 +1007,8 @@ export default function ProfilePage() {
                     />
                   </div>
                   <div className="flex justify-between mt-2 text-[10px] text-white/30">
-                    <span>เริ่มต้น</span>
-                    <span>สมบูรณ์</span>
+                    <span>{t('เริ่มต้น')}</span>
+                    <span>{t('สมบูรณ์')}</span>
                   </div>
                 </div>
               </div>
@@ -514,7 +1019,6 @@ export default function ProfilePage() {
 
       {/* Main Content Form */}
       <div className="max-w-4xl mx-auto px-4 -mt-8 relative z-20 pb-20">
-        {/* Avatar & Name Section */}
         <div className="flex flex-col md:flex-row gap-6 mb-8">
           <div
             className="relative mx-auto md:mx-0 group cursor-pointer"
@@ -537,9 +1041,8 @@ export default function ProfilePage() {
                   </svg>
                 </div>
               )}
-              {/* Hover overlay */}
               <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                <span className="text-white text-xs font-semibold">เปลี่ยนรูป</span>
+                <span className="text-white text-xs font-semibold">{t('เปลี่ยนรูป')}</span>
               </div>
             </div>
             <button className="absolute -bottom-2 -right-2 w-8 h-8 bg-black text-white rounded-full flex items-center justify-center shadow-lg hover:bg-gray-800 transition-colors z-10">
@@ -556,7 +1059,7 @@ export default function ProfilePage() {
 
           <div className="flex items-center gap-2 pt-4 md:pt-12 text-gray-700">
             <span className="text-lg font-medium">
-              {user ? `${user.firstName} ${user.lastName}` : 'เพิ่มชื่อของคุณ'}
+              {user ? `${user.firstName} ${user.lastName}` : t('เพิ่มชื่อของคุณ')}
             </span>
             <button className="text-gray-400 hover:text-gray-600">
               <Pencil className="w-4 h-4" />
@@ -564,92 +1067,91 @@ export default function ProfilePage() {
           </div>
         </div>
 
-        {/* Card: Personal Info */}
+        // Card: Personal Info
         <div className="bg-white rounded-xl shadow-2xl border border-gray-300 p-6 md:p-8">
-          <h2 className="text-lg font-bold text-gray-800 mb-6">ข้อมูลส่วนบุคคล</h2>
+          <h2 className="text-lg font-bold text-gray-800 mb-6">{t('ข้อมูลส่วนบุคคล')}</h2>
 
-          {/* Row 1: Birthdate, Height, Weight */}
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-6 mb-6">
-            <div className="md:col-span-6">
+          {/* Row 1: Birthdate, Height, Weight, Experience */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            <div>
               <label className="block text-sm font-bold text-gray-700 mb-2">
-                วัน/เดือน/ปีที่เกิด
+                {t('วัน/เดือน/ปีที่เกิด')}
               </label>
               <div className="grid grid-cols-3 gap-2">
                 <SearchableSelect
-                  placeholder="วัน"
+                  placeholder={t('วัน')}
                   value={form.birthDay}
                   onChange={(val) => setForm({ ...form, birthDay: val })}
                   options={days.map((d) => ({ value: String(d), label: String(d) }))}
                 />
                 <SearchableSelect
-                  placeholder="เดือน"
+                  placeholder={t('เดือน')}
                   value={form.birthMonth}
                   onChange={(val) => setForm({ ...form, birthMonth: val })}
-                  options={months.map((m, i) => ({ value: String(i + 1), label: m }))}
+                  options={months.map((m, i) => ({ value: String(i + 1), label: t(m) }))}
                 />
                 <SearchableSelect
-                  placeholder="ปี"
+                  placeholder={t('ปี')}
                   value={form.birthYear}
                   onChange={(val) => setForm({ ...form, birthYear: val })}
                   options={years.map((y) => ({ value: String(y), label: String(y) }))}
                 />
               </div>
             </div>
-            <div className="md:col-span-6">
-              <div className="grid grid-cols-3 gap-2">
-                <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-2">ส่วนสูง (ซม.)</label>
-                  <input
-                    type="number"
-                    name="height"
-                    value={form.height}
-                    onChange={handleChange}
-                    placeholder="โปรดระบุ"
-                    className="w-full bg-gray-100 border border-gray-300 text-gray-700 py-2.5 px-3 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 placeholder-gray-400"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-2">น้ำหนัก (กก.)</label>
-                  <input
-                    type="number"
-                    name="weight"
-                    value={form.weight}
-                    onChange={handleChange}
-                    placeholder="โปรดระบุ"
-                    className="w-full bg-gray-100 border border-gray-300 text-gray-700 py-2.5 px-3 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 placeholder-gray-400"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-2">ประสบการณ์ (ปี)</label>
-                  <input
-                    type="number"
-                    name="experience"
-                    value={form.experience}
-                    onChange={handleChange}
-                    placeholder="โปรดระบุ"
-                    className="w-full bg-gray-100 border border-gray-300 text-gray-700 py-2.5 px-3 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 placeholder-gray-400"
-                  />
-                </div>
+            <div className="grid grid-cols-3 gap-2 items-end">
+              <div>
+                <label className="block text-xs font-bold text-gray-700 mb-2">Height (cm.)</label>
+                <input
+                  type="number"
+                  name="height"
+                  value={form.height}
+                  onChange={handleChange}
+                  placeholder={t('โปรดระบุ')}
+                  className="w-full bg-gray-100 border border-gray-300 text-gray-700 py-2.5 px-3 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 placeholder-gray-400"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-gray-700 mb-2">Weight (kg.)</label>
+                <input
+                  type="number"
+                  name="weight"
+                  value={form.weight}
+                  onChange={handleChange}
+                  placeholder={t('โปรดระบุ')}
+                  className="w-full bg-gray-100 border border-gray-300 text-gray-700 py-2.5 px-3 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 placeholder-gray-400"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-gray-700 mb-2 whitespace-nowrap">
+                  {t('ประสบการณ์ (ปี)')}
+                </label>
+                <input
+                  type="number"
+                  name="experience"
+                  value={form.experience}
+                  onChange={handleChange}
+                  placeholder={t('โปรดระบุ')}
+                  className="w-full bg-gray-100 border border-gray-300 text-gray-700 py-2.5 px-3 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 placeholder-gray-400"
+                />
               </div>
             </div>
           </div>
 
-
           {/* Row 2: Gender, Phone */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
             <div>
-              <label className="block text-sm font-bold text-gray-700 mb-2">เงินเดือนที่ต้องการ</label>
+              <label className="block text-sm font-bold text-gray-700 mb-2">{t('เงินเดือนที่ต้องการ')}</label>
               <input
                 type="number"
                 name="expectedSalary"
                 value={form.expectedSalary}
                 onChange={handleChange}
-                placeholder="ระบุเป็นตัวเลข (เช่น 25000)"
+                placeholder={t('ระบุเป็นตัวเลข (เช่น 25000)')}
                 className="w-full bg-gray-100 border border-gray-300 text-gray-700 py-2.5 px-3 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 placeholder-gray-400"
               />
             </div>
             <div>
-              <label className="block text-sm font-bold text-gray-700 mb-2">เพศ</label>
+              <label className="block text-sm font-bold text-gray-700 mb-2">{t('เพศ')}</label>
               <div className="relative">
                 <select
                   name="gender"
@@ -657,24 +1159,24 @@ export default function ProfilePage() {
                   onChange={handleChange}
                   className="w-full appearance-none bg-gray-100 border border-gray-300 text-gray-700 py-2.5 px-3 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer"
                 >
-                  <option value="">โปรดเลือก</option>
-                  <option value="male">ชาย</option>
-                  <option value="female">หญิง</option>
-                  <option value="other">อื่นๆ</option>
+                  <option value="">{t('โปรดเลือก')}</option>
+                  <option value="male">{t('ชาย')}</option>
+                  <option value="female">{t('หญิง')}</option>
+                  <option value="other">{t('อื่นๆ')}</option>
                 </select>
                 <ChevronDown className="absolute right-2 top-3 w-4 h-4 text-gray-400 pointer-events-none" />
               </div>
             </div>
             <div>
               <label className="block text-sm font-bold text-gray-700 mb-2">
-                เบอร์โทรศัพท์มือถือ
+                {t('เบอร์โทรศัพท์มือถือ')}
               </label>
               <input
                 type="tel"
                 name="phone"
                 value={form.phone}
                 onChange={handleChange}
-                placeholder="โปรดระบุ"
+                placeholder={t('โปรดระบุ')}
                 className="w-full bg-gray-100 border border-gray-300 text-gray-700 py-2.5 px-3 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 placeholder-gray-400"
               />
             </div>
@@ -684,34 +1186,34 @@ export default function ProfilePage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
             <div>
               <label className="block text-sm font-bold text-gray-700 mb-2">
-                LINE ID <span className="text-gray-500 font-normal ml-1">(ไม่บังคับ)</span>
+                {t('LINE ID')} <span className="text-gray-500 font-normal ml-1">{t('(ไม่บังคับ)')}</span>
               </label>
               <input
                 type="text"
                 name="lineId"
                 value={form.lineId}
                 onChange={handleChange}
-                placeholder="โปรดระบุ"
+                placeholder={t('โปรดระบุ')}
                 className="w-full bg-gray-100 border border-gray-300 text-gray-700 py-2.5 px-3 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 placeholder-gray-400"
               />
             </div>
             <div>
-              <label className="block text-sm font-bold text-gray-700 mb-2">สัญชาติ</label>
+              <label className="block text-sm font-bold text-gray-700 mb-2">{t('สัญชาติ')}</label>
               <SearchableSelect
-                placeholder="พิมพ์เพื่อค้นหา..."
+                placeholder={t('พิมพ์เพื่อค้นหา...')}
                 value={form.nationality}
                 onChange={(val) => setForm({ ...form, nationality: val })}
-                options={NATIONALITIES.map((n) => ({ value: n, label: n }))}
+                options={NATIONALITIES.map((n) => ({ value: n, label: t(n) }))} // <--- ตรงนี้เรียก t(n) เพื่อแปล label ของแต่ละสัญชาติ
               />
             </div>
             <div>
-              <label className="block text-sm font-bold text-gray-700 mb-2">ศาสนา</label>
+              <label className="block text-sm font-bold text-gray-700 mb-2">{t('ศาสนา')}</label>
               <input
                 type="text"
                 name="religion"
                 value={form.religion}
                 onChange={handleChange}
-                placeholder="โปรดระบุ"
+                placeholder={t('โปรดระบุ')}
                 className="w-full bg-gray-100 border border-gray-300 text-gray-700 py-2.5 px-3 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 placeholder-gray-400"
               />
             </div>
@@ -720,7 +1222,7 @@ export default function ProfilePage() {
           {/* Row 4: Marital, Military */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
             <div>
-              <label className="block text-sm font-bold text-gray-700 mb-2">สถานภาพสมรส</label>
+              <label className="block text-sm font-bold text-gray-700 mb-2">{t('สถานภาพสมรส')}</label>
               <div className="relative">
                 <select
                   name="maritalStatus"
@@ -728,15 +1230,15 @@ export default function ProfilePage() {
                   onChange={handleChange}
                   className="w-full appearance-none bg-gray-100 border border-gray-300 text-gray-700 py-2.5 px-3 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer"
                 >
-                  <option value="">โปรดเลือก</option>
-                  <option value="โสด">โสด</option>
-                  <option value="สมรส">สมรส</option>
+                  <option value="">{t('โปรดเลือก')}</option>
+                  <option value="โสด">{t('โสด')}</option>
+                  <option value="สมรส">{t('สมรส')}</option>
                 </select>
                 <ChevronDown className="absolute right-2 top-3 w-4 h-4 text-gray-400 pointer-events-none" />
               </div>
             </div>
             <div>
-              <label className="block text-sm font-bold text-gray-700 mb-2">สถานภาพทางทหาร</label>
+              <label className="block text-sm font-bold text-gray-700 mb-2">{t('สถานภาพทางทหาร')}</label>
               <div className="relative">
                 <select
                   name="militaryStatus"
@@ -744,10 +1246,10 @@ export default function ProfilePage() {
                   onChange={handleChange}
                   className="w-full appearance-none bg-gray-100 border border-gray-300 text-gray-700 py-2.5 px-3 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer"
                 >
-                  <option value="">โปรดเลือก</option>
-                  <option value="ได้รับการยกเว้น">ได้รับการยกเว้น</option>
-                  <option value="ผ่านการเกณฑ์ทหารแล้ว">ผ่านการเกณฑ์ทหารแล้ว</option>
-                  <option value="ยังไม่ผ่านการเกณฑ์ทหาร">ยังไม่ผ่านการเกณฑ์ทหาร</option>
+                  <option value="">{t('โปรดเลือก')}</option>
+                  <option value="ได้รับการยกเว้น">{t('ได้รับการยกเว้น')}</option>
+                  <option value="ผ่านการเกณฑ์ทหารแล้ว">{t('ผ่านการเกณฑ์ทหารแล้ว')}</option>
+                  <option value="ยังไม่ผ่านการเกณฑ์ทหาร">{t('ยังไม่ผ่านการเกณฑ์ทหาร')}</option>
                 </select>
                 <ChevronDown className="absolute right-2 top-3 w-4 h-4 text-gray-400 pointer-events-none" />
               </div>
@@ -756,6 +1258,7 @@ export default function ProfilePage() {
 
           {/* Row 5: Location */}
           <ThaiAddressFields
+            locale={locale}
             province={form.province}
             district={form.district}
             subDistrict={form.subDistrict}
@@ -764,23 +1267,17 @@ export default function ProfilePage() {
           />
 
           {/* Row 6: Interest Province */}
-
-          <div className="space-y-4">
-            <label className="block text-sm font-bold text-gray-700">จังหวัดที่สนใจทำงาน (เลือกได้หลายที่)</label>
-            <div className="max-w-xs">
-              <ProvinceSelect
-                selectedProvinces={form.desiredProvinces}
-                onChange={(provinces: string[]) => {
-                  setForm(prev => ({
-                    ...prev,
-                    desiredProvinces: provinces
-                  }));
-                }}
-              />
-            </div>
+          <div>
+            <label className="block text-sm font-bold text-gray-700 mb-2">
+              {t('จังหวัดที่สนใจทำงาน (เลือกได้หลายที่)')}
+            </label>
+            <ProvinceSelect
+              locale={locale}
+              selectedProvinces={form.desiredProvinces || []}
+              onChange={(provinces) => setForm(prev => ({ ...prev, desiredProvinces: provinces }))}
+            />
           </div>
 
-          {/* Message Toast */}
           {message && (
             <div
               className={`mb-6 p-4 rounded-lg text-sm font-medium ${message.type === 'success'
@@ -796,22 +1293,20 @@ export default function ProfilePage() {
             <button
               onClick={handleSubmit}
               disabled={saving}
-              className="bg-[#d32f2f] hover:bg-[#b71c1c] text-white px-12 py-3 rounded-lg font-bold text-lg shadow-md transition-colors disabled:opacity-60 flex items-center gap-2"
+              className="bg-[#d32f2f] hover:bg-[#b71c1c] text-white px-12 py-3 rounded-lg font-bold text-lg shadow-md transition-colors disabled:opacity-60 flex items-center gap-2 cursor-pointer"
             >
               {saving ? (
                 <>
                   <Loader2 className="w-5 h-5 animate-spin" />
-                  กำลังบันทึก...
+                  {t('กำลังบันทึก...')}
                 </>
               ) : (
-                'บันทึกและถัดไป'
+                t('บันทึกและถัดไป')
               )}
             </button>
           </div>
         </div>
 
-        {/* Toolbar (Design reference) */}
-        {/* For visual matching with the reference image which has a toolbar at top of form */}
         <div className="absolute top-0 right-0 p-4 hidden">
           <div className="flex items-center gap-2 text-gray-500">
             <EyeOff className="w-5 h-5 cursor-pointer" />
@@ -823,6 +1318,6 @@ export default function ProfilePage() {
         </div>
       </div>
       <Footer />
-    </div >
+    </div>
   );
 }

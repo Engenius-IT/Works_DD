@@ -4,14 +4,42 @@ import { Globe, Briefcase, MessageSquareText } from 'lucide-react';
 import { Link } from '@/i18n/routing';
 import { useTranslations } from 'next-intl';
 
-// 💡 1. กำหนดรูปแบบ Props ให้รองรับตัวแปร role ที่ส่งต่อมาจากหน้าหลัก (HomePage)
 interface FooterProps {
     role?: string;
 }
 
-// 💡 2. เปลี่ยนมาใช้ Props `{ role }` แทนการเขียน Hardcode ตัวแปรจำลองด้านใน
 export const Footer: React.FC<FooterProps> = ({ role }) => {
     const t = useTranslations('Footer');
+
+    // ฟังก์ชันจัดการคลิก FAQ (ประกาศเพียง const เดียว และปิดปีกกาให้ถูกต้องก่อนคำสั่ง return)
+    const handleFaqClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+        e.preventDefault(); // หยุดการทำงานของลิงก์ปกติไม่ให้ URL เพี้ยน
+
+        // ตรวจสอบว่าปัจจุบันเราอยู่ที่หน้าแรก (Home Page) หรือไม่
+        const isHomePage = window.location.pathname === '/' || 
+                           window.location.pathname.endsWith('/th') || 
+                           window.location.pathname.endsWith('/en') ||
+                           window.location.pathname.endsWith('/th/') ||
+                           window.location.pathname.endsWith('/en/');
+
+        if (isHomePage) {
+            // ถ้าอยู่หน้าแรกอยู่แล้ว ให้สไตล์หน้าจอเลื่อนลงไปหาคอมโพเนนต์ที่มี id="faq" ทันที
+            const faqElement = document.getElementById('faq');
+            if (faqElement) {
+                const elementPosition = faqElement.getBoundingClientRect().top + window.scrollY;
+                const offsetPosition = elementPosition - 140; // ลบระยะ Navbar + ช่องไฟด้านบน
+
+                window.scrollTo({
+                    top: offsetPosition,
+                    behavior: 'smooth'
+                });
+            }
+        } else {
+            // ถ้าอยู่หน้าอื่น ให้ดีดกลับไปที่หน้าแรกของภาษานั้นๆ พร้อมส่งสัญญาณพารามิเตอร์ ?scroll=faq
+            const currentLang = window.location.pathname.split('/')[1] || 'th';
+            window.location.href = `/${currentLang}?scroll=faq`;
+        }
+    }; // ปิดแค่ตัวฟังก์ชัน handleFaqClick
 
     return (
         <footer className="bg-[#020263] text-gray-300 py-12 px-6 md:px-12 lg:px-24 font-sans">
@@ -48,12 +76,9 @@ export const Footer: React.FC<FooterProps> = ({ role }) => {
                     </div>
                 </div>
 
-                {/* * 🏢 กรณีที่ 1: เป็นผู้ประกอบการ (EMPLOYER) 
-                  * จะซ่อนฝั่งคนหางาน และแสดงเฉพาะเมนูฝั่งจ้างงาน / ดูเรซูเม
-                  */}
+                {/* กรณีที่ 1: เป็นผู้ประกอบการ (EMPLOYER) */}
                 {role === 'EMPLOYER' ? (
                     <>
-                        {/* Column 2: Links - จัดการและหาบุคลากร (สำหรับ Employer) */}
                         <div>
                             <h3 className="text-white font-semibold text-base mb-6">จัดการงาน & ค้นหา</h3>
                             <ul className="space-y-4 text-sm text-gray-400">
@@ -63,7 +88,6 @@ export const Footer: React.FC<FooterProps> = ({ role }) => {
                             </ul>
                         </div>
 
-                        {/* Column 3: Links - ประกาศงาน */}
                         <div>
                             <h3 className="text-white font-semibold text-base mb-6">สำหรับผู้ประกอบการ</h3>
                             <ul className="space-y-4 text-sm text-gray-400">
@@ -73,11 +97,8 @@ export const Footer: React.FC<FooterProps> = ({ role }) => {
                         </div>
                     </>
                 ) : (
-                    /* * 👥 กรณีที่ 2: เป็นผู้สมัครงาน (CANDIDATE) หรือบุคคลทั่วไป (Guest)
-                     * จะแสดงเมนู "หางาน" และซ่อนส่วนค้นหาเรซูเม (/resumes)
-                     */
+                    /* กรณีที่ 2: เป็นผู้สมัครงาน (CANDIDATE) หรือบุคคลทั่วไป (Guest) */
                     <>
-                        {/* Column 2: Links - หางาน (สำหรับ Candidate ไม่เห็น resumes) */}
                         <div>
                             <h3 className="text-white font-semibold text-base mb-6">{t('findJobs')}</h3>
                             <ul className="space-y-4 text-sm text-gray-400">
@@ -87,7 +108,6 @@ export const Footer: React.FC<FooterProps> = ({ role }) => {
                             </ul>
                         </div>
 
-                        {/* Column 3: Links - สำหรับผู้สมัครงาน */}
                         <div>
                             <h3 className="text-white font-semibold text-base mb-6">{t('forJobSeekers')}</h3>
                             <ul className="space-y-4 text-sm text-gray-400">
@@ -100,14 +120,23 @@ export const Footer: React.FC<FooterProps> = ({ role }) => {
                     </>
                 )}
 
-                {/* Column 4: Links - ช่วยเหลือและสนับสนุน (แสดงผลเหมือนกันทุก Role) */}
+                {/* Column 4: ช่วยเหลือและสนับสนุน */}
                 <div>
                     <h3 className="text-white font-semibold text-base mb-6">{t('support')}</h3>
                     <ul className="space-y-4 text-sm text-gray-400">
                         <li><Link href="/contact-us" className="hover:text-blue-400 transition-colors duration-200 block">{t('contact')}</Link></li>
                         <li><Link href="/privacy-policy" className="hover:text-blue-400 transition-colors duration-200 block">{t('privacyPolicy')}</Link></li>
                         <li><Link href="#" className="hover:text-blue-400 transition-colors duration-200 block">{t('terms')}</Link></li>
-                        <li><Link href="#" className="hover:text-blue-400 transition-colors duration-200 block">{t('faq')}</Link></li>
+                        
+                        <li>
+                            <a 
+                                href="#faq" 
+                                onClick={handleFaqClick} 
+                                className="hover:text-blue-400 transition-colors duration-200 block cursor-pointer"
+                            >
+                                {t('faq')}
+                            </a>
+                        </li>
                     </ul>
                 </div>
             </div>
