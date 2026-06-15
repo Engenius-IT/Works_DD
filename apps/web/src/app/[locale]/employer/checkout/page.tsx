@@ -7,7 +7,7 @@ import {
     CreditCard,
     QrCode,
     ShieldCheck,
-    Zap,
+    //Zap,
     ChevronRight,
     ChevronDown,
     ArrowLeft,
@@ -39,14 +39,14 @@ export default function CheckoutPage() {
     const isPro = !isVip && !isPremium;
 
     let planName = 'Pro';
-    let price = 299;
+    let price = 2990;
 
     if (isVip) {
         planName = 'VIP';
-        price = 1599;
+        price = 15990;
     } else if (isPremium) {
         planName = 'Premium';
-        price = 599;
+        price = 5990;
     }
 
     const [loading, setLoading] = useState(false);
@@ -320,7 +320,7 @@ export default function CheckoutPage() {
         }
     };
 
-    const handleBypass = async () => {
+    /*const handleBypass = async () => {
         if (!user || user.role !== 'EMPLOYER') {
             alert("สิทธิ์ของคุณไม่สามารถอัปเกรดแพ็คเกจได้");
             return;
@@ -349,7 +349,7 @@ export default function CheckoutPage() {
         } finally {
             setLoading(false);
         }
-    };
+    };*/
 
     const handleCardNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         let value = e.target.value.replace(/\D/g, ''); // ลบทุกอย่างที่ไม่ใช่ตัวเลข
@@ -740,7 +740,7 @@ export default function CheckoutPage() {
                         </div>
 
                         {/* --- Developer Bypass --- */}
-                        <div className={`mt-12 p-6 rounded-[2rem] border flex items-center justify-between shadow-sm transition-colors
+                        {/* <div className={`mt-12 p-6 rounded-[2rem] border flex items-center justify-between shadow-sm transition-colors
                             ${isVip ? 'bg-rose-50/50 border-rose-100' : isPremium ? 'bg-amber-50/50 border-amber-100' : 'bg-slate-50 border-slate-100'}`}>
                             <div className="flex items-center gap-4">
                                 <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center shadow-sm">
@@ -762,7 +762,7 @@ export default function CheckoutPage() {
                             >
                                 {loading ? "PROCESSING..." : "BYPASS PAYMENT"}
                             </button>
-                        </div>
+                        </div> */}
 
                         {showQrModal && qrCodeUrl && (
                             <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-300">
