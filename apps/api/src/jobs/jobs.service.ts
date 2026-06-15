@@ -730,7 +730,7 @@ export class JobsService {
     });
 
     // 🚨 ดักเงื่อนไข: เปลี่ยนจาก 12 แถว เป็น 50 แถวสะสมในตารางเรียบร้อยครับ!
-    if (totalJobsCount > 50) {
+    if (totalJobsCount > 10) {
       throw new HttpException(
         {
           statusCode: HttpStatus.BAD_REQUEST,
