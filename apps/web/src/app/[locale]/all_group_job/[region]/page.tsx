@@ -157,18 +157,18 @@ function JobCard({
         }`}
       onClick={() => (onSelect ? onSelect(job) : router.push(`/jobs/${job.slug}`))}
     >
-      <div className="grid grid-cols-[96px_minmax(0,1fr)] gap-6 p-7">
+      <div className="grid grid-cols-1 sm:grid-cols-[96px_minmax(0,1fr)] gap-4 sm:gap-6 p-5 sm:p-7">
         <div className="shrink-0 flex items-start pt-1">
           <CompanyLogo company={job.company} size="lg" />
         </div>
 
         <div className="min-w-0 flex flex-col gap-4">
-          <div className="flex items-start justify-between gap-4">
+          <div className="flex flex-col sm:flex-row items-start justify-between gap-4">
             <h3 className="font-bold text-[#020263] text-[22px] leading-snug group-hover:text-blue-600 transition-colors line-clamp-2 min-w-0">
               {job.title}
             </h3>
 
-            <div className="shrink-0 flex flex-col items-end gap-3">
+            <div className="shrink-0 flex flex-row items-center justify-between w-full sm:w-auto gap-3 sm:flex-col sm:items-end">
               <span className="flex items-center gap-1 text-xs text-gray-400 whitespace-nowrap">
                 <svg
                   className="w-3.5 h-3.5 shrink-0"
@@ -308,9 +308,9 @@ function JobCard({
             </div>
           )}
 
-          <div className="flex items-center justify-between gap-4 pt-2">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 pt-2">
             {isNew ? (
-              <span className="inline-block w-fit text-xs font-semibold text-white whitespace-nowrap bg-[#10B981] px-5 py-1.5 rounded-full hover:bg-[#16A34A]/80 transition-all duration-300 cursor-pointer">
+              <span className="inline-block w-full sm:w-fit text-center sm:text-left text-xs font-semibold text-white whitespace-nowrap bg-[#10B981] px-5 py-1.5 rounded-full hover:bg-[#16A34A]/80 transition-all duration-300 cursor-pointer">
                 สมัครด่วน
               </span>
             ) : (
@@ -326,7 +326,7 @@ function JobCard({
                   router.push(`/jobs/${job.slug}`);
                 }
               }}
-              className="bg-[#E00016] hover:bg-[#A80010]/80 text-white text-sm font-semibold px-7 py-3 rounded-full transition-colors shadow-sm whitespace-nowrap"
+              className="w-full sm:w-auto bg-[#E00016] hover:bg-[#A80010]/80 text-white text-sm font-semibold px-7 py-3 rounded-full transition-colors shadow-sm whitespace-nowrap"
             >
               อ่านรายละเอียดงาน
             </button>
@@ -452,37 +452,40 @@ function JobDetailPanel({
     <div className="flex flex-col h-full bg-gray-50/50">
       {/* Detail Panel Header */}
       <div className="sticky top-0 z-20 bg-white border-b border-gray-200 p-4 sm:p-6 shadow-sm">
-        <div className="flex justify-between items-start gap-4">
-          <div className="flex gap-4">
+        <div className="relative flex flex-col gap-4 pt-12 sm:flex-row sm:items-start sm:justify-between sm:pt-0">
+          <div className="flex gap-4 min-w-0">
             <CompanyLogo company={displayJob.company} size="lg" />
-            <div>
-              <h2 className="text-xl sm:text-2xl font-bold text-[#020263] leading-tight mb-2">
+            <div className="min-w-0">
+              <h2 className="text-xl sm:text-2xl font-bold text-[#020263] leading-tight mb-2 break-words">
                 {displayJob.title}
               </h2>
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 {isVerifiedCompany(displayJob.company) && (
                   <CheckCircle2 className="w-4 h-4 text-emerald-500" />
                 )}
-                <span className="font-semibold text-gray-700">{displayJob.company.name}</span>
+                <span className="font-semibold text-gray-700 break-words">{displayJob.company.name}</span>
               </div>
             </div>
           </div>
-          <button
-            onClick={onClose}
-            className="p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-400 hover:text-gray-600 shrink-0"
-          >
-            <X className="w-6 h-6" />
-          </button>
+          <div className="absolute top-0 right-0 sm:static sm:flex sm:items-center sm:justify-end">
+            <button
+              onClick={onClose}
+              aria-label="ปิด"
+              className="p-2 bg-white border border-gray-200 rounded-full shadow-sm text-gray-500 hover:bg-gray-100 hover:text-gray-700 transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
         </div>
 
-        <div className="flex flex-wrap items-center gap-3 mt-6">
+        <div className="flex flex-col gap-3 mt-6 sm:flex-row sm:items-center sm:justify-between">
           <button
             onClick={onApply}
             disabled={
               isApplying || applyStatus === 'success' || applyStatus === 'already_applied'
             }
-            className={`flex-1 sm:flex-none flex items-center justify-center gap-2 px-8 py-3 rounded-xl font-bold transition-all shadow-sm ${applyStatus === 'success' || applyStatus === 'already_applied'
-              ? 'bg-emerald-500 text-white cursor-not-allowed hidden'
+            className={`w-full sm:w-auto flex items-center justify-center gap-2 px-8 py-3 rounded-xl font-bold transition-all shadow-sm ${applyStatus === 'success' || applyStatus === 'already_applied'
+              ? 'bg-emerald-500 text-white cursor-not-allowed'
               : 'bg-[#E00016] hover:bg-[#A80010] hover:-translate-y-0.5 hover:shadow-md text-white'
               }`}
           >
@@ -491,7 +494,7 @@ function JobDetailPanel({
 
           <Link
             href={`/jobs/${displayJob.slug}`}
-            className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-semibold text-[#020263] bg-[#020263]/5 hover:bg-[#020263]/10 transition-colors"
+            className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-semibold text-[#020263] bg-[#020263]/5 hover:bg-[#020263]/10 transition-colors"
           >
             <ExternalLink className="w-4 h-4" />
             เปิดเต็มหน้าจอ
@@ -924,7 +927,7 @@ function RegionJobsContent() {
         )}
 
         {/* Split-panel layout */}
-        <div className="flex gap-5 items-start">
+        <div className="flex flex-col gap-5 items-start xl:flex-row xl:items-start">
           {/* Left: Job list */}
           <div
             className="flex flex-col gap-4 transition-all duration-300 w-full"
@@ -986,24 +989,24 @@ function RegionJobsContent() {
           </div>
 
           {selectedJob && (
-  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-    <div className="w-full max-w-6xl h-[90vh] overflow-hidden bg-white rounded-3xl shadow-2xl">
-      <JobDetailPanel
-        job={selectedJob}
-        detailJob={detailJob}
-        detailLoading={detailLoading}
-        onClose={() => {
-          setSelectedJob(null);
-          setDetailJob(null);
-          setApplyStatus('idle');
-        }}
-        onApply={handleApply}
-        isApplying={isApplying}
-        applyStatus={applyStatus}
-      />
-    </div>
-  </div>
-)}
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 sm:p-6">
+              <div className="w-full max-w-4xl sm:max-w-6xl max-h-[calc(100vh-3rem)] h-full sm:h-[90vh] overflow-hidden bg-white rounded-3xl shadow-2xl">
+                <JobDetailPanel
+                  job={selectedJob}
+                  detailJob={detailJob}
+                  detailLoading={detailLoading}
+                  onClose={() => {
+                    setSelectedJob(null);
+                    setDetailJob(null);
+                    setApplyStatus('idle');
+                  }}
+                  onApply={handleApply}
+                  isApplying={isApplying}
+                  applyStatus={applyStatus}
+                />
+              </div>
+            </div>
+          )}
         </div>
       </main>
     </>
