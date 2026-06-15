@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from '@/i18n/routing';
 import { useAuth } from '@/context/AuthContext';
+import { useLocale } from 'next-intl';
 import { Navbar } from '@/components/Navbar';
 import { Footer } from '@/components/Footer';
 import {
@@ -25,36 +26,86 @@ import {
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
 
-const profileSteps = [
-    { icon: User, label: 'ข้อมูลส่วนบุคคล', completed: true, active: false },
-    { icon: GraduationCap, label: 'ประวัติการศึกษา', completed: true, active: false },
-    { icon: Briefcase, label: 'ประวัติการทำงาน', completed: true, active: false },
-    { icon: Languages, label: 'ความสามารถทางภาษา', completed: true, active: false },
-    { icon: Car, label: 'ทักษะการขับขี่', completed: false, active: true },
-    { icon: Award, label: 'ใบประกาศนียบัตร', completed: false, active: false },
+const menuLabels = {
+    th: {
+        personal: 'ข้อมูลส่วนบุคคล',
+        education: 'ประวัติการศึกษา',
+        work: 'ตำแหน่ง/ประวัติการทำงาน',
+        language: 'ความสามารถทางภาษา',
+        driving: 'ทักษะการขับขี่',
+        certificates: 'ใบประกาศนียบัตร',
+    },
+    en: {
+        personal: 'Personal Information',
+        education: 'Education History',
+        work: 'Work History',
+        language: 'Language Skills',
+        driving: 'Driving Skills',
+        certificates: 'Certificates',
+    }
+};
+
+const getLicenseTypes = (locale: 'th' | 'en') => [
+    { id: 'l_car', label: locale === 'en' ? 'Car' : 'รถยนต์', icon: Car },
+    { id: 'l_bike', label: locale === 'en' ? 'Motorcycle' : 'รถจักรยานยนต์', icon: Bike },
+    { id: 'l_truck_6', label: locale === 'en' ? '6-wheel Truck' : 'รถบรรทุก 6 ล้อ', icon: Truck },
+    { id: 'l_truck_10', label: locale === 'en' ? '10-wheel Truck' : 'รถบรรทุก 10 ล้อ', icon: Truck },
 ];
 
-const LICENSE_TYPES = [
-    { id: 'l_car', label: 'รถยนต์', icon: Car },
-    { id: 'l_bike', label: 'รถจักรยานยนต์', icon: Bike },
-    { id: 'l_truck_6', label: 'รถบรรทุก 6 ล้อ', icon: Truck },
-    { id: 'l_truck_10', label: 'รถบรรทุก 10 ล้อ', icon: Truck },
+const getTravelVehicles = (locale: 'th' | 'en') => [
+    { id: 'v_car', label: locale === 'en' ? 'Private Car' : 'รถยนต์ส่วนตัว', icon: Car },
+    { id: 'v_bike', label: locale === 'en' ? 'Private Motorcycle' : 'รถจักรยานยนต์ส่วนตัว', icon: Bike },
 ];
 
-const TRAVEL_VEHICLES = [
-    { id: 'v_car', label: 'รถยนต์ส่วนตัว', icon: Car },
-    { id: 'v_bike', label: 'รถจักรยานยนต์ส่วนตัว', icon: Bike },
+const getHeavyMachinery = (locale: 'th' | 'en') => [
+    { id: 'm_backhoe', label: locale === 'en' ? 'Backhoe' : 'รถแบคโฮ (Backhoe)', icon: Pickaxe },
+    { id: 'm_crane', label: locale === 'en' ? 'Crane' : 'รถเครน (Crane)', icon: Construction },
+    { id: 'm_forklift', label: locale === 'en' ? 'Forklift' : 'รถยก (Forklift)', icon: Wrench },
 ];
 
-const HEAVY_MACHINERY = [
-    { id: 'm_backhoe', label: 'รถแบคโฮ (Backhoe)', icon: Pickaxe },
-    { id: 'm_crane', label: 'รถเครน (Crane)', icon: Construction },
-    { id: 'm_forklift', label: 'รถยก (Forklift)', icon: Wrench },
-];
+const translations = {
+    th: {
+        completeness: 'ความสมบูรณ์ของโปรไฟล์',
+        success: 'สำเร็จ',
+        licenseTitle: 'ใบอนุญาตขับขี่',
+        vehicleTitle: 'พาหนะที่มีส่วนตัว',
+        machineryTitle: 'ทักษะเครื่องจักรพิเศษ',
+        saved: 'บันทึกข้อมูลเรียบร้อยแล้ว ✓',
+        error: 'เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง',
+        backBtn: 'ย้อนกลับ',
+        saveAndNext: 'บันทึกและถัดไป',
+        saving: 'กำลังบันทึก...',
+        start: 'เริ่มต้น',
+        complete: 'สมบูรณ์',
+        licensePrefix: 'ใบขับขี่',
+        machineryPrefix: 'ขับ',
+        machinerySuffix: 'ได้'
+    },
+    en: {
+        completeness: 'Profile Completeness',
+        success: 'Success',
+        licenseTitle: 'Driving License',
+        vehicleTitle: 'Personal Vehicles',
+        machineryTitle: 'Heavy Machinery Skills',
+        saved: 'Data saved successfully ✓',
+        error: 'An error occurred, please try again.',
+        backBtn: 'Back',
+        saveAndNext: 'Save & Next',
+        saving: 'Saving...',
+        start: 'Start',
+        complete: 'Complete',
+        licensePrefix: 'Driver License: ',
+        machineryPrefix: 'Able to drive ',
+        machinerySuffix: ''
+    }
+};
 
 export default function EditDrivingPage() {
     const router = useRouter();
     const { user, loading: authLoading } = useAuth();
+    const locale = useLocale() as 'th' | 'en';
+    const t = translations[locale] || translations.th;
+
     const [selectedLicenses, setSelectedLicenses] = useState<string[]>([]);
     const [ownedVehicles, setOwnedVehicles] = useState<string[]>([]);
     const [machinerySkills, setMachinerySkills] = useState<string[]>([]);
@@ -65,6 +116,19 @@ export default function EditDrivingPage() {
     const circumference = 2 * Math.PI * 54;
     const strokeDashoffset = circumference - (completionPercent / 100) * circumference;
 
+    const LICENSE_TYPES = getLicenseTypes(locale);
+    const TRAVEL_VEHICLES = getTravelVehicles(locale);
+    const HEAVY_MACHINERY = getHeavyMachinery(locale);
+
+    const profileSteps = [
+        { icon: User, label: menuLabels[locale].personal, completed: true, active: false, path: '/profile' },
+        { icon: GraduationCap, label: menuLabels[locale].education, completed: true, active: false, path: '/profile/education' },
+        { icon: Briefcase, label: menuLabels[locale].work, completed: true, active: false, path: '/profile/work-history' },
+        { icon: Languages, label: menuLabels[locale].language, completed: true, active: false, path: '/profile/languages' },
+        { icon: Car, label: menuLabels[locale].driving, completed: false, active: true, path: '/profile/driving' },
+        { icon: Award, label: menuLabels[locale].certificates, completed: false, active: false, path: '/profile/certificates' },
+    ];
+
     // Auth Guard
     useEffect(() => {
         if (!authLoading && !user) {
@@ -72,25 +136,89 @@ export default function EditDrivingPage() {
         }
     }, [user, authLoading, router]);
 
-
+    // 🔄 ดักจับและประมวลผลข้อมูลเก่าเพื่อให้กลับมาหน้าเดิมแล้วยังคงเลือกสถานะปุ่มอยู่
     useEffect(() => {
         if (!user) return;
         const token = localStorage.getItem('accessToken');
         if (!token) return;
         setCompletionPercent(67);
+        
         fetch(`${API_URL}/users/me/profile`, {
             headers: { Authorization: `Bearer ${token}` },
         })
             .then((res) => res.json())
             .then((data) => {
-                if (Array.isArray(data)) {
-                    const skillIds = data.map(item => item.skillId);
-                    setSelectedLicenses(skillIds.filter(id => id.startsWith('l_')));
-                    setOwnedVehicles(skillIds.filter(id => id.startsWith('v_')));
-                    setMachinerySkills(skillIds.filter(id => id.startsWith('m_')));
+                const profileData = data?.data || data;
+                if (!profileData) return;
+
+                console.log("=== DEBUG PROFILE DATA ===", profileData);
+
+                const loadedLicenses: string[] = [];
+                const loadedVehicles: string[] = [];
+                const loadedMachinery: string[] = [];
+
+                // 🌟 ตรวจสอบแบบ Array รวมสกีมาจากฟิลด์ skills หรือ drivingSkills
+                const rawSkills = profileData.skills || profileData.drivingSkills || profileData.driving_skills || [];
+                if (Array.isArray(rawSkills)) {
+                    rawSkills.forEach(item => {
+                        if (!item) return;
+                        const val = (typeof item === 'string' ? item : (item.skillId || item.id || item.name || item.value || '')).toString().trim();
+                        if (!val) return;
+
+                        const lowerVal = val.toLowerCase();
+                        if (lowerVal.startsWith('l_') || ['car', 'bike', 'motorcycle', 'truck'].includes(lowerVal) || lowerVal.includes('truck_')) {
+                            loadedLicenses.push(val);
+                        } else if (lowerVal.startsWith('v_') || lowerVal.startsWith('own_') || lowerVal.includes('private_')) {
+                            loadedVehicles.push(val);
+                        } else if (lowerVal.startsWith('m_') || ['forklift', 'crane', 'backhoe'].includes(lowerVal)) {
+                            loadedMachinery.push(val);
+                        }
+                    });
                 }
+
+                // 🌟 ตรวจสอบเพิ่มเติมจาก Root Level Object เผื่อกรณีแยกฟิลด์เดี่ยวๆ มา
+                const checkAndAdd = (fieldData: any, targetArray: string[]) => {
+                    if (typeof fieldData === 'string') {
+                        fieldData.split(',').forEach(v => targetArray.push(v.trim()));
+                    } else if (Array.isArray(fieldData)) {
+                        fieldData.forEach(v => targetArray.push(typeof v === 'string' ? v : (v.id || v.skillId || v.name)));
+                    }
+                };
+
+                checkAndAdd(profileData.drivingLicense || profileData.driving_license, loadedLicenses);
+                checkAndAdd(profileData.personalVehicle || profileData.personal_vehicle || profileData.vehicles, loadedVehicles);
+                checkAndAdd(profileData.heavyMachinery || profileData.heavy_machinery || profileData.machinery, loadedMachinery);
+
+                // 🌟 Mapping ข้อมูลดิบให้ตรงกับค่า ID หน้า UI เพื่อให้ปุ่มขึ้นสถานะเปิดไฟสีฟ้าค้างไว้คราบเดิม
+                const finalLicenses = loadedLicenses.map(v => {
+                    const s = v.toString().trim().toLowerCase();
+                    if (s.startsWith('l_')) return s;
+                    if (s === 'truck' || s === 'truck_6') return 'l_truck_6';
+                    if (s === 'truck_10') return 'l_truck_10';
+                    if (s === 'motorcycle' || s === 'bike') return 'l_bike';
+                    return `l_${s}`;
+                }).filter(v => ['l_car', 'l_bike', 'l_truck_6', 'l_truck_10'].includes(v));
+
+                const finalVehicles = loadedVehicles.map(v => {
+                    const s = v.toString().trim().toLowerCase();
+                    if (s.startsWith('v_')) return s;
+                    if (s.startsWith('own_')) return s.replace('own_', 'v_');
+                    if (s.startsWith('private_')) return s.replace('private_', 'v_');
+                    return `v_${s}`;
+                }).filter(v => ['v_car', 'v_bike'].includes(v));
+
+                const finalMachinery = loadedMachinery.map(v => {
+                    const s = v.toString().trim().toLowerCase();
+                    if (s.startsWith('m_')) return s;
+                    return `m_${s}`;
+                }).filter(v => ['m_backhoe', 'm_crane', 'm_forklift'].includes(v));
+
+                // ทำการอัปเดตสถานะกลับคืนให้ UI นำไปเปรียบเทียบเปิดปุ่มสีฟ้าค้างไว้คราเดิม
+                setSelectedLicenses([...new Set(finalLicenses)]);
+                setOwnedVehicles([...new Set(finalVehicles)]);
+                setMachinerySkills([...new Set(finalMachinery)]);
             })
-            .catch((err) => console.error("Load error:", err));
+            .catch((err) => console.error("โหลดข้อมูลทักษะเดิมขัดข้อง:", err));
     }, [user]);
 
     const toggle = (id: string, setter: React.Dispatch<React.SetStateAction<string[]>>) => {
@@ -118,19 +246,31 @@ export default function EditDrivingPage() {
                 body: JSON.stringify({ skills: skillsPayload }),
             });
 
-            if (!response.ok && 0) throw new Error('Save failed');
+            if (!response.ok) throw new Error('Save failed');
 
             setSaving(false);
-            setMessage({ type: 'success', text: 'บันทึกข้อมูลเรียบร้อยแล้ว ✓' });
+            setMessage({ type: 'success', text: t.saved });
             setCompletionPercent(83);
-            setTimeout(() => router.push('/profile/certificates'), 1000);
+            
+            setTimeout(() => {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                router.push('/profile/certificates');
+            }, 1000);
         } catch {
             setSaving(false);
-            setMessage({ type: 'error', text: 'เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง' });
+            setMessage({ type: 'error', text: t.error });
         };
     }
 
-    const handleBack = () => router.push('/profile/languages');
+    const handleStepClick = (path: string) => {
+        window.scrollTo(0, 0);
+        router.push(path);
+    };
+
+    const handleBack = () => {
+        window.scrollTo(0, 0);
+        router.push('/profile/languages');
+    };
 
     if (authLoading) {
         return (
@@ -160,7 +300,7 @@ export default function EditDrivingPage() {
                     <div className="flex items-center gap-3 mb-8">
                         <div className="w-1 h-6 rounded-full bg-linear-to-b from-blue-400 to-cyan-400" />
                         <h2 className="text-white text-2xl md:text-3xl lg:text-4xl font-semibold tracking-wide">
-                            ความสมบูรณ์ของโปรไฟล์</h2>
+                            {t.completeness}</h2>
                     </div>
 
                     <div className="rounded-2xl border border-white/10 p-6 md:p-8" style={{ background: 'rgba(255,255,255,0.05)', backdropFilter: 'blur(20px)' }}>
@@ -186,13 +326,13 @@ export default function EditDrivingPage() {
                                     </svg>
                                     <div className="absolute inset-0 flex flex-col items-center justify-center">
                                         <span className="text-3xl md:text-4xl font-bold text-white">{completionPercent}%</span>
-                                        <span className="text-[10px] text-blue-300/80 mt-0.5">สำเร็จ</span>
+                                        <span className="text-[10px] text-blue-300/80 mt-0.5">{t.success}</span>
                                     </div>
                                 </div>
                                 <div className="absolute inset-0 rounded-full opacity-20 blur-xl" style={{ background: 'radial-gradient(circle, #38bdf8, transparent)' }} />
                             </div>
 
-                            {/* Steps Navigation with Hover Effects */}
+                            {/* Steps Navigation */}
                             <div className="flex-1 w-full">
                                 <div className="grid grid-cols-1 sm:grid-cols-6 gap-3 sm:gap-2">
                                     {profileSteps.map((step, index) => {
@@ -200,6 +340,8 @@ export default function EditDrivingPage() {
                                         return (
                                             <button
                                                 key={index}
+                                                type="button"
+                                                onClick={() => handleStepClick(step.path)}
                                                 className={`group relative flex sm:flex-col items-center gap-3 sm:gap-2.5 p-3 sm:p-4 rounded-xl transition-all duration-300 cursor-pointer
                                                     ${step.active
                                                         ? 'bg-white/15 border border-white/20 shadow-lg shadow-blue-500/10'
@@ -219,6 +361,9 @@ export default function EditDrivingPage() {
                                                     }`}>
                                                     {step.label}
                                                 </span>
+                                                {step.active && (
+                                                    <div className="sm:hidden ml-auto w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
+                                                )}
                                             </button>
                                         );
                                     })}
@@ -233,6 +378,10 @@ export default function EditDrivingPage() {
                                                 background: 'linear-gradient(90deg, #60a5fa, #38bdf8, #22d3ee)',
                                             }}
                                         />
+                                    </div>
+                                    <div className="flex justify-between mt-2 text-[10px] text-white/30">
+                                        <span>{t.start}</span>
+                                        <span>{t.complete}</span>
                                     </div>
                                 </div>
                             </div>
@@ -250,13 +399,13 @@ export default function EditDrivingPage() {
                         {/* 1. ใบขับขี่ */}
                         <div className="space-y-5">
                             <h3 className="text-base font-bold text-gray-800 flex items-center gap-2 pb-2 border-b">
-                                <CreditCard className="w-5 h-5 text-blue-600" /> ใบอนุญาตขับขี่
+                                <CreditCard className="w-5 h-5 text-blue-600" /> {t.licenseTitle}
                             </h3>
                             <div className="space-y-3">
                                 {LICENSE_TYPES.map(v => (
                                     <SelectionCard
                                         key={v.id}
-                                        title={`ใบขับขี่${v.label}`}
+                                        title={`${t.licensePrefix}${v.label}`}
                                         active={selectedLicenses.includes(v.id)}
                                         icon={v.icon}
                                         onClick={() => toggle(v.id, setSelectedLicenses)}
@@ -268,7 +417,7 @@ export default function EditDrivingPage() {
                         {/* 2. พาหนะส่วนตัว */}
                         <div className="space-y-5">
                             <h3 className="text-base font-bold text-gray-800 flex items-center gap-2 pb-2 border-b">
-                                <Car className="w-5 h-5 text-blue-600" /> พาหนะที่มีส่วนตัว
+                                <Car className="w-5 h-5 text-blue-600" /> {t.vehicleTitle}
                             </h3>
                             <div className="space-y-3">
                                 {TRAVEL_VEHICLES.map(v => (
@@ -286,13 +435,13 @@ export default function EditDrivingPage() {
                         {/* 3. เครื่องจักรหนัก */}
                         <div className="space-y-5">
                             <h3 className="text-base font-bold text-gray-800 flex items-center gap-2 pb-2 border-b">
-                                <Wrench className="w-5 h-5 text-blue-600" /> ทักษะเครื่องจักรพิเศษ
+                                <Wrench className="w-5 h-5 text-blue-600" /> {t.machineryTitle}
                             </h3>
                             <div className="space-y-3">
                                 {HEAVY_MACHINERY.map(v => (
                                     <SelectionCard
                                         key={v.id}
-                                        title={`ขับ${v.label}ได้`}
+                                        title={`${t.machineryPrefix}${v.label}${t.machinerySuffix}`}
                                         active={machinerySkills.includes(v.id)}
                                         icon={v.icon}
                                         onClick={() => toggle(v.id, setMachinerySkills)}
@@ -310,25 +459,25 @@ export default function EditDrivingPage() {
                     </div>
                 )}
 
-                {/* Action Buttons - Moved Outside */}
+                {/* Action Buttons */}
                 <div className="flex flex-col sm:flex-row justify-center gap-3 pb-20">
                     <button
                         onClick={handleBack}
                         className="px-8 py-3 rounded-lg border border-gray-300 text-gray-600 font-medium hover:bg-gray-100 transition-colors"
                     >
-                        ย้อนกลับ
+                        {t.backBtn}
                     </button>
                     <button
                         onClick={handleSubmit}
-                        disabled={saving} // เปลี่ยนจาก loading เป็น saving
+                        disabled={saving}
                         className="bg-[#d32f2f] hover:bg-[#b71c1c] text-white px-12 py-3 rounded-lg font-bold text-lg shadow-md transition-colors disabled:opacity-60 flex items-center justify-center gap-2"
                     >
-                        {saving ? ( // เปลี่ยนจาก loading เป็น saving
+                        {saving ? (
                             <>
                                 <Loader2 className="w-5 h-5 animate-spin" />
-                                กำลังบันทึก...
+                                {t.saving}
                             </>
-                        ) : 'บันทึกและถัดไป'}
+                        ) : t.saveAndNext}
                     </button>
                 </div>
             </div>

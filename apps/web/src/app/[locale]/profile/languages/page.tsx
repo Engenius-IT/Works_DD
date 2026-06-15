@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from '@/i18n/routing';
 import { useAuth } from '@/context/AuthContext';
+import { useLocale } from 'next-intl';
 import { Navbar } from '@/components/Navbar';
 import { Footer } from '@/components/Footer';
 import { SearchableSelect } from '@/components/SearchableSelect';
@@ -23,14 +24,24 @@ import {
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
 
-const profileSteps = [
-  { icon: User, label: 'ข้อมูลส่วนบุคคล', completed: true, active: false },
-  { icon: GraduationCap, label: 'ประวัติการศึกษา', completed: true, active: false },
-  { icon: Briefcase, label: 'ประวัติการทำงาน', completed: true, active: false },
-  { icon: Languages, label: 'ความสามารถทางภาษา', completed: false, active: true },
-  { icon: Car, label: 'ทักษะการขับขี่', completed: false, active: false },
-  { icon: Award, label: 'ใบประกาศนียบัตร', completed: false, active: false },
-];
+const menuLabels = {
+  th: {
+    personal: 'ข้อมูลส่วนบุคคล',
+    education: 'ประวัติการศึกษา',
+    work: 'ตำแหน่ง/ประวัติการทำงาน',
+    language: 'ความสามารถทางภาษา',
+    driving: 'ทักษะการขับขี่',
+    certificates: 'ใบประกาศนียบัตร',
+  },
+  en: {
+    personal: 'Personal Information',
+    education: 'Education History',
+    work: 'Work History',
+    language: 'Language Skills',
+    driving: 'Driving Skills',
+    certificates: 'Certificates',
+  }
+};
 
 const LANGUAGES_LIST = [
   'ภาษาไทย',
@@ -53,7 +64,28 @@ const LANGUAGES_LIST = [
   'อื่นๆ',
 ];
 
-const LANGUAGE_LEVELS = [
+const LANGUAGES_LIST_EN = [
+  'Thai',
+  'English',
+  'Chinese (Mandarin)',
+  'Japanese',
+  'Korean',
+  'French',
+  'German',
+  'Spanish',
+  'Burmese',
+  'Vietnamese',
+  'Lao',
+  'Khmer',
+  'Malay',
+  'Hindi',
+  'Russian',
+  'Arabic',
+  'Portuguese',
+  'Other',
+];
+
+const LANGUAGE_LEVELS_TH = [
   'พื้นฐาน(Basic)',
   'พอใช้ (Fair)',
   'ดี (Good)',
@@ -61,7 +93,16 @@ const LANGUAGE_LEVELS = [
   'เจ้าของภาษา (Native)',
 ];
 
-const SKILL_LEVELS = ['ไม่ได้', 'พอใช้', 'ดี', 'ดีเยี่ยม'];
+const LANGUAGE_LEVELS_EN = [
+  'Basic',
+  'Fair',
+  'Good',
+  'Fluent',
+  'Native',
+];
+
+const SKILL_LEVELS_TH = ['ไม่ได้', 'พอใช้', 'ดี', 'ดีเยี่ยม'];
+const SKILL_LEVELS_EN = ['None', 'Fair', 'Good', 'Excellent'];
 
 const TEST_NAMES = [
   'TOEIC',
@@ -78,6 +119,67 @@ const TEST_NAMES = [
   'DELE',
   'อื่นๆ',
 ];
+
+const translations = {
+  th: {
+    completeness: 'ความสมบูรณ์ของโปรไฟล์',
+    success: 'สำเร็จ',
+    saved: 'บันทึกความสามารถทางภาษาเรียบร้อยแล้ว ✓',
+    error: 'เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง',
+    saveAndNext: 'บันทึกและถัดไป',
+    saving: 'กำลังบันทึก...',
+    backBtn: 'ย้อนกลับ',
+    langTitle: 'ความสามารถทางภาษา',
+    langLabel: 'ภาษา',
+    overallLevel: 'ระดับภาษาโดยรวม',
+    speaking: 'พูด',
+    reading: 'อ่าน',
+    writing: 'เขียน',
+    pleaseSelect: 'โปรดเลือก',
+    addLang: 'เพิ่มภาษา',
+    testScoresTitle: 'ผลสอบระดับภาษา',
+    testName: 'ชื่อผลสอบ',
+    scoreReceived: 'คะแนนที่ได้รับ',
+    attachDoc: 'เอกสารแนบผลสอบ (PDF)',
+    selectFile: 'เลือกไฟล์',
+    addTestResult: 'เพิ่มผลสอบ',
+    placeholderLang: 'ระบุภาษา',
+    placeholderLevel: 'ระบุระดับภาษา',
+    placeholderScore: 'ระบุคะแนน',
+    fileNotSelected: 'ยังไม่ได้เลือกไฟล์ใหม่',
+    viewOldFile: 'ดูไฟล์เอกสารแนบเดิม',
+    deleteAttachment: 'ลบเอกสารแนบ'
+  },
+  en: {
+    completeness: 'Profile Completeness',
+    success: 'Success',
+    saved: 'Language skills saved successfully ✓',
+    error: 'An error occurred, please try again.',
+    saveAndNext: 'Save & Next',
+    saving: 'Saving...',
+    backBtn: 'Back',
+    langTitle: 'Language Skills',
+    langLabel: 'Language',
+    overallLevel: 'Overall Language Level',
+    speaking: 'Speaking',
+    reading: 'Reading',
+    writing: 'Writing',
+    pleaseSelect: 'Please select',
+    addLang: 'Add Language',
+    testScoresTitle: 'Language Test Scores',
+    testName: 'Test Name',
+    scoreReceived: 'Score Received',
+    attachDoc: 'Test Attachment (PDF)',
+    selectFile: 'Select File',
+    addTestResult: 'Add Test Result',
+    placeholderLang: 'Select Language',
+    placeholderLevel: 'Select Level',
+    placeholderScore: 'Enter Score',
+    fileNotSelected: 'No file selected',
+    viewOldFile: 'View existing attached file',
+    deleteAttachment: 'Delete attachment'
+  }
+};
 
 interface LanguageEntry {
   id: string;
@@ -137,6 +239,9 @@ function createTestEntry(): TestEntry {
 export default function LanguagesPage() {
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
+  const locale = useLocale() as 'th' | 'en';
+  const t = translations[locale] || translations.th;
+
   const [langEntries, setLangEntries] = useState<LanguageEntry[]>([createLanguageEntry()]);
   const [testEntries, setTestEntries] = useState<TestEntry[]>([createTestEntry()]);
   const [saving, setSaving] = useState(false);
@@ -145,6 +250,27 @@ export default function LanguagesPage() {
   const [completionPercent, setCompletionPercent] = useState(50);
   const circumference = 2 * Math.PI * 54;
   const strokeDashoffset = circumference - (completionPercent / 100) * circumference;
+
+  const langsListOptions = (locale === 'en' ? LANGUAGES_LIST_EN : LANGUAGES_LIST).map((l, i) => ({
+    value: LANGUAGES_LIST[i], // เก็บค่า value เป็นภาษาไทยอิงตาม backend เดิม หรือปรับเปลี่ยนตามตกลง
+    label: l,
+  }));
+
+  const langLevelsOptions = (locale === 'en' ? LANGUAGE_LEVELS_EN : LANGUAGE_LEVELS_TH).map((l, i) => ({
+    value: LANGUAGE_LEVELS_TH[i],
+    label: l,
+  }));
+
+  const skillLevelsList = locale === 'en' ? SKILL_LEVELS_EN : SKILL_LEVELS_TH;
+
+  const profileSteps = [
+    { icon: User, label: menuLabels[locale].personal, completed: true, active: false, path: '/profile' },
+    { icon: GraduationCap, label: menuLabels[locale].education, completed: true, active: false, path: '/profile/education' },
+    { icon: Briefcase, label: menuLabels[locale].work, completed: true, active: false, path: '/profile/work-history' },
+    { icon: Languages, label: menuLabels[locale].language, completed: false, active: true, path: '/profile/languages' },
+    { icon: Car, label: menuLabels[locale].driving, completed: false, active: false, path: '/profile/driving' },
+    { icon: Award, label: menuLabels[locale].certificates, completed: false, active: false, path: '/profile/certificates' },
+  ];
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -217,7 +343,7 @@ export default function LanguagesPage() {
         updateTest(id, 'file', file);
         updateTest(id, 'fileName', file.name);
       } else {
-        alert('กรุณาอัปโหลดไฟล์ PDF เท่านั้น');
+        alert(locale === 'en' ? 'Please upload a PDF file only.' : 'กรุณาอัปโหลดไฟล์ PDF เท่านั้น');
       }
     }
   };
@@ -263,7 +389,7 @@ export default function LanguagesPage() {
             id: testEntry.id,
             testName: testEntry.testName,
             score: testEntry.score,
-            fileUrl: testEntry.fileUrl, // keep existing if any
+            fileUrl: testEntry.fileUrl,
           };
         }),
       );
@@ -286,7 +412,6 @@ export default function LanguagesPage() {
         }),
       });
       if (!res.ok) {
-        // If user not found (token stale), clear and redirect to login
         if (res.status === 401 || res.status === 404) {
           localStorage.removeItem('accessToken');
           router.push('/login');
@@ -295,16 +420,29 @@ export default function LanguagesPage() {
         throw new Error('Save failed');
       }
       setSaving(false);
-      setMessage({ type: 'success', text: 'บันทึกความสามารถทางภาษาเรียบร้อยแล้ว ✓' });
+      setMessage({ type: 'success', text: t.saved });
+      
       setCompletionPercent(67);
-      setTimeout(() => router.push('/profile/driving'), 1000);
+      
+      setTimeout(() => {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        router.push('/profile/driving');
+      }, 1000);
     } catch {
       setSaving(false);
-      setMessage({ type: 'error', text: 'เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง' });
+      setMessage({ type: 'error', text: t.error });
     }
   };
 
-  const handleBack = () => router.push('/profile/work-history');
+  const handleStepClick = (path: string) => {
+    window.scrollTo(0, 0);
+    router.push(path);
+  };
+
+  const handleBack = () => {
+    window.scrollTo(0, 0);
+    router.push('/profile/work-history');
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 font-sans">
@@ -336,7 +474,7 @@ export default function LanguagesPage() {
           <div className="flex items-center gap-3 mb-8">
             <div className="w-1 h-6 rounded-full bg-linear-to-b from-blue-400 to-cyan-400" />
             <h2 className="text-white text-2xl md:text-3xl lg:text-4xl font-semibold tracking-wide">
-              ความสมบูรณ์ของโปรไฟล์
+              {t.completeness}
             </h2>
           </div>
 
@@ -381,7 +519,7 @@ export default function LanguagesPage() {
                     <span className="text-3xl md:text-4xl font-bold text-white">
                       {completionPercent}%
                     </span>
-                    <span className="text-[10px] text-blue-300/80 mt-0.5">สำเร็จ</span>
+                    <span className="text-[10px] text-blue-300/80 mt-0.5">{t.success}</span>
                   </div>
                 </div>
                 <div
@@ -398,6 +536,8 @@ export default function LanguagesPage() {
                     return (
                       <button
                         key={index}
+                        type="button"
+                        onClick={() => handleStepClick(step.path)}
                         className={`group relative flex sm:flex-col items-center gap-3 sm:gap-2.5 p-3 sm:p-4 rounded-xl transition-all duration-300 cursor-pointer
                           ${step.active ? 'bg-white/15 border border-white/20 shadow-lg shadow-blue-500/10' : 'hover:bg-white/6 border border-transparent'}`}
                       >
@@ -452,7 +592,7 @@ export default function LanguagesPage() {
         <div className="bg-white rounded-xl shadow-md border border-gray-200 p-6 md:p-8 mb-6">
           <h2 className="text-base font-bold text-gray-800 flex items-center gap-2 mb-6">
             <Languages className="w-4 h-4 text-blue-600" />
-            ความสามารถทางภาษา
+            {t.langTitle}
           </h2>
 
           {langEntries.map((entry, idx) => (
@@ -462,23 +602,23 @@ export default function LanguagesPage() {
               {/* Row 1: Language + Overall Level */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
                 <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-2">ภาษา</label>
+                  <label className="block text-sm font-bold text-gray-700 mb-2">{t.langLabel}</label>
                   <SearchableSelect
-                    placeholder="ระบุภาษา"
+                    placeholder={t.placeholderLang}
                     value={entry.language}
                     onChange={(val) => updateLang(entry.id, 'language', val)}
-                    options={LANGUAGES_LIST.map((l) => ({ value: l, label: l }))}
+                    options={langsListOptions}
                   />
                 </div>
                 <div>
                   <label className="block text-sm font-bold text-gray-700 mb-2">
-                    ระดับภาษาโดยรวม
+                    {t.overallLevel}
                   </label>
                   <SearchableSelect
-                    placeholder="ระบุระดับภาษา"
+                    placeholder={t.placeholderLevel}
                     value={entry.level}
                     onChange={(val) => updateLang(entry.id, 'level', val)}
-                    options={LANGUAGE_LEVELS.map((l) => ({ value: l, label: l }))}
+                    options={langLevelsOptions}
                   />
                 </div>
               </div>
@@ -487,9 +627,9 @@ export default function LanguagesPage() {
               <div className="grid grid-cols-3 gap-4">
                 {(
                   [
-                    { field: 'speaking' as const, label: 'พูด' },
-                    { field: 'reading' as const, label: 'อ่าน' },
-                    { field: 'writing' as const, label: 'เขียน' },
+                    { field: 'speaking' as const, label: t.speaking },
+                    { field: 'reading' as const, label: t.reading },
+                    { field: 'writing' as const, label: t.writing },
                   ] as const
                 ).map(({ field, label }) => (
                   <div key={field}>
@@ -500,9 +640,9 @@ export default function LanguagesPage() {
                         onChange={(e) => updateLang(entry.id, field, e.target.value)}
                         className="w-full appearance-none bg-gray-100 border border-gray-300 text-gray-700 py-2.5 px-3 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer text-sm"
                       >
-                        <option value="">โปรดเลือก</option>
-                        {SKILL_LEVELS.map((s) => (
-                          <option key={s} value={s}>
+                        <option value="">{t.pleaseSelect}</option>
+                        {skillLevelsList.map((s, idxS) => (
+                          <option key={s} value={SKILL_LEVELS_TH[idxS]}>
                             {s}
                           </option>
                         ))}
@@ -546,36 +686,36 @@ export default function LanguagesPage() {
             className="mt-4 flex items-center gap-1.5 text-blue-600 hover:text-blue-800 text-sm font-medium transition-colors"
           >
             <Plus className="w-4 h-4" />
-            เพิ่มภาษา
+            {t.addLang}
           </button>
         </div>
 
         {/* Section 2: Language Test Scores */}
         <div className="bg-white rounded-xl shadow-md border border-gray-200 p-6 md:p-8 mb-8">
-          <h2 className="text-base font-bold text-gray-800 mb-6">ผลสอบระดับภาษา</h2>
+          <h2 className="text-base font-bold text-gray-800 mb-6">{t.testScoresTitle}</h2>
 
           {testEntries.map((entry, idx) => (
             <div key={entry.id} className="mb-4 last:mb-0">
               {idx > 0 && <hr className="my-4 border-gray-200" />}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-2">ชื่อผลสอบ</label>
+                  <label className="block text-sm font-bold text-gray-700 mb-2">{t.testName}</label>
                   <SearchableSelect
-                    placeholder="ระบุภาษา"
+                    placeholder={t.placeholderLang}
                     value={entry.testName}
                     onChange={(val) => updateTest(entry.id, 'testName', val)}
-                    options={TEST_NAMES.map((t) => ({ value: t, label: t }))}
+                    options={TEST_NAMES.map((tItem) => ({ value: tItem, label: tItem }))}
                   />
                 </div>
                 <div>
                   <label className="block text-sm font-bold text-gray-700 mb-2">
-                    คะแนนที่ได้รับ
+                    {t.scoreReceived}
                   </label>
                   <input
                     type="text"
                     value={entry.score}
                     onChange={(e) => updateTest(entry.id, 'score', e.target.value)}
-                    placeholder="ระบุคะแนน"
+                    placeholder={t.placeholderScore}
                     className="w-full bg-gray-100 border border-gray-300 text-gray-700 py-2.5 px-3 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 placeholder-gray-400"
                   />
                 </div>
@@ -584,12 +724,12 @@ export default function LanguagesPage() {
               {/* File Upload for Test Entry */}
               <div className="mt-4">
                 <label className="block text-sm font-bold text-gray-700 mb-2">
-                  เอกสารแนบผลสอบ (PDF)
+                  {t.attachDoc}
                 </label>
                 <div className="flex items-center gap-4">
                   <label className="cursor-pointer inline-flex items-center justify-center gap-2 px-4 py-2 bg-blue-50 text-blue-700 border border-blue-200 rounded-lg hover:bg-blue-100 transition-colors font-medium text-sm">
                     <Upload className="w-4 h-4" />
-                    <span>เลือกไฟล์</span>
+                    <span>{t.selectFile}</span>
                     <input
                       type="file"
                       accept="application/pdf"
@@ -609,7 +749,7 @@ export default function LanguagesPage() {
                           updateTest(entry.id, 'fileUrl', undefined);
                         }}
                         className="text-gray-400 hover:text-red-500 transition-colors ml-2"
-                        title="ลบเอกสารแนบ"
+                        title={t.deleteAttachment}
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
@@ -623,7 +763,7 @@ export default function LanguagesPage() {
                         rel="noopener noreferrer"
                         className="truncate flex-1 text-blue-600 hover:underline"
                       >
-                        ดูไฟล์เอกสารแนบเดิม
+                        {t.viewOldFile}
                       </a>
                       <button
                         onClick={() => {
@@ -631,13 +771,13 @@ export default function LanguagesPage() {
                           updateTest(entry.id, 'fileName', '');
                         }}
                         className="text-gray-400 hover:text-red-500 transition-colors ml-2"
-                        title="ลบเอกสารแนบ"
+                        title={t.deleteAttachment}
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
                     </div>
                   ) : (
-                    <span className="text-sm text-gray-500">ยังไม่ได้เลือกไฟล์ใหม่</span>
+                    <span className="text-sm text-gray-500">{t.fileNotSelected}</span>
                   )}
                 </div>
               </div>
@@ -649,7 +789,7 @@ export default function LanguagesPage() {
                   className="flex items-center gap-1.5 text-blue-600 hover:text-blue-800 text-sm font-medium bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-lg transition-colors"
                 >
                   <Plus className="w-3.5 h-3.5" />
-                  เพิ่มผลสอบ
+                  {t.addTestResult}
                 </button>
                 {testEntries.length > 1 && (
                   <button
@@ -683,7 +823,7 @@ export default function LanguagesPage() {
             onClick={handleBack}
             className="px-8 py-3 rounded-lg border border-gray-300 text-gray-600 font-medium hover:bg-gray-100 transition-colors"
           >
-            ย้อนกลับ
+            {t.backBtn}
           </button>
           <button
             onClick={handleSubmit}
@@ -693,10 +833,10 @@ export default function LanguagesPage() {
             {saving ? (
               <>
                 <Loader2 className="w-5 h-5 animate-spin" />
-                กำลังบันทึก...
+                {t.saving}
               </>
             ) : (
-              'บันทึกและถัดไป'
+              t.saveAndNext
             )}
           </button>
         </div>

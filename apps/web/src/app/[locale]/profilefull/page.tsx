@@ -7,6 +7,7 @@ import { Navbar } from '@/components/Navbar';
 import { Footer } from '@/components/Footer';
 import { pdf } from '@react-pdf/renderer';
 import { ResumeTemplate } from '../../../components/ResumeTemplate';
+import { useLocale } from 'next-intl';
 import {
   User,
   GraduationCap,
@@ -24,8 +25,7 @@ import {
   Mail,
   Sparkles,
   Car,
-  AlertCircle,
-  Target,
+  AlertCircle
 } from 'lucide-react';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
@@ -60,6 +60,7 @@ interface EducationItem {
   major?: string;
   graduationYear?: number;
   gpa?: string;
+  degreeName?: string; // 🟢 เพิ่มฟิลด์รองรับชื่อปริญญา
 }
 
 interface WorkItem {
@@ -105,8 +106,9 @@ interface LanguageTest {
   fileUrl?: string;
 }
 
-const getSkillLabel = (id: string) => {
-  const labels: Record<string, string> = {
+// ฟังก์ชันแปลงภาษาข้อมูลสกิลการขับรถ
+const getSkillLabel = (id: string, isEn: boolean) => {
+  const labelsTh: Record<string, string> = {
     'l_car': 'ใบขับขี่รถยนต์',
     'l_bike': 'ใบขับขี่รถจักรยานยนต์',
     'l_truck_6': 'ใบขับขี่รถบรรทุก 6 ล้อ',
@@ -117,11 +119,217 @@ const getSkillLabel = (id: string) => {
     'm_crane': 'ขับรถเครนได้',
     'm_forklift': 'ขับรถยกได้',
   };
-  return labels[id] || id;
+
+  const labelsEn: Record<string, string> = {
+    'l_car': 'Driving License (Car)',
+    'l_bike': 'Driving License (Motorcycle)',
+    'l_truck_6': 'Driving License (6-Wheel Truck)',
+    'l_truck_10': 'Driving License (10-Wheel Truck)',
+    'v_car': 'Personal Car',
+    'v_bike': 'Personal Motorcycle',
+    'm_backhoe': 'Backhoe Operation',
+    'm_crane': 'Crane Operation',
+    'm_forklift': 'Forklift Operation',
+  };
+
+  return isEn ? (labelsEn[id] || id) : (labelsTh[id] || id);
 };
+
+// ฟังก์ชันจัดการและแปลงภาษาสำหรับ ทักษะทางด้านภาษา (Language Skills)
+const getLanguageLabel = (key: 'language' | 'level', value: string | undefined, isEn: boolean) => {
+  if (!value) return '-';
+
+  let cleanedValue = value.trim();
+  const lowercaseValue = cleanedValue.toLowerCase();
+
+  // ตรวจสอบสถานะค่าว่าง หรือ ไม่ระบุ หรือ ไม่ได้ ทั้งภาษาไทยและอังกฤษ
+  if (
+    lowercaseValue === 'ไม่ได้' || 
+    lowercaseValue === 'ไม่ได้ระบุ' || 
+    lowercaseValue === 'none' || 
+    lowercaseValue === 'not specified' || 
+    lowercaseValue === '-' ||
+    lowercaseValue === ''
+  ) {
+    return isEn ? 'None' : 'ไม่ได้';
+  }
+
+  // ตารางคำแปลหลักของระบบ
+  const translations: Record<'language' | 'level', Record<string, string>> = {
+    language: {
+      'ภาษาไทย': 'Thai',
+      'ภาษาอังกฤษ': 'English',
+      'ภาษาจีน': 'Chinese',
+      'ภาษาญี่ปุ่น': 'Japanese',
+      'ภาษาเกาหลี': 'Korean',
+      'ภาษาฝรั่งเศส': 'French',
+      'ภาษาเยอรมัน': 'German',
+      'ภาษาพม่า': 'Burmese',
+      'ภาษากัมพูชา': 'Cambodian',
+      'ภาษาลาว': 'Lao',
+      'ไทย': 'Thai',
+      'อังกฤษ': 'English',
+    },
+    level: {
+      'เบื้องต้น': 'Basic',
+      'พอใช้': 'Fair',
+      'ดี': 'Good',
+      'ดีมาก': 'Very Good',
+      'ดีเยี่ยม': 'Excellent',
+      'เจ้าของภาษา': 'Native Speaker',
+    }
+  };
+  
+  if (isEn) {
+    if (translations[key] && translations[key][cleanedValue]) {
+      return translations[key][cleanedValue];
+    }
+
+    if (key === 'level') {
+      if (cleanedValue.includes('เยี่ยม') || cleanedValue.toLowerCase().includes('excellent')) return 'Excellent';
+      if (cleanedValue.includes('ดีมาก') || cleanedValue.toLowerCase().includes('very')) return 'Very Good';
+      if (cleanedValue.includes('ดี') || cleanedValue.toLowerCase().includes('good')) return 'Good';
+      if (cleanedValue.includes('พอใช้') || cleanedValue.toLowerCase().includes('fair')) return 'Fair';
+      if (cleanedValue.includes('เบื้อง') || cleanedValue.toLowerCase().includes('basic')) return 'Basic';
+      if (cleanedValue.includes('เจ้าของ') || cleanedValue.toLowerCase().includes('native')) return 'Native Speaker';
+      if (cleanedValue.includes('ไม่ได้') || cleanedValue.toLowerCase().includes('none')) return 'None';
+    }
+
+    if (key === 'language') {
+      if (cleanedValue.includes('ไทย') || cleanedValue.toLowerCase().includes('thai')) return 'Thai';
+      if (cleanedValue.includes('อังกฤษ') || cleanedValue.toLowerCase().includes('english')) return 'English';
+    }
+  } else {
+    if (key === 'level') {
+      if (cleanedValue.includes('เบื้องต้น') || cleanedValue.toLowerCase().includes('basic')) return 'เบื้องต้น';
+      if (cleanedValue.includes('พอใช้') || cleanedValue.toLowerCase().includes('fair')) return 'พอใช้';
+      if (cleanedValue.includes('ดีมาก') || cleanedValue.toLowerCase().includes('very')) return 'ดีมาก';
+      if (cleanedValue.includes('ดีเยี่ยม') || cleanedValue.toLowerCase().includes('excellent')) return 'ดีเยี่ยม';
+      if (cleanedValue.includes('ดี') || cleanedValue.toLowerCase().includes('good')) return 'ดี';
+      if (cleanedValue.includes('เจ้าของภาษา') || cleanedValue.toLowerCase().includes('native')) return 'เจ้าของภาษา';
+      if (cleanedValue.includes('ไม่ได้') || cleanedValue.toLowerCase().includes('none')) return 'ไม่ได้';
+    } 
+  } 
+
+  return value;
+};
+
+// ฟังก์ชันแปลงภาษาข้อมูลส่วนบุคคลที่มาจาก Database
+const getProfileValueLabel = (key: string, value: string | undefined, isEn: boolean) => {
+  if (!value) return '-';
+
+  const translations: Record<string, Record<string, string>> = {
+    militaryStatus: {
+      'ยังไม่ผ่านการเกณฑ์ทหาร': 'Not Exempt / Waiting for Military Service',
+      'ผ่านการเกณฑ์ทหารแล้ว': 'Exempted / Completed Military Service',
+      'ได้รับการยกเว้น': 'Exempted',
+    },
+    maritalStatus: {
+      'โสด': 'Single',
+      'สมรส': 'Married',
+      'หย่าร้าง': 'Divorced',
+      'หม้าย': 'Widowed',
+    },
+    nationality: {
+      'ไทย': 'Thai',
+    },
+    religion: {
+      'พุทธ': 'Buddhism',
+      'คริสต์': 'Christianity',
+      'อิสลาม': 'Islam',
+      'ฮินดู': 'Hinduism',
+    }
+  };
+
+  if (isEn && translations[key] && translations[key][value]) {
+    return translations[key][value];
+  }
+
+  return value;
+};
+
+// 🟢 เพิ่มฟังก์ชันแปลงภาษาในส่วนประวัติการศึกษา (Education)
+const getEducationLabel = (key: string, value: string | undefined, isEn: boolean) => {
+  if (!value) return '-';
+
+  const translations: Record<string, Record<string, string>> = {
+    educationLevel: {
+      'มัธยมศึกษาตอนต้น': 'Lower Secondary School',
+      'มัธยมศึกษาตอนปลาย': 'Upper Secondary School',
+      'ปวช.': 'Certificate of Vocational Education (Voc. Cert.)',
+      'ปวส.': 'Diploma of Vocational Education (High Voc. Cert.)',
+      'ปริญญาตรี': "Bachelor's Degree",
+      'ปริญญาโท': "Master's Degree",
+      'ปริญญาเอก': "Doctoral Degree (Ph.D.)",
+    },
+    faculty: {
+      "คณะเกษตรศาสตร์": "Faculty of Agriculture",
+      "คณะครุศาสตร์": "Faculty of Education (B.Ed.)",
+      "คณะครุศาสตร์อุตสาหกรรม": "Faculty of Technical Education",
+      "คณะดุริยางคศิลป์": "Faculty of Music",
+      "คณะทันตแพทยศาสตร์": "Faculty of Dentistry",
+      "คณะเทคนิคการแพทย์": "Faculty of Associated Medical Sciences",
+      "คณะเทคโนโลยี": "Faculty of Technology",
+      "คณะเทคโนโลยีทางทะเล": "Faculty of Marine Technology",
+      "คณะเทคโนโลยีสารสนเทศ": "Faculty of Information Technology",
+      "คณะนิติศาสตร์": "Faculty of Law",
+      "คณะนิเทศศาสตร์": "Faculty of Communication Arts",
+      "คณะบริหารธุรกิจ": "Faculty of Business Administration",
+      "คณะโบราณคดี": "Faculty of Archaeology",
+      "คณะประมง": "Faculty of Fisheries",
+      "คณะพยาบาลศาสตร์": "Faculty of Nursing",
+      "คณะพาณิชยศาสตร์และการบัญชี": "Faculty of Commerce and Accountancy",
+      "คณะแพทยศาสตร์": "Faculty of Medicine",
+      "คณะเภสัชศาสตร์": "Faculty of Pharmacy",
+      "คณะโภชนศาสตร์": "Faculty of Nutrition",
+      "คณะมนุษยศาสตร์": "Faculty of Humanities",
+      "คณะมัณฑนศิลป์": "Faculty of Decorative Arts",
+      "คณะวนศาสตร์": "Faculty of Forestry",
+      "คณะวารสารศาสตร์และสื่อสารมวลชน": "Faculty of Journalism and Mass Communication",
+      "คณะวิจิตรศิลป์": "Faculty of Fine Arts",
+      "คณะวิทยาการจัดการ": "Faculty of Management Science",
+      "คณะวิทยาการสารสนเทศ": "Faculty of Informatics",
+      "คณะวิทยาศาสตร์": "Faculty of Science",
+      "คณะวิทยาศาสตร์การกีฬา": "Faculty of Sports Science",
+      "คณะวิศวกรรมศาสตร์": "Faculty of Engineering",
+      "คณะศิลปกรรมศาสตร์": "Faculty of Fine and Applied Arts",
+      "คณะศิลปศาสตร์": "Faculty of Liberal Arts",
+      "คณะศิลปะและการออกแบบ": "Faculty of Arts and Design",
+      "คณะเศรษฐศาสตร์": "Faculty of Economics",
+      "คณะสถาปัตยกรรมศาสตร์": "Faculty of Architecture",
+      "คณะสหเวชศาสตร์": "Faculty of Allied Health Sciences",
+      "คณะสัตวแพทยศาสตร์": "Faculty of Veterinary Science",
+      "คณะสังคมสงเคราะห์ศาสตร์": "Faculty of Social Work",
+      "คณะสังคมศาสตร์": "Faculty of Social Sciences",
+      "คณะสาธารณสุขศาสตร์": "Faculty of Public Health",
+      "คณะศึกษาศาสตร์": "Faculty of Education (TEFL)",
+      "คณะสิ่งแวดล้อมและทรัพยากรศาสตร์": "Faculty of Environment and Resource Studies",
+      "คณะอุตสาหกรรมเกษตร": "Faculty of Agro-Industry",
+      "คณะอุตสาหกรรมสร้างสรรค์": "Faculty of Creative Industries",
+      "คณะอักษรศาสตร์": "Faculty of Arts",
+      "วิทยาลัยการคอมพิวเตอร์": "College of Computing",
+      "วิทยาลัยการภาพยนตร์ ศิลปะการแสดงและสื่อใหม่": "College of Film, Performing Arts and New Media",
+      "วิทยาลัยนานาชาติ": "International College",
+      "วิทยาลัยนวัตกรรม": "College of Innovation",
+      "วิทยาลัยป๊อปพิวเลชันศาสตร์": "College of Population Studies",
+      "วิทยาลัยสื่อสารการเมือง": "College of Politics and Governance"
+    }
+  };
+
+  if (isEn && translations[key] && translations[key][value]) {
+    return translations[key][value];
+  }
+
+  return value;
+};
+
+
 
 export default function ProfileFullPage() {
   const router = useRouter();
+  const locale = useLocale();
+  const isEn = locale === 'en';
+
   const [refreshKey, setRefreshKey] = useState(0);
   const { user, loading: authLoading, setUser } = useAuth();
 
@@ -147,39 +355,71 @@ export default function ProfileFullPage() {
   const machinery = drivingSkills.filter((s: any) => s.skillType?.startsWith('m_'));
   const [languageTests, setLanguageTests] = useState<LanguageTest[]>([]);
 
+  const t = {
+    profileCompletion: isEn ? 'Profile Completion' : 'ความสมบูรณ์ของโปรไฟล์',
+    moreChance: isEn ? 'More chance of getting a job' : 'มีโอกาสได้งานมากขึ้น',
+    publishProfile: isEn ? 'Publish Profile' : 'เผยแพร่โปรไฟล์',
+    allowSearch: isEn ? 'Allow employers to search your profile' : 'อนุญาตให้ค้นหาโปรไฟล์ของคุณได้',
+    moreDetails: isEn ? 'More details' : 'รายละเอียดเพิ่มเติม',
+    personalInfo: isEn ? 'Personal Information' : 'ข้อมูลส่วนบุคคล',
+    personalDesc: isEn ? 'Basic info and physical details for consideration.' : 'ข้อมูลเบื้องต้นและรายละเอียดทางกายภาพเพื่อประกอบการพิจารณา',
+    edit: isEn ? 'Edit' : 'แก้ไข',
+    manage: isEn ? 'Manage' : 'จัดการ',
+    add: isEn ? 'Add' : 'เพิ่มข้อมูล',
+    completeInfo: isEn ? 'Complete Information' : 'ข้อมูลครบถ้วน',
+    incompleteInfo: isEn ? 'Incomplete Information' : 'ยังกรอกข้อมูลไม่ครบ',
+    phone: isEn ? 'Phone' : 'โทรศัพท์',
+    lineId: isEn ? 'LINE ID' : 'LINE ID',
+    heightWeight: isEn ? 'Height / Weight' : 'ส่วนสูง / น้ำหนัก',
+    military: isEn ? 'Military Status' : 'สถานภาพทางทหาร',
+    nationalityReligion: isEn ? 'Nationality / Religion' : 'สัญชาติ / ศาสนา',
+    marital: isEn ? 'Marital Status' : 'สถานภาพสมรส',
+    expectedSalary: isEn ? 'Expected Salary' : 'เงินเดือนที่ต้องการ',
+    negotiable: isEn ? 'Negotiable' : 'ตามตกลง',
+    baht: isEn ? 'Baht' : 'บาท',
+    education: isEn ? 'Education History' : 'ประวัติการศึกษา',
+    educationDesc: isEn ? 'Highest qualification and your institution.' : 'วุฒิการศึกษาสูงสุดและสถาบันที่คุณจบการศึกษา',
+    addEducation: isEn ? 'Add Education' : 'เพิ่มการศึกษา',
+    workInfo: isEn ? 'Work Information' : 'ข้อมูลการทำงาน',
+    workDesc: isEn ? 'Target position and past work experience.' : 'ตำแหน่งงานที่กำลังมองหาและประวัติประสบการณ์การทำงานที่ผ่านมา',
+    interestedPos: isEn ? 'Interested Positions' : 'ตำแหน่งงานที่สนใจ',
+    noPosSpecified: isEn ? 'No position specified yet' : 'ยังไม่ได้ระบุตำแหน่งที่ต้องการ',
+    workHistory: isEn ? 'Work History' : 'ประวัติการทำงาน',
+    present: isEn ? 'Present' : 'ปัจจุบัน',
+    general: isEn ? 'General' : 'ทั่วไป',
+    noWorkHistory: isEn ? 'No work history specified yet' : 'ยังไม่มีข้อมูลประวัติการทำงาน',
+    languages: isEn ? 'Language Skills' : 'ทักษะด้านภาษา',
+    languagesDesc: isEn ? 'Foreign languages you can communicate in and proficiency levels.' : 'ภาษาต่างประเทศที่สามารถสื่อสารได้และระดับความเชี่ยวชาญ',
+    drivingSkills: isEn ? 'Driving Skills' : 'ทักษะการขับขี่',
+    drivingDesc: isEn ? 'Driving licenses, personal vehicles, and special skills.' : 'ใบอนุญาตขับขี่ ยานพาหนะส่วนตัว และความสามารถพิเศษ',
+    noData: isEn ? 'No data specified' : 'ยังไม่ได้ระบุข้อมูล',
+    resume: isEn ? 'Resume' : 'เรซูเม่ (Resume)',
+    resumeDesc: isEn ? 'Upload a PDF file or generate a new one from your profile data.' : 'อัปโหลดไฟล์ PDF หรือสร้างใหม่จากข้อมูลโปรไฟล์ของคุณ',
+    deleteFile: isEn ? 'Delete file' : 'ลบไฟล์',
+    notUploaded: isEn ? 'File not uploaded yet' : 'ยังไม่ได้อัปโหลดไฟล์',
+    autoGenerate: isEn ? 'Auto Generate' : 'สร้างอัตโนมัติ',
+    generating: isEn ? 'Generating...' : 'กำลังสร้าง...',
+    uploadPdf: isEn ? 'Upload PDF' : 'อัปโหลด PDF',
+    loadingProfile: isEn ? 'Loading profile data...' : 'กำลังโหลดข้อมูลโปรไฟล์...',
+  };
 
-  // ─── 🟢 แก้ไขจุดสำคัญ: ป้องกัน Infinite Loop จากอาการ Context โหลดช้า ──────────────────
   useEffect(() => {
-    // 1. ถ้ายังโหลดเซสชันไม่เสร็จ ห้ามเพิ่งสั่งเด้งหน้าหนีเด็ดขาด
     if (authLoading) return;
-
-    // 2. ถ้าไม่มีตัวแปร user ใน Context ให้เช็คที่ตัวตั๋วจริง (accessToken) ในเครื่องก่อน
     const hasLocalToken = typeof window !== 'undefined' && localStorage.getItem('accessToken');
-
     if (!user && !hasLocalToken) {
-      // ไม่มีทั้งตัวตน และไม่มีทั้งตั๋วในเครื่อง แปลว่าไม่ได้ล็อกอินชัวร์ ๆ -> ส่งไปหน้า Login
       router.replace('/login');
     } else if (user && user.role === 'EMPLOYER') {
-      // เป็นนายจ้าง ห้ามเข้าหน้านี้ -> ส่งกลับหน้าแรก
       router.replace('/th/');
     }
   }, [user, authLoading, router]);
-  useEffect(() => {
-    console.log("avatar:", user?.avatarUrl);
-  }, [user]);
 
-  // ─── 🟢 แก้ไขจุดตาย: ล็อกลูป Promise.all ไม่ให้ยิงรัวตามตัวแปร user ──────────────────
   useEffect(() => {
-    // 1. ถ้า Context บอกว่ากำลังโหลดเซสชันอยู่ ให้ยืนรอเฉย ๆ ก่อน
     if (authLoading) return;
-
-    // 2. ดึง Token ออกมาเช็คตรง ๆ
     const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
     if (!token) return;
 
     const headers = { Authorization: `Bearer ${token}` };
 
-    // 🚀 ยิงดึงข้อมูล (ตัดคำสั่ง setLoading(true) สุ่มสี่สุ่มห้าออก เพื่อไม่ให้กระตุกเรนเดอร์)
     Promise.all([
       fetch(`${API_URL}/users/me/profile`, { headers }).then((r) => r.json()).catch(() => null),
       fetch(`${API_URL}/users/me/educations`, { headers }).then((r) => r.json()).catch(() => []),
@@ -200,21 +440,16 @@ export default function ProfileFullPage() {
       setLanguageTests(Array.isArray(lang?.tests) ? lang.tests : []);
 
       if (Array.isArray(resumes) && resumes.length > 0) {
-        // ใช้ข้อมูลจากตัวแปร local 'prof' หรือถอดจาก Token แทนการพึ่งพาตัวแปร user นอกลูปที่ทำลูปพัง
         const myResume = resumes.find(r => r.fileUrl);
         setResume(myResume || null);
       } else {
         setResume(null);
       }
-
-      // ดึงข้อมูลเสร็จสิ้น คลายล็อกหน้าจอ
       setLoading(false);
     }).catch((err) => {
       console.error("Error loading profile details:", err);
       setLoading(false);
     });
-
-    // 🔒 เปลี่ยน Dependency ด้านล่างนี้ให้เหลือแค่นี้พอครับ! ห้ามใส่ user เข้าไปเด็ดขาด!
   }, [authLoading]);
 
   const profileComplete = !!(
@@ -226,7 +461,7 @@ export default function ProfileFullPage() {
 
   const levelColor = (level?: string) => {
     if (!level) return 'bg-slate-200';
-    if (level.includes('เยี่ยม') || level.includes('Native')) return 'bg-emerald-500';
+    if (level.includes('เยี่ยม') || level.includes('Native') || level.includes('Excellent')) return 'bg-emerald-500';
     if (level.includes('ดีมาก') || level.includes('Very')) return 'bg-blue-500';
     if (level.includes('ดี') || level.includes('Good')) return 'bg-cyan-500';
     if (level.includes('พอใช้') || level.includes('Fair')) return 'bg-amber-400';
@@ -235,7 +470,7 @@ export default function ProfileFullPage() {
 
   const levelWidth = (level?: string) => {
     if (!level) return '10%';
-    if (level.includes('เยี่ยม') || level.includes('Native')) return '100%';
+    if (level.includes('เยี่ยม') || level.includes('Native') || level.includes('Excellent')) return '100%';
     if (level.includes('ดีมาก') || level.includes('Very')) return '80%';
     if (level.includes('ดี') || level.includes('Good')) return '65%';
     if (level.includes('พอใช้') || level.includes('Fair')) return '45%';
@@ -247,14 +482,13 @@ export default function ProfileFullPage() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Check file type and size
     const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
     if (!allowedTypes.includes(file.type)) {
-      alert('กรุณาอัปโหลดไฟล์ภาพ (JPG, PNG, WEBP) เท่านั้น');
+      alert(isEn ? 'Please upload image file (JPG, PNG, WEBP) only' : 'กรุณาอัปโหลดไฟล์ภาพ (JPG, PNG, WEBP) เท่านั้น');
       return;
     }
     if (file.size > 5 * 1024 * 1024) {
-      alert('ไฟล์ภาพต้องมีขนาดไม่เกิน 5MB');
+      alert(isEn ? 'Image size must not exceed 5MB' : 'ไฟล์ภาพต้องมีขนาดไม่เกิน 5MB');
       return;
     }
 
@@ -272,17 +506,14 @@ export default function ProfileFullPage() {
       if (!res.ok) throw new Error('Upload failed');
       const data = await res.json();
 
-      // Update global user context to reflect new avatar
       if (user) {
         setUser({ ...user, avatarUrl: data.avatarUrl });
       }
     } catch {
-      alert('อัปโหลดรูปโปรไฟล์ไม่สำเร็จ กรุณาลองใหม่อีกครั้ง');
+      alert(isEn ? 'Avatar upload failed, please try again' : 'อัปโหลดรูปโปรไฟล์ไม่สำเร็จ กรุณาลองใหม่อีกครั้ง');
     } finally {
       setAvatarUploading(false);
     }
-
-    // Reset file input
     e.target.value = '';
   };
 
@@ -290,11 +521,11 @@ export default function ProfileFullPage() {
     const file = e.target.files?.[0];
     if (!file) return;
     if (file.type !== 'application/pdf') {
-      alert('กรุณาอัปโหลดไฟล์ PDF เท่านั้น');
+      alert(isEn ? 'Please upload PDF file only' : 'กรุณาอัปโหลดไฟล์ PDF เท่านั้น');
       return;
     }
     if (file.size > 10 * 1024 * 1024) {
-      alert('ไฟล์ต้องมีขนาดไม่เกิน 10MB');
+      alert(isEn ? 'File size must not exceed 10MB' : 'ไฟล์ต้องมีขนาดไม่เกิน 10MB');
       return;
     }
     setResumeUploading(true);
@@ -311,7 +542,7 @@ export default function ProfileFullPage() {
       const data = await res.json();
       setResume(data);
     } catch {
-      alert('อัปโหลดไม่สำเร็จ กรุณาลองใหม่อีกครั้ง');
+      alert(isEn ? 'Upload failed, please try again' : 'อัปโหลดไม่สำเร็จ กรุณาลองใหม่อีกครั้ง');
     } finally {
       setResumeUploading(false);
     }
@@ -319,7 +550,7 @@ export default function ProfileFullPage() {
 
   const handleResumeDelete = async () => {
     if (!resume) return;
-    if (!confirm('ต้องการลบ Resume นี้ใช่ไหม?')) return;
+    if (!confirm(isEn ? 'Do you want to delete this Resume?' : 'ต้องการลบ Resume นี้ใช่ไหม?')) return;
     const token = localStorage.getItem('accessToken');
     try {
       await fetch(`${API_URL}/resumes/${resume.id}`, {
@@ -328,7 +559,7 @@ export default function ProfileFullPage() {
       });
       setResume(null);
     } catch {
-      alert('ลบไม่สำเร็จ');
+      alert(isEn ? 'Delete failed' : 'ลบไม่สำเร็จ');
     }
   };
 
@@ -336,7 +567,6 @@ export default function ProfileFullPage() {
     const currentIsPublic = profile?.isPublic ?? true;
     const newStatus = !currentIsPublic;
 
-    // Optimistic update
     const previousProfile = profile;
     const newProfile = profile
       ? { ...profile, isPublic: newStatus }
@@ -357,9 +587,8 @@ export default function ProfileFullPage() {
       if (!res.ok) throw new Error('Failed to update');
     } catch (error) {
       console.error('Failed to update visibility', error);
-      // Revert
       setProfile(previousProfile);
-      alert('เกิดข้อผิดพลาดในการอัปเดตสถานะ');
+      alert(isEn ? 'Error updating status' : 'เกิดข้อผิดพลาดในการอัปเดตสถานะ');
     }
   };
 
@@ -368,7 +597,7 @@ export default function ProfileFullPage() {
       <div className="min-h-screen bg-slate-50 flex items-center justify-center">
         <div className="flex flex-col items-center gap-3">
           <Loader2 className="w-10 h-10 text-blue-600 animate-spin" />
-          <p className="text-sm text-slate-500 font-medium">กำลังโหลดข้อมูลโปรไฟล์...</p>
+          <p className="text-sm text-slate-500 font-medium">{t.loadingProfile}</p>
         </div>
       </div>
     );
@@ -429,7 +658,6 @@ export default function ProfileFullPage() {
       avatarUrl = await toBase64(avatarUrl);
     }
 
-    // 1. เตรียมข้อมูลสำหรับ Template
     const fullUserData = {
       fullName: `${user?.firstName} ${user?.lastName}`,
       email: user?.email,
@@ -449,7 +677,7 @@ export default function ProfileFullPage() {
       militaryStatus: profile?.militaryStatus || '-',
       height: profile?.height,
       weight: profile?.weight,
-      targetPosition: jobPreferences.length > 0 ? jobPreferences[0].position : 'พร้อมเริ่มงาน',
+      targetPosition: jobPreferences.length > 0 ? jobPreferences[0].position : (isEn ? 'Ready to work' : 'พร้อมเริ่มงาน'),
       experience: profile?.experience || 0,
       totalExperienceYear: profile?.experience || 0,
       profile: {
@@ -459,9 +687,9 @@ export default function ProfileFullPage() {
       },
       expectedSalary: profile?.expectedSalary,
       expectedSalaryText: profile?.expectedSalary
-        ? `${Number(profile.expectedSalary).toLocaleString()} บาท`
-        : 'ตามตกลง',
-      drivingSkills: drivingSkillsData.map(s => getSkillLabel(s.skillType)),
+        ? `${Number(profile.expectedSalary).toLocaleString()} ${t.baht}`
+        : t.negotiable,
+      drivingSkills: drivingSkillsData.map(s => getSkillLabel(s.skillType, isEn)),
       languages: languages.map(l => ({ language: l.language, level: l.level })),
       languageTests: languageTests.map(t => ({
         testName: t.testName,
@@ -485,10 +713,7 @@ export default function ProfileFullPage() {
     };
 
     try {
-      // 2. สร้าง Blob ใหม่จาก Template (เลเอาท์ใหม่จะถูกคำนวณที่นี่)
       const blob = await pdf(<ResumeTemplate data={fullUserData} />).toBlob();
-
-      // 3. ใช้ Timestamp ในชื่อไฟล์เพื่อป้องกัน Server-side cache
       const timestamp = new Date().getTime();
       const uniqueFileName = `Resume_${user?.firstName}_${timestamp}.pdf`;
       const file = new File([blob], uniqueFileName, { type: 'application/pdf' });
@@ -513,12 +738,12 @@ export default function ProfileFullPage() {
 
         setResume({ ...data, fileUrl: freshUrl });
         setRefreshKey(prev => prev + 1);
-        alert("สร้างเรซูเม่อัตโนมัติสำเร็จ!");
+        alert(isEn ? "Resume generated successfully!" : "สร้างเรซูเม่อัตโนมัติสำเร็จ!");
       }
 
     } catch (error) {
       console.error("Generate Error:", error);
-      alert("สร้างเรซูเม่ไม่สำเร็จ");
+      alert(isEn ? "Failed to generate resume" : "สร้างเรซูเม่ไม่สำเร็จ");
     } finally {
       setResumeUploading(false);
     }
@@ -535,7 +760,7 @@ export default function ProfileFullPage() {
             <path fill="currentColor" opacity="0.5" d="M0,0 L500,150 L1000,0 Z"></path>
             <path fill="rgba(255,255,255,0.7)" d="M400,0 L900,200 L1440,50 L1440,0 Z"></path>
             <path fill="#dce4ef" d="M800,0 L1440,250 L1440,0 Z"></path>
-            <path fill="#dce4ef" d="M0,50 L400,250 L0,320 Z"></path>
+            <path fill="#0,50 L400,250 L0,320 Z"></path>
           </svg>
         </div>
 
@@ -586,8 +811,8 @@ export default function ProfileFullPage() {
               <div className="w-full xl:flex-1 xl:max-w-[380px] bg-[#f8faff] rounded-3xl p-5 border border-indigo-50 shadow-xs flex flex-col justify-center">
                 <div className="flex justify-between items-end mb-3 gap-2">
                   <div className="min-w-0">
-                    <h3 className="text-xl font-bold text-slate-700 truncate">ความสมบูรณ์ของโปรไฟล์</h3>
-                    <p className="text-[14px] text-slate-500 mt-1 whitespace-nowrap">มีโอกาสได้งานมากขึ้น {Math.round(completionPercentage)}%</p>
+                    <h3 className="text-xl font-bold text-slate-700 truncate">{t.profileCompletion}</h3>
+                    <p className="text-[14px] text-slate-500 mt-1 whitespace-nowrap">{t.moreChance} {Math.round(completionPercentage)}%</p>
                   </div>
                   <span className={`text-xl font-bold shrink-0 ${getCompletionTextColor(completionPercentage)}`}>
                     {Math.round(completionPercentage)}%
@@ -601,13 +826,13 @@ export default function ProfileFullPage() {
                 </div>
               </div>
 
-              {/* Card 2: เผยแพร่โปรไฟล์ - ใช้ flex-1 และ max-w เช่นกัน */}
+              {/* Card 2: เผยแพร่โปรไฟล์ */}
               <div className="w-full xl:flex-1 xl:max-w-[340px] bg-[#f8faff] rounded-3xl p-5 border border-indigo-50 shadow-xs flex items-center justify-between gap-4">
                 <div className="min-w-0">
-                  <h3 className="text-xl font-bold text-slate-700 truncate">เผยแพร่โปรไฟล์</h3>
-                  <p className="text-sm text-slate-500 mt-1 truncate">อนุญาตให้ค้นหาโปรไฟล์ของคุณได้</p>
+                  <h3 className="text-xl font-bold text-slate-700 truncate">{t.publishProfile}</h3>
+                  <p className="text-sm text-slate-500 mt-1 truncate">{t.allowSearch}</p>
                   <Link href="/profile-visibility" className="mt-2 inline-block text-[12px] font-semibold text-indigo-600 hover:text-indigo-700 underline">
-                    รายละเอียดเพิ่มเติม
+                    {t.moreDetails}
                   </Link>
                 </div>
                 <button
@@ -636,14 +861,14 @@ export default function ProfileFullPage() {
                 className="text-xs text-[#4f75e2] bg-[#f4f7fe] hover:bg-blue-100 font-bold px-4 py-2 rounded-full flex items-center gap-1.5 transition-colors"
               >
                 <Edit3 className="w-3.5 h-3.5" />
-                แก้ไข
+                {t.edit}
               </button>
             </div>
 
             <div>
-              <h3 className="font-bold text-slate-800 text-[17px] mb-2">ข้อมูลส่วนบุคคล</h3>
+              <h3 className="font-bold text-slate-800 text-[17px] mb-2">{t.personalInfo}</h3>
               <p className="text-[13px] text-slate-500 leading-relaxed mb-4">
-                ข้อมูลเบื้องต้นและรายละเอียดทางกายภาพเพื่อประกอบการพิจารณา
+                {t.personalDesc}
               </p>
             </div>
 
@@ -651,56 +876,56 @@ export default function ProfileFullPage() {
               {profileComplete ? (
                 <div className="inline-flex items-center gap-1.5 text-emerald-600 text-[11px] font-bold bg-[#ecfdf3] px-3 py-1.5 rounded-full mb-4 border border-emerald-100">
                   <CheckCircle2 className="w-3.5 h-3.5" />
-                  ข้อมูลครบถ้วน
+                  {t.completeInfo}
                 </div>
               ) : (
                 <div className="inline-flex items-center gap-1.5 text-amber-600 text-[11px] font-bold bg-amber-50 px-3 py-1.5 rounded-full mb-4 border border-amber-100">
                   <AlertCircle className="w-3.5 h-3.5" />
-                  ยังกรอกข้อมูลไม่ครบ
+                  {t.incompleteInfo}
                 </div>
               )}
 
               {/* Section: ข้อมูลรายละเอียดแบบ Grid */}
               <div className="pt-4 border-t border-slate-100 grid grid-cols-2 gap-x-4 gap-y-3">
-                {/* แถวที่ 1 */}
                 <div className="flex flex-col">
-                  <span className="text-slate-400 text-[10px] font-bold uppercase tracking-wider">โทรศัพท์</span>
+                  <span className="text-slate-400 text-[10px] font-bold uppercase tracking-wider">{t.phone}</span>
                   <span className="text-[13px] font-semibold text-slate-700">{profile?.phone || '-'}</span>
                 </div>
                 <div className="flex flex-col">
-                  <span className="text-slate-400 text-[10px] font-bold uppercase tracking-wider">LINE ID</span>
+                  <span className="text-slate-400 text-[10px] font-bold uppercase tracking-wider">{t.lineId}</span>
                   <span className="text-[13px] font-semibold text-slate-700">{profile?.lineId || '-'}</span>
                 </div>
 
-                {/* แถวที่ 2 */}
                 <div className="flex flex-col">
-                  <span className="text-slate-400 text-[10px] font-bold uppercase tracking-wider">ส่วนสูง / น้ำหนัก</span>
+                  <span className="text-slate-400 text-[10px] font-bold uppercase tracking-wider">{t.heightWeight}</span>
                   <span className="text-[13px] font-semibold text-slate-700">
-                    {profile?.height ? `${profile.height} ซม.` : '-'} / {profile?.weight ? `${profile.weight} กก.` : '-'}
+                    {profile?.height ? `${profile.height} ${isEn ? 'cm' : 'ซม.'}` : '-'} / {profile?.weight ? `${profile.weight} ${isEn ? 'kg' : 'กก.'}` : '-'}
                   </span>
                 </div>
                 <div className="flex flex-col">
-                  <span className="text-slate-400 text-[10px] font-bold uppercase tracking-wider">สถานภาพทางทหาร</span>
-                  <span className="text-[13px] font-semibold text-slate-700">{profile?.militaryStatus || '-'}</span>
+                  <span className="text-slate-400 text-[10px] font-bold uppercase tracking-wider">{t.military}</span>
+                  <span className="text-[13px] font-semibold text-slate-700">
+                    {getProfileValueLabel('militaryStatus', profile?.militaryStatus, isEn)}
+                  </span>
                 </div>
 
-                {/* แถวที่ 3 */}
                 <div className="flex flex-col">
-                  <span className="text-slate-400 text-[10px] font-bold uppercase tracking-wider">สัญชาติ / ศาสนา</span>
+                  <span className="text-slate-400 text-[10px] font-bold uppercase tracking-wider">{t.nationalityReligion}</span>
                   <span className="text-[13px] font-semibold text-slate-700">
-                    {profile?.nationality || '-'} / {profile?.religion || '-'}
+                    {getProfileValueLabel('nationality', profile?.nationality, isEn)} / {getProfileValueLabel('religion', profile?.religion, isEn)}
                   </span>
                 </div>
                 <div className="flex flex-col">
-                  <span className="text-slate-400 text-[10px] font-bold uppercase tracking-wider">สถานภาพสมรส</span>
-                  <span className="text-[13px] font-semibold text-slate-700">{profile?.maritalStatus || '-'}</span>
+                  <span className="text-slate-400 text-[10px] font-bold uppercase tracking-wider">{t.marital}</span>
+                  <span className="text-[13px] font-semibold text-slate-700">
+                    {getProfileValueLabel('maritalStatus', profile?.maritalStatus, isEn)}
+                  </span>
                 </div>
 
-                {/* แถวที่ 4 (เน้นสีน้ำเงินเพื่อให้เห็นเงินเดือนชัดเจน) */}
                 <div className="flex flex-col col-span-2 mt-1 p-2 bg-blue-50/50 rounded-lg border border-blue-100/50">
-                  <span className="text-blue-500 text-[10px] font-bold uppercase tracking-wider">เงินเดือนที่ต้องการ</span>
+                  <span className="text-blue-500 text-[10px] font-bold uppercase tracking-wider">{t.expectedSalary}</span>
                   <span className="text-[14px] font-bold text-blue-700">
-                    {profile?.expectedSalary ? `${Number(profile.expectedSalary).toLocaleString()} บาท` : 'ตามตกลง'}
+                    {profile?.expectedSalary ? `${Number(profile.expectedSalary).toLocaleString()} ${t.baht}` : t.negotiable}
                   </span>
                 </div>
               </div>
@@ -718,36 +943,47 @@ export default function ProfileFullPage() {
                 className="text-xs text-[#f97316] bg-[#fef4eb] hover:bg-orange-100 font-bold px-4 py-2 rounded-full flex items-center gap-1.5 transition-colors"
               >
                 <Edit3 className="w-3.5 h-3.5" />
-                จัดการ
+                {t.manage}
               </button>
             </div>
             <div>
-              <h3 className="font-bold text-slate-800 text-[17px] mb-2">ประวัติการศึกษา</h3>
+              <h3 className="font-bold text-slate-800 text-[17px] mb-2">{t.education}</h3>
               <p className="text-[13px] text-slate-500 leading-relaxed mb-4">
-                วุฒิการศึกษาสูงสุดและสถาบันที่คุณจบการศึกษา
+                {t.educationDesc}
               </p>
             </div>
             <div className="mt-auto">
               {educations.length > 0 ? (
-                <div className="pt-4 border-t border-slate-100 flex flex-col gap-y-5">
+                <div className="pt-4 border-t border-slate-100 flex flex-col gap-y-4">
                   {educations.map((e) => (
-                    <div key={e.id} className="relative pl-4">
-                      {/* จุดวงกลมหน้าทุกรายการ */}
+                    <div key={e.id} className="relative pl-4 border-b border-slate-50 last:border-none pb-3 last:pb-0">
                       <div className="absolute left-0 top-[7px] w-[5px] h-[5px] bg-[#f97316] rounded-full"></div>
 
                       <div className="flex items-start justify-between gap-4">
-                        <div className="text-[13px] font-semibold text-slate-800 leading-tight">
-                          {/* แสดงคณะ และ สาขา ต่อกัน */}
-                          {e.faculty}{e.major ? ` สาขา${e.major}` : ''}
+                        <div className="text-[13px] font-bold text-slate-800 leading-tight">
+                          {/* 🟢 เรียกฟังก์ชัน getEducationLabel แยกกับฟิลด์อื่นอย่างชัดเจน */}
+                          {getEducationLabel('faculty', e.faculty, isEn)}
+                          {e.major && ` (${isEn ? 'Major' : 'สาขา'}: ${e.major})`}
                         </div>
-                        {/* ระดับการศึกษาวางไว้ด้านขวา */}
                         <span className="shrink-0 inline-block text-[10px] text-[#f97316] bg-[#fef4eb] font-bold px-2 py-0.5 rounded-full">
-                          {e.educationLevel || 'ปริญญาตรี'}
+                          {getEducationLabel('educationLevel', e.educationLevel, isEn)}
                         </span>
                       </div>
 
-                      <div className="text-[11px] text-slate-500 mt-1">
+                      <div className="text-[11px] text-slate-500 mt-1 font-medium">
                         {e.institution} {e.graduationYear ? `(${e.graduationYear})` : ''}
+                      </div>
+
+                      {/* 🟢 แสดงข้อมูลเพิ่มเติม: Degree Name & GPA ตามที่ขอเพิ่ม */}
+                      <div className="mt-2 grid grid-cols-2 gap-2 bg-slate-50/70 p-2 rounded-xl border border-slate-100">
+                        <div className="flex flex-col">
+                          <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">{isEn ? 'Degree' : 'วุฒิปริญญา'}</span>
+                          <span className="text-[11px] font-semibold text-slate-700 truncate">{e.degreeName || '-'}</span>
+                        </div>
+                        <div className="flex flex-col">
+                          <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">{isEn ? 'GPA' : 'เกรดเฉลี่ย (GPA)'}</span>
+                          <span className="text-[11px] font-bold text-[#f97316]">{e.gpa || '-'}</span>
+                        </div>
                       </div>
                     </div>
                   ))}
@@ -758,7 +994,7 @@ export default function ProfileFullPage() {
                   className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl border-2 border-dashed border-slate-200 hover:border-[#f97316] text-[13px] font-bold text-slate-500 transition-colors"
                 >
                   <Plus className="w-4 h-4" />
-                  เพิ่มการศึกษา
+                  {t.addEducation}
                 </button>
               )}
             </div>
@@ -766,7 +1002,6 @@ export default function ProfileFullPage() {
 
           {/* Card 3: Work History */}
           <div className="bg-white rounded-4xl p-6 shadow-sm flex flex-col border border-slate-100/50 drop-shadow-lg">
-            {/* Header & Icon */}
             <div className="flex items-start justify-between mb-4">
               <div className="w-12 h-12 rounded-full bg-[#f0fcfc] text-[#06b6d4] flex items-center justify-center">
                 <Briefcase className="w-5 h-5" />
@@ -777,24 +1012,22 @@ export default function ProfileFullPage() {
                   className="text-xs text-cyan-600 bg-cyan-50 hover:bg-cyan-100 font-bold px-4 py-2 rounded-full flex items-center gap-1.5 transition-colors"
                 >
                   <Plus className="w-3.5 h-3.5 stroke-3" />
-                  เพิ่มข้อมูล
+                  {t.add}
                 </button>
               </div>
             </div>
 
-            {/* Description - ปรับให้เหมือน Card อื่นๆ */}
             <div>
-              <h3 className="font-bold text-slate-800 text-[17px] mb-2">ข้อมูลการทำงาน</h3>
+              <h3 className="font-bold text-slate-800 text-[17px] mb-2">{t.workInfo}</h3>
               <p className="text-[13px] text-slate-500 leading-relaxed mb-4">
-                ตำแหน่งงานที่กำลังมองหาและประวัติประสบการณ์การทำงานที่ผ่านมา
+                {t.workDesc}
               </p>
             </div>
 
             <div className="mt-auto">
-              {/* ส่วนบน: ตำแหน่งงานที่ต้องการ */}
               <div className="pt-4 border-t border-slate-100 mb-6">
                 <div className="flex items-center gap-2 mb-3">
-                  <span className="text-[13px] font-bold text-slate-700">ตำแหน่งงานที่สนใจ</span>
+                  <span className="text-[13px] font-bold text-slate-700">{t.interestedPos}</span>
                 </div>
 
                 {jobPreferences && jobPreferences.length > 0 ? (
@@ -809,17 +1042,16 @@ export default function ProfileFullPage() {
                     ))}
                   </div>
                 ) : (
-                  <p className="text-[12px] text-slate-400 italic pl-5">ยังไม่ได้ระบุตำแหน่งที่ต้องการ</p>
+                  <p className="text-[12px] text-slate-400 italic pl-5">{t.noPosSpecified}</p>
                 )}
               </div>
 
-              {/* เส้นแบ่งกลางแบบจางๆ */}
               <div className="border-t border-slate-50 mb-6"></div>
 
               {/* ส่วนล่าง: ประวัติการทำงาน */}
               <div className="relative">
                 <div className="flex items-center gap-2 mb-4">
-                  <span className="text-[13px] font-bold text-slate-700">ประวัติการทำงาน</span>
+                  <span className="text-[13px] font-bold text-slate-700">{t.workHistory}</span>
                 </div>
 
                 {works && works.length > 0 ? (
@@ -830,7 +1062,7 @@ export default function ProfileFullPage() {
 
                         <div className="text-[13px] font-bold text-slate-800 leading-tight">
                           <span className="text-cyan-600 font-medium mr-2 text-[11px]">
-                            [{w.businessType || 'ทั่วไป'}]
+                            [{w.businessType || t.general}]
                           </span>
                           {w.position}
                         </div>
@@ -839,21 +1071,21 @@ export default function ProfileFullPage() {
                           <span className="font-semibold text-slate-600">{w.company}</span>
                           <span className="text-slate-300">|</span>
                           <span className="bg-slate-50 px-2 py-0.5 rounded text-[10px]">
-                            {w.startYear} – {w.isCurrent ? 'ปัจจุบัน' : w.endYear}
+                            {w.startYear} – {w.isCurrent ? t.present : w.endYear}
                           </span>
                         </div>
                       </div>
                     ))}
                   </div>
                 ) : (
-                  <p className="text-[12px] text-slate-400 italic pl-5">ยังไม่มีข้อมูลประวัติการทำงาน</p>
+                  <p className="text-[12px] text-slate-400 italic pl-5">{t.noWorkHistory}</p>
                 )}
               </div>
             </div>
           </div>
 
           {/* Card 4: Languages */}
-          <div className="bg-white rounded-4xl p-6 shadow-sm flex flex-col border border-slate-100/50 drop-shadow-lg ">
+          <div className="bg-white rounded-4xl p-6 shadow-sm flex flex-col border border-slate-100/50 drop-shadow-lg">
             <div className="flex items-start justify-between mb-4">
               <div className="w-12 h-12 rounded-full bg-[#f0fdf4] text-[#22c55e] flex items-center justify-center">
                 <Languages className="w-5 h-5" />
@@ -863,62 +1095,81 @@ export default function ProfileFullPage() {
                 className="text-xs text-[#22c55e] bg-[#f0fdf4] hover:bg-green-100 font-bold px-4 py-2 rounded-full flex items-center gap-1.5 transition-colors"
               >
                 <Edit3 className="w-3.5 h-3.5" />
-                จัดการ
+                {t.manage}
               </button>
             </div>
             <div>
-              <h3 className="font-bold text-slate-800 text-[17px] mb-2">ทักษะด้านภาษา</h3>
+              <h3 className="font-bold text-slate-800 text-[17px] mb-2">{t.languages}</h3>
               <p className="text-[13px] text-slate-500 leading-relaxed mb-4">
-                ภาษาต่างประเทศที่สามารถสื่อสารได้และระดับความเชี่ยวชาญ
+                {t.languagesDesc}
               </p>
             </div>
             <div className="mt-auto">
               {languages.length > 0 ? (
-                <div className="space-y-4 pt-4 border-t border-slate-100">
-                  {languages.map((lang) => (
-                    <div key={lang.id}>
-                      <div className="flex justify-between items-end mb-1.5">
-                        <span className="font-semibold text-slate-800 text-[13px]">
-                          {lang.language}
+                <div className="pt-4 border-t border-slate-100 space-y-4">
+                  {languages.map((l) => (
+                    <div key={l.id} className="p-3 bg-slate-50 rounded-2xl border border-slate-100/70">
+                      {/* ส่วนหัวย่อย: ชื่อภาษา และ ระดับความเข้าใจหลัก */}
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-[13px] font-bold text-slate-800">
+                          {getLanguageLabel('language', l.language, isEn)}
                         </span>
-                        <span className="text-[10px] font-bold text-[#22c55e] bg-[#f0fdf4] px-2 py-0.5 rounded-md">
-                          {lang.level || 'ดีเยี่ยม (Excellent)'}
+                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full text-white ${levelColor(l.level)}`}>
+                          {getLanguageLabel('level', l.level, isEn)}
                         </span>
                       </div>
-                      <div className="h-[5px] bg-slate-100 rounded-full overflow-hidden">
+
+                      {/* แถบ Progress Bar ความเชี่ยวชาญหลัก */}
+                      <div className="w-full bg-slate-200 h-1.5 rounded-full overflow-hidden mb-3">
                         <div
-                          className={`h-full rounded-full transition-all ${levelColor(lang.level)}`}
-                          style={{ width: levelWidth(lang.level) }}
-                        />
+                          className={`h-full rounded-full ${levelColor(l.level)}`}
+                          style={{ width: levelWidth(l.level) }}
+                        ></div>
+                      </div>
+
+                      {/* บล็อกแสดงผลแยกทักษะย่อย Speaking, Reading, Writing ใต้ Progress Bar */}
+                      <div className="grid grid-cols-3 gap-2 pt-2 border-t border-slate-200/60 text-center">
+                        {/* 1. สกิลการพูด (Speaking) */}
+                        <div className="flex flex-col bg-white rounded-xl p-1.5 border border-slate-100">
+                          <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">
+                            {isEn ? 'Speaking' : 'การพูด'}
+                          </span>
+                          <span className="text-[11px] font-semibold text-slate-700 mt-0.5">
+                            {getLanguageLabel('level', l.speaking, isEn)}
+                          </span>
+                        </div>
+
+                        {/* 2. สกิลการอ่าน (Reading) */}
+                        <div className="flex flex-col bg-white rounded-xl p-1.5 border border-slate-100">
+                          <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">
+                            {isEn ? 'Reading' : 'การอ่าน'}
+                          </span>
+                          <span className="text-[11px] font-semibold text-slate-700 mt-0.5">
+                            {getLanguageLabel('level', l.reading, isEn)}
+                          </span>
+                        </div>
+
+                        {/* 3. สกิลการเขียน (Writing) */}
+                        <div className="flex flex-col bg-white rounded-xl p-1.5 border border-slate-100">
+                          <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">
+                            {isEn ? 'Writing' : 'การเขียน'}
+                          </span>
+                          <span className="text-[11px] font-semibold text-slate-700 mt-0.5">
+                            {getLanguageLabel('level', l.writing, isEn)}
+                          </span>
+                        </div>
                       </div>
                     </div>
                   ))}
                 </div>
               ) : (
-                <div className="space-y-4 pt-4 border-t border-slate-100">
-                  <div>
-                    <div className="flex justify-between items-end mb-1.5">
-                      <span className="font-semibold text-slate-800 text-[13px]">ภาษาอังกฤษ</span>
-                      <span className="text-[10px] font-bold text-[#22c55e] bg-[#f0fdf4] px-2 py-0.5 rounded-md">
-                        ดีเยี่ยม (Excellent)
-                      </span>
-                    </div>
-                    <div className="h-[5px] bg-slate-100 rounded-full overflow-hidden">
-                      <div className="h-full rounded-full bg-[#22c55e] w-[85%]" />
-                    </div>
-                  </div>
-                  <div>
-                    <div className="flex justify-between items-end mb-1.5">
-                      <span className="font-semibold text-slate-800 text-[13px]">ภาษาไทย</span>
-                      <span className="text-[10px] font-bold text-[#22c55e] bg-[#f0fdf4] px-2 py-0.5 rounded-md">
-                        ดีเยี่ยม (Excellent)
-                      </span>
-                    </div>
-                    <div className="h-[5px] bg-slate-100 rounded-full overflow-hidden">
-                      <div className="h-full rounded-full bg-[#22c55e] w-full" />
-                    </div>
-                  </div>
-                </div>
+                <button
+                  onClick={() => router.push('/profile/languages')}
+                  className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl border-2 border-dashed border-slate-200 hover:border-[#22c55e] text-[13px] font-bold text-slate-500 transition-colors"
+                >
+                  <Plus className="w-4 h-4" />
+                  {t.add}
+                </button>
               )}
             </div>
           </div>
@@ -934,61 +1185,57 @@ export default function ProfileFullPage() {
                 className="text-xs font-bold text-violet-600 bg-violet-50 hover:bg-violet-100 px-4 py-2 rounded-full flex items-center gap-1.5 transition-colors"
               >
                 <Edit3 className="w-3.5 h-3.5" />
-                จัดการ
+                {t.manage}
               </button>
             </div>
 
             <div>
-              <h3 className="font-bold text-slate-800 text-[17px] mb-2">ทักษะการขับขี่</h3>
+              <h3 className="font-bold text-slate-800 text-[17px] mb-2">{t.drivingSkills}</h3>
               <p className="text-[13px] text-slate-500 leading-relaxed mb-4">
-                ใบอนุญาตขับขี่ ยานพาหนะส่วนตัว และความสามารถพิเศษ
+                {t.drivingDesc}
               </p>
             </div>
 
             <div className="mt-auto pt-4 border-t border-slate-100 space-y-3">
               {drivingSkills.length > 0 ? (
                 <>
-                  {/* 1. กลุ่มใบอนุญาตขับขี่ (ใช้ตัวแปร licenses) */}
                   {licenses.length > 0 && (
                     <div className="flex flex-wrap gap-2">
                       {licenses.map((s: any) => (
                         <span key={s.id} className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-violet-50 text-violet-700 text-[11px] font-bold border border-violet-100">
                           <CheckCircle2 className="w-3 h-3" />
-                          {getSkillLabel(s.skillType)}
+                          {getSkillLabel(s.skillType, isEn)}
                         </span>
                       ))}
                     </div>
                   )}
 
-                  {/* 2. กลุ่มพาหนะส่วนตัว (ใช้ตัวแปร vehicles - ตรงนี้ v_bike จะโชว์) */}
                   {vehicles.length > 0 && (
                     <div className="flex flex-wrap gap-2">
                       {vehicles.map((s: any) => (
                         <span key={s.id} className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-emerald-50 text-emerald-700 text-[11px] font-bold border border-emerald-100">
                           <Car className="w-3 h-3" />
-                          {getSkillLabel(s.skillType)}
+                          {getSkillLabel(s.skillType, isEn)}
                         </span>
                       ))}
                     </div>
                   )}
 
-                  {/* 3. กลุ่มเครื่องจักร/ทักษะพิเศษ (ใช้ตัวแปร machinery) */}
                   {machinery.length > 0 && (
                     <div className="flex flex-wrap gap-2">
                       {machinery.map((s: any) => (
                         <span key={s.id} className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-amber-50 text-amber-700 text-[11px] font-bold border border-amber-100">
                           <Sparkles className="w-3 h-3" />
-                          {getSkillLabel(s.skillType)}
+                          {getSkillLabel(s.skillType, isEn)}
                         </span>
                       ))}
                     </div>
                   )}
                 </>
               ) : (
-                /* กรณีไม่มีข้อมูลเลย */
                 <div className="flex items-center gap-2 text-amber-600 bg-amber-50/50 px-3 py-2 rounded-xl border border-amber-100/50">
                   <AlertCircle className="w-4 h-4" />
-                  <span className="text-[11px] font-bold">ยังไม่ได้ระบุข้อมูล</span>
+                  <span className="text-[11px] font-bold">{t.noData}</span>
                 </div>
               )}
             </div>
@@ -1007,7 +1254,7 @@ export default function ProfileFullPage() {
                   className="text-xs text-[#ef4444] bg-[#fff1f2] hover:bg-red-100 font-bold px-4 py-2 rounded-full flex items-center gap-1.5 transition-colors"
                 >
                   <Trash2 className="w-3.5 h-3.5" />
-                  ลบไฟล์
+                  {t.deleteFile}
                 </button>
               ) : (
                 <div className="opacity-0 pointer-events-none">
@@ -1017,15 +1264,14 @@ export default function ProfileFullPage() {
             </div>
 
             <div>
-              <h3 className="font-bold text-slate-800 text-[17px] mb-2">เรซูเม่ (Resume)</h3>
+              <h3 className="font-bold text-slate-800 text-[17px] mb-2">{t.resume}</h3>
               <p className="text-[13px] text-slate-500 leading-relaxed mb-4">
-                อัปโหลดไฟล์ PDF หรือสร้างใหม่จากข้อมูลโปรไฟล์ของคุณ
+                {t.resumeDesc}
               </p>
             </div>
 
             <div className="mt-auto pt-4 border-t border-slate-100">
               <div className="space-y-3">
-                {/* ส่วนแสดงข้อมูลไฟล์ปัจจุบัน */}
                 <div className={`flex items-center gap-3 p-3 rounded-2xl transition-colors ${resume?.fileUrl ? 'bg-[#fff1f2]' : 'bg-slate-50 border border-dashed border-slate-200'
                   }`}>
                   <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${resume?.fileUrl ? 'text-[#ef4444]' : 'text-slate-400'
@@ -1036,7 +1282,7 @@ export default function ProfileFullPage() {
                   <div className="flex-1 min-w-0">
                     <p className={`text-[13px] font-semibold truncate ${resume?.fileUrl ? 'text-slate-800' : 'text-slate-400 italic'
                       }`}>
-                      {resume?.fileUrl ? (resume.title || 'resume.pdf') : 'ยังไม่ได้อัปโหลดไฟล์'}
+                      {resume?.fileUrl ? (resume.title || 'resume.pdf') : t.notUploaded}
                     </p>
                   </div>
 
@@ -1055,11 +1301,10 @@ export default function ProfileFullPage() {
 
                 {/* ส่วนปุ่ม Action */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                  {/* ปุ่มสร้างอัตโนมัติ: แดงไล่เฉดไปน้ำเงิน */}
                   <button
                     type="button"
                     onClick={handleGenerateResume}
-                    disabled={resumeUploading} // ปิดปุ่มระหว่างอัปโหลด
+                    disabled={resumeUploading}
                     className="flex items-center justify-center gap-2 py-2.5 rounded-2xl bg-gradient-to-r from-[#ef4444] via-[#ef4444] to-[#3b82f6] bg-[length:150%_100%] bg-left hover:bg-right text-[13px] font-bold text-white shadow-md transition-all duration-500 active:scale-95 disabled:opacity-50"
                   >
                     {resumeUploading ? (
@@ -1067,17 +1312,16 @@ export default function ProfileFullPage() {
                     ) : (
                       <Sparkles className="w-4 h-4" />
                     )}
-                    {resumeUploading ? 'กำลังสร้าง...' : 'สร้างอัตโนมัติ'}
+                    {resumeUploading ? t.generating : t.autoGenerate}
                   </button>
 
-                  {/* ปุ่มอัปโหลดไฟล์: ใช้สีเดิม (แดงชมพู) */}
                   <label className="flex items-center justify-center gap-2 py-2.5 rounded-2xl border border-slate-200 hover:border-[#fecaca] text-[13px] font-bold text-slate-600 hover:text-[#ef4444] cursor-pointer transition-colors bg-white">
                     {resumeUploading ? (
                       <Loader2 className="w-4 h-4 animate-spin text-[#ef4444]" />
                     ) : (
                       <>
                         <Upload className="w-4 h-4" />
-                        อัปโหลด PDF
+                        {t.uploadPdf}
                       </>
                     )}
                     <input
