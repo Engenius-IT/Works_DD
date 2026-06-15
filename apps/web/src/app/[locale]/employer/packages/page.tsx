@@ -92,7 +92,7 @@ export default function PackagesPage() {
 
                             <div className="text-center mb-8 relative z-10">
                                 <div className="flex justify-center items-baseline gap-1">
-                                    <span className="text-6xl font-black text-[#020263]">299</span>
+                                    <span className="text-6xl font-black text-[#020263]">2,990</span>
                                     <span className="text-xl font-bold text-slate-400">บาท 1 เดือน</span>
                                 </div>
                             </div>
@@ -105,7 +105,7 @@ export default function PackagesPage() {
                                     </div>
                                     <div>
                                         <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tight">โควตาติดต่อบุคลากร (CC)</p>
-                                        <p className="text-lg font-black text-[#020263]">100 CC / เดือน</p>
+                                        <p className="text-lg font-black text-[#020263]">100 Credits / เดือน</p>
                                     </div>
                                 </div>
 
@@ -116,7 +116,7 @@ export default function PackagesPage() {
                                     </div>
                                     <div>
                                         <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tight">โควตาการลงงาน (AC)</p>
-                                        <p className="text-lg font-black text-[#020263]">50 AC </p>
+                                        <p className="text-lg font-black text-[#020263]">10 AC </p>
                                     </div>
                                 </div>
 
@@ -131,7 +131,7 @@ export default function PackagesPage() {
 
                             {/* --- ปุ่มกด (สว่างขึ้นเมื่อ Hover) --- */}
                             <button
-                                onClick={() => handleUpgrade('Pro', 39)}
+                                onClick={() => handleUpgrade('Pro', 2990)}
                                 disabled={userTier >= 1} // ถ้าเป็น Pro, Premium, VIP อยู่แล้ว ห้ามกด
                                 className={`mt-8 w-full font-black py-4 rounded-xl transition-all duration-300 border-b-4 relative overflow-hidden uppercase text-sm tracking-widest ${userTier >= 1
                                     ? 'bg-gray-200 text-gray-400 border-gray-300 cursor-not-allowed grayscale'
@@ -163,7 +163,7 @@ export default function PackagesPage() {
 
                             <div className="text-center mb-8 relative z-10">
                                 <div className="flex justify-center items-baseline gap-1">
-                                    <span className="text-6xl font-black text-slate-900 tracking-tighter">599</span>
+                                    <span className="text-6xl font-black text-slate-900 tracking-tighter">5,990</span>
                                     <span className="text-xl font-bold text-slate-400">บาท 3 เดือน</span>
                                 </div>
                             </div>
@@ -176,7 +176,7 @@ export default function PackagesPage() {
                                     </div>
                                     <div>
                                         <p className="text-[10px] text-amber-600 font-bold uppercase tracking-tight">โควตาติดต่อบุคลากร (CC)</p>
-                                        <p className="text-lg font-black text-slate-800">150 CC / เดือน</p>
+                                        <p className="text-lg font-black text-slate-800">150 Credits / เดือน</p>
                                     </div>
                                 </div>
 
@@ -187,7 +187,7 @@ export default function PackagesPage() {
                                     </div>
                                     <div>
                                         <p className="text-[10px] text-amber-600 font-bold uppercase tracking-tight">โควตาการลงงาน (AC)</p>
-                                        <p className="text-lg font-black text-slate-800">75 AC </p>
+                                        <p className="text-lg font-black text-slate-800">10 AC </p>
                                     </div>
                                 </div>
 
@@ -206,7 +206,7 @@ export default function PackagesPage() {
 
                             {/* --- ปุ่มกด (สว่างขึ้นเมื่อ Hover) --- */}
                             <button
-                                onClick={() => handleUpgrade('Premium', 99)}
+                                onClick={() => handleUpgrade('Premium', 5990)}
                                 // ปิดปุ่มถ้า user เป็น Premium (2) หรือ VIP (3) อยู่แล้ว
                                 disabled={userTier >= 2}
                                 className={`mt-8 w-full bg-gradient-to-r from-amber-500 to-amber-600 text-white font-black py-4 rounded-xl transition-all duration-300 border-b-4 border-amber-800 relative overflow-hidden uppercase text-sm tracking-widest shadow-md ${userTier >= 2
@@ -244,7 +244,7 @@ export default function PackagesPage() {
                             <div className="text-center mb-8 relative z-10">
                                 <div className="flex justify-center items-baseline gap-1">
                                     {/* ราคาตัวเลขไล่เฉดขาวไปชมพูแดง */}
-                                    <span className="text-7xl font-black text-transparent bg-clip-text bg-gradient-to-b from-white via-rose-100 to-rose-400 drop-shadow-sm">1,599</span>
+                                    <span className="text-7xl font-black text-transparent bg-clip-text bg-gradient-to-b from-white via-rose-100 to-rose-400 drop-shadow-sm">15,990</span>
                                     <span className="text-xl font-bold text-rose-200/80">บาท 1 ปี</span>
                                 </div>
                             </div>
@@ -257,7 +257,7 @@ export default function PackagesPage() {
                                     </div>
                                     <div>
                                         <p className="text-[10px] text-rose-200 font-bold uppercase tracking-widest">โควตาติดต่อบุคลากร (CC)</p>
-                                        <p className="text-xl font-black text-white">200 CC / เดือน</p>
+                                        <p className="text-xl font-black text-white">200 Credits / เดือน</p>
                                     </div>
                                 </div>
 
@@ -268,7 +268,7 @@ export default function PackagesPage() {
                                     </div>
                                     <div>
                                         <p className="text-[10px] text-rose-300 font-bold uppercase tracking-widest">โควตาการลงงาน (AC)</p>
-                                        <p className="text-xl font-black text-white">100 AC </p>
+                                        <p className="text-xl font-black text-white">10 AC </p>
                                     </div>
                                 </div>
 
@@ -291,7 +291,7 @@ export default function PackagesPage() {
 
                             {/* --- ปุ่มกด Rose Red ที่ตะโกนว่า VIP --- */}
                             <button
-                                onClick={() => handleUpgrade('VIP', 249)}
+                                onClick={() => handleUpgrade('VIP', 15990)}
                                 className="mt-8 w-full bg-gradient-to-r from-rose-500 via-red-600 to-rose-600 text-white font-black py-4.5 rounded-2xl transition-all duration-300 border-b-[6px] border-red-900 relative overflow-hidden hover:brightness-110 hover:-translate-y-1 active:translate-y-0.5 active:border-b-0 shadow-2xl shadow-rose-900/40 uppercase tracking-[0.2em] text-sm"
                             >
                                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover:animate-[shimmer_2s_infinite]" />

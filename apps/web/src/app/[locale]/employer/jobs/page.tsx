@@ -232,6 +232,7 @@ function ApplicantAvatars({ count }: { count: number }) {
   );
 }
 
+
 /* ========== MAIN PAGE ========== */
 export default function EmployerJobsPage() {
   const router = useRouter();
@@ -249,6 +250,8 @@ export default function EmployerJobsPage() {
   // --- เพิ่ม State สำหรับ Search History ---
   const [searchHistory, setSearchHistory] = useState<string[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [pendingJobId, setPendingJobId] = useState<string | null>(null); // 👈 เก็บ ID ของการ์ดที่กำลังรอหักแต้ม
 
   // โหลดประวัติจาก Local Storage เมื่อเปิดหน้าเว็บ
   useEffect(() => {
@@ -256,67 +259,67 @@ export default function EmployerJobsPage() {
     if (savedHistory) {
       try {
         setSearchHistory(JSON.parse(savedHistory));
-      } catch (e) {}
+      } catch (e) { }
     }
   }, []);
 
   // --- สร้างรายการคำแนะนำ (Suggestions) โดยรวบคำซ้ำพิมพ์เล็ก/พิมพ์ใหญ่ ---
-    const getSuggestions = () => {
-      const query = inputText.toLowerCase().trim();
-      if (!query) return [];
+  const getSuggestions = () => {
+    const query = inputText.toLowerCase().trim();
+    if (!query) return [];
 
-      const uniqueMap = new Map<string, { text: string; type: 'history' | 'job' }>();
+    const uniqueMap = new Map<string, { text: string; type: 'history' | 'job' }>();
 
-      // 1. ประวัติที่ตรงกัน (เอาอันที่พิมพ์มาแสดง)
-      searchHistory.forEach((h) => {
-        if (h.toLowerCase().includes(query)) {
-          uniqueMap.set(h.toLowerCase(), { text: h, type: 'history' });
-        }
-      });
+    // 1. ประวัติที่ตรงกัน (เอาอันที่พิมพ์มาแสดง)
+    searchHistory.forEach((h) => {
+      if (h.toLowerCase().includes(query)) {
+        uniqueMap.set(h.toLowerCase(), { text: h, type: 'history' });
+      }
+    });
 
-      // 2. ชื่อตำแหน่งงานในระบบ (ไม่ให้ซ้ำกับประวัติ และรวบคำที่สะกดเหมือนกันแต่พิมพ์เล็กใหญ่ต่างกัน)
-      jobs.forEach((j) => {
-        const lowerTitle = j.title.toLowerCase();
-        if (lowerTitle.includes(query) && !uniqueMap.has(lowerTitle)) {
-          uniqueMap.set(lowerTitle, { text: j.title, type: 'job' });
-        }
-      });
+    // 2. ชื่อตำแหน่งงานในระบบ (ไม่ให้ซ้ำกับประวัติ และรวบคำที่สะกดเหมือนกันแต่พิมพ์เล็กใหญ่ต่างกัน)
+    jobs.forEach((j) => {
+      const lowerTitle = j.title.toLowerCase();
+      if (lowerTitle.includes(query) && !uniqueMap.has(lowerTitle)) {
+        uniqueMap.set(lowerTitle, { text: j.title, type: 'job' });
+      }
+    });
 
-      return Array.from(uniqueMap.values()).slice(0, 6); // แสดงสูงสุด 6 รายการ
-    };
+    return Array.from(uniqueMap.values()).slice(0, 6); // แสดงสูงสุด 6 รายการ
+  };
 
-    const suggestions = getSuggestions();
+  const suggestions = getSuggestions();
 
-    // ฟังก์ชันสั่งค้นหาจริง และบันทึกประวัติ
-    const executeSearch = (term: string) => {
-      const trimmedTerm = term.trim();
-      setSearchQuery(trimmedTerm); // สั่งให้ระบบกรองข้อมูล
-      setInputText(trimmedTerm); // เปลี่ยนคำในช่องค้นหาให้ตรงกับสิ่งที่เลือก
-      setSelectedJobIndex(0);
-      setShowSuggestions(false);
+  // ฟังก์ชันสั่งค้นหาจริง และบันทึกประวัติ
+  const executeSearch = (term: string) => {
+    const trimmedTerm = term.trim();
+    setSearchQuery(trimmedTerm); // สั่งให้ระบบกรองข้อมูล
+    setInputText(trimmedTerm); // เปลี่ยนคำในช่องค้นหาให้ตรงกับสิ่งที่เลือก
+    setSelectedJobIndex(0);
+    setShowSuggestions(false);
 
-      if (!trimmedTerm) return;
+    if (!trimmedTerm) return;
 
-      // ลบคำซ้ำเดิมออก (ไม่สนใจพิมพ์เล็กพิมพ์ใหญ่) แล้วเอาคำที่หาล่าสุดไปไว้บนสุด
-      const newHistory = [
-        trimmedTerm,
-        ...searchHistory.filter((h) => h.toLowerCase() !== trimmedTerm.toLowerCase()),
-      ];
-      setSearchHistory(newHistory);
-      localStorage.setItem('jobSearchHistory', JSON.stringify(newHistory));
-    };
+    // ลบคำซ้ำเดิมออก (ไม่สนใจพิมพ์เล็กพิมพ์ใหญ่) แล้วเอาคำที่หาล่าสุดไปไว้บนสุด
+    const newHistory = [
+      trimmedTerm,
+      ...searchHistory.filter((h) => h.toLowerCase() !== trimmedTerm.toLowerCase()),
+    ];
+    setSearchHistory(newHistory);
+    localStorage.setItem('jobSearchHistory', JSON.stringify(newHistory));
+  };
 
-    const handleSuggestionClick = (term: string) => {
-      executeSearch(term);
-    };
+  const handleSuggestionClick = (term: string) => {
+    executeSearch(term);
+  };
 
-    // ฟังก์ชันลบประวัติรายตัว
-    const removeHistory = (termToRemove: string, e: React.MouseEvent) => {
-      e.stopPropagation(); // ป้องกันไม่ให้ทะลุไปกดคลิกที่ตัวเลือก
-      const newHistory = searchHistory.filter((term) => term !== termToRemove);
-      setSearchHistory(newHistory);
-      localStorage.setItem('jobSearchHistory', JSON.stringify(newHistory));
-    };
+  // ฟังก์ชันลบประวัติรายตัว
+  const removeHistory = (termToRemove: string, e: React.MouseEvent) => {
+    e.stopPropagation(); // ป้องกันไม่ให้ทะลุไปกดคลิกที่ตัวเลือก
+    const newHistory = searchHistory.filter((term) => term !== termToRemove);
+    setSearchHistory(newHistory);
+    localStorage.setItem('jobSearchHistory', JSON.stringify(newHistory));
+  };
 
 
   useEffect(() => {
@@ -385,7 +388,7 @@ export default function EmployerJobsPage() {
     setTimeout(() => setMessage(''), 3000);
   };
 
-/* Filtered and Sorted jobs */
+  /* Filtered and Sorted jobs */
   const filteredJobs = jobs
     .filter((j) => {
       // --- 1. เช็คเงื่อนไขตาม Tab ---
@@ -422,6 +425,21 @@ export default function EmployerJobsPage() {
     );
   }
 
+  // 💡 ฟังก์ชันดักสิทธิ์การสร้างงานใหม่ตั้งแต่หน้าแรก
+  const handleCreateNewJob = () => {
+    const currentTotalJobs = jobs.length;
+
+    if (currentTotalJobs >= 50) {
+      setMessage('ขออภัย จำนวนประกาศงานสะสมของคุณมีจำนวน 50 งานแล้ว เราไม่แนะนำให้คุณลงงานมากกว่านี้แต่แนะนำให้คุณจัดการกับงานที่เคยมีอยู่');
+
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+
+      return; // 🛑 สั่งตัดจบการทำงานทันที ห้ามวิ่งไปหน้าสร้างงาน
+    }
+
+    router.push('/employer/jobs/create');
+  };
+
   return (
     <div className="min-h-screen bg-slate-50 font-sans">
       <Navbar />
@@ -436,7 +454,7 @@ export default function EmployerJobsPage() {
             </p>
           </div>
           <button
-            onClick={() => router.push('/employer/jobs/create')}
+            onClick={handleCreateNewJob} // 💡 เปลี่ยนมาเรียกฟังก์ชันนี้แทน
             className="flex items-center gap-2 bg-[#A80010] hover:bg-[#E00016] text-white font-semibold drop-shadow-lg px-5 py-2.5 rounded-xl text-sm transition-colors shadow-sm shrink-0"
           >
             <Plus className="w-4 h-4" />
@@ -472,7 +490,7 @@ export default function EmployerJobsPage() {
           </div>
         )}
 
-{/* ─── Empty State แบบโกลบอล (โชว์เมื่อผู้ใช้ยังไม่เคยลงประกาศงานเลยสักงานเดียว) ─── */}
+        {/* ─── Empty State แบบโกลบอล (โชว์เมื่อผู้ใช้ยังไม่เคยลงประกาศงานเลยสักงานเดียว) ─── */}
         {jobs.length === 0 ? (
           <div className="text-center py-20">
             <div className="text-5xl mb-4">📋</div>
@@ -490,13 +508,13 @@ export default function EmployerJobsPage() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
             {/* ───── Card 1: Job Detail & Search (2 cols) ───── */}
             <div className="lg:col-span-2 flex flex-col gap-5">
-              
+
               {/* --- กล่องค้นหา (แยกออกมาเป็นกล่องด้านบนสุด) --- */}
               <div className="bg-white rounded-xl shadow-sm border border-gray-100 px-5 pt-4 pb-2">
                 <div className="flex gap-2 mb-3">
                   <div className="relative flex-1">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
-                    
+
                     <input
                       type="text"
                       value={inputText}
@@ -504,8 +522,8 @@ export default function EmployerJobsPage() {
                         setInputText(e.target.value);
                         setShowSuggestions(true);
                         if (e.target.value === '') {
-                           setSearchQuery('');
-                           setSelectedJobIndex(0);
+                          setSearchQuery('');
+                          setSelectedJobIndex(0);
                         }
                       }}
                       onFocus={() => setShowSuggestions(true)}
@@ -517,10 +535,9 @@ export default function EmployerJobsPage() {
                       }}
                       placeholder="ค้นหาชื่อตำแหน่งงาน... (กด Enter เพื่อค้นหา)"
                       className={`w-full pl-9 pr-10 py-2 text-sm border focus:outline-none transition-all
-                        ${
-                          inputText 
-                            ? 'bg-[#020263] text-white border-[#00003D] placeholder:text-gray-400' 
-                            : 'bg-white text-gray-800 border-gray-200 focus:border-[#020263] focus:ring-1 focus:ring-[#020263]'
+                        ${inputText
+                          ? 'bg-[#020263] text-white border-[#00003D] placeholder:text-gray-400'
+                          : 'bg-white text-gray-800 border-gray-200 focus:border-[#020263] focus:ring-1 focus:ring-[#020263]'
                         }
                         ${showSuggestions && suggestions.length > 0 ? 'rounded-t-lg border-b-0' : 'rounded-lg'}
                       `}
@@ -545,10 +562,10 @@ export default function EmployerJobsPage() {
                       <div className="absolute top-full left-0 right-0 bg-white border border-gray-200 border-t-0 rounded-b-lg shadow-lg z-50 overflow-hidden">
                         <ul>
                           {suggestions.map((item, index) => (
-                            <li 
+                            <li
                               key={index}
                               onMouseDown={(e) => {
-                                e.preventDefault(); 
+                                e.preventDefault();
                                 handleSuggestionClick(item.text);
                               }}
                               className="flex items-center gap-3 px-4 py-2.5 hover:bg-slate-50 cursor-pointer transition-colors text-sm text-gray-700"
@@ -565,7 +582,7 @@ export default function EmployerJobsPage() {
                       </div>
                     )}
                   </div>
-                  
+
                   {/* Sort Dropdown */}
                   <div className="relative shrink-0">
                     <select
@@ -583,7 +600,7 @@ export default function EmployerJobsPage() {
                     <ChevronDown className="w-4 h-4 text-gray-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                   </div>
                 </div>
-                
+
                 {/* Search History Pills */}
                 <div className="flex gap-2 overflow-x-auto pb-2 items-center min-h-[36px] scrollbar-hide">
                   {searchHistory.length > 0 ? (
@@ -624,14 +641,14 @@ export default function EmployerJobsPage() {
                 <div className="flex flex-col gap-4">
                   {filteredJobs.map((job, index) => {
                     const isSelected = index === selectedJobIndex;
-                    
+
                     return (
-                      <div 
+                      <div
                         key={job.id}
                         onClick={() => setSelectedJobIndex(index)}
                         className={`bg-white rounded-xl border transition-all cursor-pointer p-5 
-                          ${isSelected 
-                            ? 'border-[#020263] ring-1 ring-[#020263]/10 shadow-md' 
+                          ${isSelected
+                            ? 'border-[#020263] ring-1 ring-[#020263]/10 shadow-md'
                             : 'border-gray-100 hover:border-gray-300 shadow-sm hover:shadow-md'
                           }`}
                       >
@@ -730,31 +747,68 @@ export default function EmployerJobsPage() {
                         {/* Footer */}
                         <div className="flex items-center justify-between mt-5 pt-4 border-t border-gray-100">
                           <ApplicantAvatars count={job._count?.applications || 0} />
+
                           <div className="flex gap-2">
+                            {/* ปุ่มแก้ไข: เปิดให้แก้ได้ทุกสถานะ */}
                             <button
-                              onClick={(e) => { e.stopPropagation(); router.push(`/employer/jobs/${job.id}/edit`); }}
+                              onClick={(e) => {
+                                e.stopPropagation(); // 🛑 กันไม่ให้คลิกทะลุไปเลือกการ์ด
+                                router.push(`/employer/jobs/${job.id}/edit`);
+                              }}
                               className="flex items-center gap-1.5 px-4 py-2 text-xs font-medium text-white bg-[#E00016] hover:bg-[#A80010] border border-gray-200 rounded-lg transition-colors"
                             >
                               <PenSquare className="w-3.5 h-3.5" />
                               แก้ไข
                             </button>
-                            {(job.status === 'DRAFT' || job.status === 'CLOSED') && (
+
+                            {/* เคสที่ 1: สถานะ DRAFT */}
+                            {job.status === 'DRAFT' && (
                               <button
-                                onClick={(e) => { e.stopPropagation(); publish(job.id); }}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setPendingJobId(job.id);     // 1. จำ ID งานชิ้นนี้ไว้
+                                  setShowConfirmModal(true);   // 2. เปิดหน้าต่าง Modal ยืนยัน
+                                }}
                                 disabled={actionLoading === job.id}
                                 className="flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-white bg-[#020263] rounded-lg hover:bg-[#00003D] transition-colors disabled:opacity-60"
                               >
-                                {job.status === 'CLOSED' ? <RefreshCcw className="w-3.5 h-3.5" /> : <Send className="w-3.5 h-3.5" />}
-                                {actionLoading === job.id ? '...' : (job.status === 'CLOSED' ? 'รีโพสต์งาน' : 'เผยแพร่')}
+                                <Send className="w-3.5 h-3.5" />
+                                {actionLoading === job.id ? 'กำลังดำเนินการ...' : 'เผยแพร่'}
                               </button>
                             )}
-                            {job.status === 'ACTIVE' && (
+
+                            {/* เคสที่ 2: สถานะ CLOSED */}
+                            {job.status === 'CLOSED' && (
                               <button
-                                onClick={(e) => { e.stopPropagation(); publish(job.id); }}
-                                className="flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-slate-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setPendingJobId(job.id);     // 1. จำ ID งานชิ้นนี้ไว้
+                                  setShowConfirmModal(true);   // 2. เปิดหน้าต่าง Modal ยืนยัน
+                                }}
+                                disabled={actionLoading === job.id}
+                                className="flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-white bg-[#020263] rounded-lg hover:bg-[#00003D] transition-colors disabled:opacity-60"
                               >
                                 <RefreshCcw className="w-3.5 h-3.5" />
-                                รีโพสต์งาน(ปิดใช้งาน)
+                                {actionLoading === job.id ? 'กำลังดำเนินการ...' : 'รีโพสต์งาน'}
+                              </button>
+                            )}
+
+                            {/* เคสที่ 3: สถานะ ACTIVE (กำลังเปิดรับสมัครอยู่) -> แสดงปุ่ม ปิดรับสมัคร (ไม่มีการตัดแต้ม) */}
+                            {job.status === 'ACTIVE' && (
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  if (confirm('คุณต้องการปิดรับสมัครตำแหน่งงานนี้ใช่หรือไม่?')) {
+                                    close(job.id); // 🛑 วิ่งไปฟังก์ชัน close หลังบ้านเพื่อปิดประกาศ
+                                  }
+                                }}
+                                disabled={actionLoading === job.id}
+                                className="flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-slate-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-60"
+                              >
+                                <svg className="w-3.5 h-3.5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                  <path strokeLinecap="round" strokeLinejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+                                </svg>
+                                {actionLoading === job.id ? 'กำลังปิด...' : 'ปิดรับสมัคร'}
                               </button>
                             )}
                           </div>
@@ -792,6 +846,59 @@ export default function EmployerJobsPage() {
           </div>
         )}
       </div>
+      {/* ==================== POP-UP MODAL ยืนยันการใช้ 1 AC (เวอร์ชันหน้ารวมการ์ด) ==================== */}
+      {showConfirmModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto">
+          <div
+            className="fixed inset-0 bg-black/50 backdrop-blur-xs transition-opacity"
+            onClick={() => { setShowConfirmModal(false); setPendingJobId(null); }}
+          />
+
+          <div className="relative bg-white rounded-2xl max-w-md w-full mx-4 p-6 shadow-2xl border border-gray-100 z-10 transform transition-all scale-100 animate-scaleUp">
+            <div className="flex flex-col items-center text-center">
+              <div className="w-14 h-14 bg-red-50 rounded-full flex items-center justify-center mb-4 border border-red-100">
+                <span className="text-2xl text-[#E00016] font-bold">🪙</span>
+              </div>
+
+              <h3 className="text-lg font-bold text-gray-900 mb-2">
+                ยืนยันการทำรายการประกาศงาน
+              </h3>
+
+              <p className="text-sm text-gray-600 mb-6 leading-relaxed">
+                การเปิดใช้งานและเผยแพร่ตำแหน่งงานนี้สู่สาธารณะ <br />
+                <span className="font-semibold text-[#E00016] bg-red-50 px-2 py-0.5 rounded-md mt-1 inline-block">
+                  จะมีค่าใช้จ่ายจำนวน 1 AC
+                </span> <br />
+                ระบบจะทำการตัดยอดเครดิตคงเหลือของคุณทันที
+              </p>
+
+              <div className="flex w-full gap-3">
+                <button
+                  type="button"
+                  onClick={() => { setShowConfirmModal(false); setPendingJobId(null); }}
+                  className="flex-1 px-4 py-2.5 border border-gray-200 hover:bg-gray-50 text-gray-700 text-sm font-semibold rounded-xl transition-colors"
+                >
+                  ยกเลิก
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (pendingJobId) {
+                      publish(pendingJobId); // 🚀 เอา ID ที่จำไว้ ส่งไปยิง API หักแต้มจริงทันที!
+                    }
+                    setShowConfirmModal(false); // ปิดโมดอลหลังจากกด
+                    setPendingJobId(null);     // ล้างค่า ID ทิ้ง
+                  }}
+                  className="flex-1 px-4 py-2.5 bg-[#E00016] hover:bg-[#E00016]/90 text-white text-sm font-semibold rounded-xl shadow-sm transition-colors"
+                >
+                  ยืนยันและหัก 1 AC
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -39,14 +39,14 @@ export default function CheckoutPage() {
     const isPro = !isVip && !isPremium;
 
     let planName = 'Pro';
-    let price = 299;
+    let price = 2990;
 
     if (isVip) {
         planName = 'VIP';
-        price = 1599;
+        price = 15990;
     } else if (isPremium) {
         planName = 'Premium';
-        price = 599;
+        price = 5990;
     }
 
     const [loading, setLoading] = useState(false);
@@ -285,15 +285,14 @@ export default function CheckoutPage() {
             }
 
             // 🟢 3. ยิงข้อมูลหาเส้นทาง NestJS ตัวจริง โดยเปลี่ยน URL ไปใช้ `${process.env.NEXT_PUBLIC_API_URL}`
-            // และทำการส่งคีย์คู่ตัวแปรที่ครอบคลุมความต้องการของฝั่ง Controller ทั้งหมดไปให้ครบถ้วน
             const backendResponse = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/payments/create`, {
-                token: omiseResponse.id,              // ส่ง Token ตัวที่ได้จาก Omise เข้าไปด้วย
-                method: 'credit_card',                // รูปแบบชำระเงินประเภทเครดิตการ์ด
-                companyId: realCompanyId,             // ใช้ ID บริษัทจริงของยูสเซอร์ที่ดึงมา
-                planName: planName,                   // ดึงตาม Dynamic Plan ชื่อคีย์ด้านบน (Premium / VIP / Pro)
-                amount: price,                        // ดึงตามราคาจริงของหน้านั้น (99 / 249 / 39)
+                token: omiseResponse.id,
+                method: 'credit_card',
+                companyId: realCompanyId,
+                planName: planName,
+                amount: price,
             }, {
-                headers: { Authorization: `Bearer ${token}` } // 🌟 แนบ Token ยืนยันตัวตนสิทธิ์หลังบ้าน
+                headers: { Authorization: `Bearer ${token}` }
             });
 
             // 🟢 4. ตรวจสอบสเตตัสการตอบกลับ หากเซิร์ฟเวอร์ทำงานเสร็จพาวาร์ปไปหน้าแดชบอร์ดทันที
