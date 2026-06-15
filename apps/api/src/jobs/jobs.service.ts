@@ -656,7 +656,10 @@ export class JobsService {
   }
 
   /**
-   * Publish a draft job (เช็กสิทธิ์และหักโควตา AC ราย 24 ชั่วโมง)
+   * Publish a job (เช็กสิทธิ์และหักโควตา AC รายเดือน - นับรวมงานทั้งหมดไม่สนสถานะ)
+   */
+  /**
+   * Publish a job (เช็กสิทธิ์และหักโควตา AC รายเดือน - นับรวมงานทั้งหมดไม่สนสถานะ)
    */
   async publish(id: string, userId: string) {
     const job = await this.prisma.job.findUnique({
@@ -686,61 +689,60 @@ export class JobsService {
       throw new BadRequestException('ไม่พบข้อมูลแพ็กเกจการใช้งาน หรือแพ็กเกจหมดอายุแล้ว');
     }
 
-    // 2. คำนวณรอบรีเซ็ต 24 ชม. ถอดตาม Logic ฝั่ง CC เป๊ะ ๆ
     const now = new Date();
     const purchaseDate = new Date(pkg.startDate);
 
-    const resetToday = new Date(now);
-    resetToday.setHours(
-      purchaseDate.getHours(),
-      purchaseDate.getMinutes(),
-      purchaseDate.getSeconds(),
-      purchaseDate.getMilliseconds()
-    );
-
-    let lastResetPoint: Date;
-    if (now >= resetToday) {
-      lastResetPoint = resetToday;
-    } else {
-      lastResetPoint = new Date(resetToday);
-      lastResetPoint.setDate(lastResetPoint.getDate() - 1);
+    // 2. คำนวณวันตัดรอบและวันรีเซ็ตเป็น "รายเดือน"
+    const currentResetPoint = new Date(purchaseDate);
+    while (currentResetPoint <= now) {
+      currentResetPoint.setMonth(currentResetPoint.getMonth() + 1);
     }
+    const lastResetPoint = new Date(currentResetPoint);
+    lastResetPoint.setMonth(lastResetPoint.getMonth() - 1);
 
-    // 3. นับจำนวนงานที่กดเปิดใช้งาน (ACTIVE) ไปแล้วในรอบเวลานี้
-    const usedInCycle = await this.prisma.job.count({
-      where: {
-        companyId: company.id,
-        status: 'ACTIVE',
-        publishedAt: { gte: lastResetPoint },
-      },
-    });
-
-    // 4. สรุปโควตาสูงสุดที่ใช้ได้ในรอบ (โควตาหลัก + โบนัส)
+    // 3. นับจำนวนครั้งที่ใช้ AC ไปแล้วใน "รอบเดือนนี้"
+    const usedInCycle = pkg.acQuotaUsed || 0;
     const maxQuota = pkg.acQuotaTotal + (pkg.bonusQuotaAC || 0);
 
-    // 5. ดักกรณีโควตาเต็ม -> คำนวณเวลาที่เหลือส่งกลับไปให้หน้าบ้านแสดงผล
-    if (usedInCycle >= maxQuota) {
-      const nextResetPoint = new Date(lastResetPoint);
-      nextResetPoint.setDate(nextResetPoint.getDate() + 1);
+    // ✨ เช็คสถานะงานปัจจุบันเพื่อไม่ให้หักแต้มซ้ำซ้อนตอนแก้ไข
+    const isAlreadyActive = job.status === 'ACTIVE';
 
-      const diffMs = nextResetPoint.getTime() - now.getTime();
-      const hours = Math.floor(diffMs / (1000 * 60 * 60));
-      const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+    // 4. ดักกรณีโควตารายเดือนเต็ม (เช็คเฉพาะงานใหม่ หรือจาก Draft เป็น Active เท่านั้น)
+    if (!isAlreadyActive && usedInCycle >= maxQuota) {
+      const diffMs = currentResetPoint.getTime() - now.getTime();
+      const daysLeft = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
 
       throw new HttpException(
         {
           statusCode: HttpStatus.BAD_REQUEST,
-          message: `ขออภัย คุณใช้งานโควตาลงประกาศงาน (AC) หมดแล้วในรอบวันนี้ กรุณารออีก ${hours} ชม. ${minutes} น. เพื่อใช้งานระบบใหม่อีกครั้ง`,
-          resetIn: { hours, minutes },
-          resetAt: purchaseDate.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }),
+          message: `ขออภัย คุณใช้งานโควตาลงประกาศงาน (AC) ของรอบเดือนนี้หมดแล้ว กรุณารอตัดรอบใหม่ในอีก ${daysLeft} วัน หรือติดต่อเจ้าหน้าที่เพื่อเพิ่มโควตา`,
+          resetAt: currentResetPoint.toLocaleDateString('th-TH', { day: 'numeric', month: 'long', year: 'numeric' }),
         },
         HttpStatus.BAD_REQUEST
       );
     }
 
-    // 6. รันด้วยระบบ Database Transaction ป้องกันปัญหาแต้มลดแต่งานไม่เปิด หรือ งานเปิดแต่แต้มไม่ลด
-    const [updatedJob] = await this.prisma.$transaction([
-      // คำสั่งที่ 1: อัปเดตงานให้เปิดใช้งานจริง
+    // 5. 🟢 [ตรงตามบรีฟ 100%] นับจำนวนแถวข้อมูลทั้งหมดของบริษัทนี้ในตาราง Job โดยไม่สนสถานะ
+    const totalJobsCount = await this.prisma.job.count({
+      where: {
+        companyId: company.id,
+      },
+    });
+
+    // 🚨 ดักเงื่อนไข: เปลี่ยนจาก 12 แถว เป็น 50 แถวสะสมในตารางเรียบร้อยครับ!
+    if (totalJobsCount > 50) {
+      throw new HttpException(
+        {
+          statusCode: HttpStatus.BAD_REQUEST,
+          message: 'ขออภัย จำนวนประกาศงานสะสมของคุณเต็มพื้นที่โควตา 50 งานแล้ว ไม่สามารถทำรายการเพิ่มได้',
+        },
+        HttpStatus.BAD_REQUEST
+      );
+    }
+
+    // 6. รันด้วยระบบ Database Transaction
+    const operations: any[] = [
+      // คำสั่งที่ 1: อัปเดตงานชิ้นนั้น ๆ ให้เป็น ACTIVE และดันวันเวลา (ทำเสมอไม่ว่างานเก่าหรือใหม่)
       this.prisma.job.update({
         where: { id },
         data: {
@@ -759,17 +761,27 @@ export class JobsService {
             },
           },
         },
-      }),
-      // คำสั่งที่ 2: บันทึกแต้มที่ถูกใช้งานจริงเพิ่มเข้าตารางแพ็กเกจบริษัท
-      this.prisma.companyPackage.update({
-        where: { id: pkg.id },
-        data: { acQuotaUsed: usedInCycle + 1 },
-      }),
-    ]);
+      })
+    ];
+
+    // 🚨 [แก้ไขจุดนี้] จะสั่งหักโควตา AC +1 ก็ต่อเมื่อ "งานนี้ยังไม่เคยเป็น ACTIVE" เท่านั้น (งานเก่าที่แก้ไขจะไม่โดนหักเพิ่ม)
+    if (!isAlreadyActive) {
+      operations.push(
+        this.prisma.companyPackage.update({
+          where: { id: pkg.id },
+          data: {
+            acQuotaUsed: usedInCycle + 1,
+          },
+        })
+      );
+    }
+
+    // รัน Transaction พร้อมกัน
+    const results = await this.prisma.$transaction(operations);
+    const updatedJob = results[0]; // ผลลัพธ์จากการอัปเดตงานจะอยู่ที่ตำแหน่งแรกเสมอ
 
     return updatedJob;
   }
-
   /**
    * Generate a URL-friendly slug from title
    * Appends timestamp suffix for uniqueness

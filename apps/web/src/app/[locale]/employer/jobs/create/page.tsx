@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, KeyboardEvent } from 'react';
+import { useState, useEffect, KeyboardEvent, useRef } from 'react';
 import { useRouter } from '@/i18n/routing';
 import { useAuth } from '@/context/AuthContext';
 import { Navbar } from '@/components/Navbar';
@@ -137,6 +137,7 @@ export default function CreateJobPage() {
   const [loadingCompany, setLoadingCompany] = useState(true);
   const [companyError, setCompanyError] = useState('');
   const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [checkingAccess, setCheckingAccess] = useState(true);
 
   const [form, setForm] = useState<FormState>({
     title: '',
@@ -178,42 +179,76 @@ export default function CreateJobPage() {
   const [skillInput, setSkillInput] = useState('');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
+  // 🟢 1. เพิ่ม State เก็บรายชื่อฟิลด์ที่กรอกไม่ผ่าน เพื่อทำขอบแดงแสดงข้อผิดพลาดแยกจุด
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+
+  // 🟢 2. สร้าง Refs ผูกกับตำแหน่งอินพุตต่าง ๆ ไว้ดึงหน้าจอ (Scroll) ไปหา
+  const basicInfoRef = useRef<HTMLDivElement>(null);
 
   const [transportInput, setTransportInput] = useState('');
   const [additionalQualInput, setAdditionalQualInput] = useState('');
 
   useEffect(() => {
-    if (!authLoading && !user) {
+    if (authLoading) return;
+
+    // 1. เช็ก Login & Role (ต้องผ่านด่านนี้ก่อน)
+    if (!user) {
       router.push('/employer/login');
       return;
     }
-    if (!authLoading && user && user.role !== 'EMPLOYER') {
+    if (user.role !== 'EMPLOYER') {
       router.push('/');
       return;
     }
-  }, [user, authLoading, router]);
 
-  useEffect(() => {
-    if (!user || user.role !== 'EMPLOYER') return;
     const token = localStorage.getItem('accessToken');
     if (!token) return;
-    fetch(`${API_URL}/companies/mine`, { headers: { Authorization: `Bearer ${token}` } })
-      .then((r) => r.json())
-      .then((data) => {
-        if (data?.id) {
-          setCompanyId(data.id);
-          setCompanyName(data.name);
-          setCompanyStatus(data.verificationStatus || 'UNVERIFIED');
+
+    const initializePage = async () => {
+      try {
+        // 2. 🚨 ดักเช็กจำนวนงานสะสมในตาราง (ปรับโควตาเป็น 50 งาน)
+        const quotaRes = await fetch(`${API_URL}/companies/mine/jobs`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        const jobs = await quotaRes.json();
+
+        // 🛑 ถ้าตรวจสอบแล้วพบว่าข้อมูลในตารางงอกครบ 50 แถวแล้ว
+        if (Array.isArray(jobs) && jobs.length >= 50) {
+          // โยนข้อความเข้า Error State เพื่อแสดง UI ล็อกหน้าแทนการยิง alert เบราว์เซอร์
+          setCompanyError('ขออภัย จำนวนประกาศงานสะสมของคุณมีจำนวน 50 งานแล้ว เราไม่แนะนำให้คุณลงงานมากกว่านี้แต่แนะนำให้คุณจัดการกับงานที่เคยมีอยู่');
+          setLoadingCompany(false);
+          setCheckingAccess(false);
+          return;
+        }
+
+        // 3. 🏢 ดึงข้อมูลบริษัทต่อตามปกติ (จะทำเมื่อจำนวนงานยังไม่เต็ม 50)
+        const companyRes = await fetch(`${API_URL}/companies/mine`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        const companyData = await companyRes.json();
+
+        if (companyData?.id) {
+          setCompanyId(companyData.id);
+          setCompanyName(companyData.name);
+          setCompanyStatus(companyData.verificationStatus || 'UNVERIFIED');
         } else {
           setCompanyError('ไม่พบข้อมูลบริษัท กรุณาตั้งค่าข้อมูลบริษัทก่อน');
         }
+
+      } catch (err) {
+        console.error('Initialization error:', err);
+        setCompanyError('ไม่สามารถโหลดข้อมูลระบบได้');
+      } finally {
+        // โหลดเสร็จเรียบร้อย ปลดล็อกสถานะ Loading ทั้งหมด
         setLoadingCompany(false);
-      })
-      .catch(() => {
-        setCompanyError('ไม่สามารถโหลดข้อมูลบริษัทได้');
-        setLoadingCompany(false);
-      });
-  }, [user]);
+        setCheckingAccess(false);
+      }
+    };
+
+    initializePage();
+  }, [user, authLoading, router]);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>,
@@ -223,6 +258,14 @@ export default function CreateJobPage() {
       ...prev,
       [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : value,
     }));
+    // 🟢 ล้างเออเร่อรายช่องเมื่อผู้ใช้พิมพ์แก้ไขแล้ว
+    if (fieldErrors[name]) {
+      setFieldErrors((prev) => {
+        const next = { ...prev };
+        delete next[name];
+        return next;
+      });
+    }
   };
 
   const addSkill = () => {
@@ -247,16 +290,106 @@ export default function CreateJobPage() {
     }
   };
 
+  // 🟢 3. ฟังก์ชันกลางสำหรับกรองข้อมูล (Form Validation) และดึงหน้าจอไปหาจุดที่พลาด
+  const validateForm = (): boolean => {
+    setErrors({});
+    setError('');
+
+    const errors: Record<string, string> = {};
+    let firstErrorId = ''; // 🟢 เปลี่ยนจาก ref มาจำค่า id ตัวแรกที่พังแทน
+
+    if (!form.title || !form.title.trim()) {
+      errors.title = 'กรุณากรอกชื่อตำแหน่งงาน';
+      if (!firstErrorId) firstErrorId = 'job-title'; // 🟢 ใส่ ID ของอินพุตนี้ลงไป
+    }
+
+    if (!form.positions || Number(form.positions) < 1) {
+      errors.positions = 'กรุณาระบุจำนวนอัตราที่รับอย่างน้อย 1 อัตรา';
+      if (!firstErrorId) firstErrorId = 'job-positions';
+    }
+
+    if (!form.locationProvince) {
+      errors.locationProvince = 'กรุณาเลือกจังหวัดที่ปฏิบัติงาน';
+      if (!firstErrorId) firstErrorId = 'job-province';
+    }
+
+    if (!form.workingDays) {
+      errors.workingDays = 'กรุณาเลือกจำนวนวันทำงานต่อสัปดาห์';
+    }
+
+    if (!form.startTime) {
+      errors.startTime = 'กรุณาระบุเวลาเข้างาน';
+      if (!firstErrorId) firstErrorId = 'job-starttime';
+    }
+
+    if (!form.endTime) {
+      errors.endTime = 'กรุณาระบุเวลาออกงาน';
+      if (!firstErrorId) firstErrorId = 'job-endtime';
+    }
+
+    if (!form.companyAddress || !form.companyAddress.trim()) {
+      errors.companyAddress = 'กรุณากรอกที่อยู่ติดต่อของบริษัท';
+      if (!firstErrorId) firstErrorId = 'job-address';
+    }
+
+    // 🟢 เช็กรายละเอียดงาน (ต้องกรอก และต้องยาวอย่างน้อย 20 ตัวอักษร)
+    const cleanDesc = form.description ? form.description.replace(/<[^>]*>/g, '').trim() : '';
+    if (!cleanDesc) {
+      errors.description = 'กรุณากรอกหน้าที่ความรับผิดชอบ';
+      if (!firstErrorId) firstErrorId = 'job-description';
+    } else if (cleanDesc.length < 20) {
+      errors.description = `กรุณากรอกรายละเอียดงานอย่างน้อย 20 ตัวอักษร (ตอนนี้มี ${cleanDesc.length} ตัวอักษร)`;
+      if (!firstErrorId) firstErrorId = 'job-description';
+    }
+
+    // 🟢 เช็กคุณสมบัติผู้สมัคร (ต้องกรอก และต้องยาวอย่างน้อย 20 ตัวอักษร)
+    const cleanReq = form.requirements ? form.requirements.replace(/<[^>]*>/g, '').trim() : '';
+    if (!cleanReq) {
+      errors.requirements = 'กรุณากรอกคุณสมบัติผู้สมัคร';
+      if (!firstErrorId) firstErrorId = 'job-requirements';
+    } else if (cleanReq.length < 20) {
+      errors.requirements = `กรุณากรอกคุณสมบัติผู้สมัครอย่างน้อย 20 ตัวอักษร (ตอนนี้มี ${cleanReq.length} ตัวอักษร)`;
+      if (!firstErrorId) firstErrorId = 'job-requirements';
+    }
+
+    if (!form.requiredSkills || form.requiredSkills.length === 0) {
+      errors.requiredSkills = 'กรุณาเพิ่มทักษะที่ต้องการอย่างน้อย 1 รายการ';
+      if (!firstErrorId) firstErrorId = 'job-skills';
+    }
+
+    setErrors(errors);
+
+    // 🚀 ลอจิกสั่งดึงหน้าจอและโฟกัสด้วย ID ปรับเหลือแค่นี้:
+    if (Object.keys(errors).length > 0) {
+      setError('กรุณากรอกข้อมูลในช่องที่จำเป็นให้ครบถ้วน');
+
+      if (firstErrorId) {
+        const element = document.getElementById(firstErrorId);
+        if (element) {
+          // เลื่อนหน้าจอมาตรงกลางช่องที่กรอกผิด
+          element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+          // หน่วงเวลาแป๊บนึงเพื่อให้เลื่อนเสร็จ แล้วสั่งโฟกัสให้พร้อมพิมพ์ทันที
+          setTimeout(() => {
+            if (typeof element.focus === 'function') element.focus();
+          }, 300);
+        }
+      }
+      return false;
+    }
+
+    return true;
+  };
+
   const handleSubmit = async (publishNow: boolean) => {
     setError('');
     if (!companyId) {
       setError('ไม่พบข้อมูลบริษัท');
       return;
     }
-    if (form.requiredSkills.length === 0) {
-      setError('กรุณาเพิ่มทักษะที่ต้องการอย่างน้อย 1 รายการ');
-      return;
-    }
+
+    // 🟢 ตรวจสอบความถูกต้องของฟอร์มก่อนยิง API
+    if (!validateForm()) return;
 
     setSaving(true);
     const token = localStorage.getItem('accessToken');
@@ -347,17 +480,13 @@ export default function CreateJobPage() {
       setError('ไม่พบข้อมูลบริษัท');
       return;
     }
-    // 2. ตรวจสอบ Validation อื่นๆ ตามเงื่อนไขของพี่
-    if (form.requiredSkills.length === 0) {
-      setError('กรุณาเพิ่มทักษะที่ต้องการอย่างน้อย 1 รายการ');
-      return;
-    }
 
-    // ถ้าผ่านเงื่อนไขครบถ้วน ค่อยเปิด Pop-up เตือนหักแต้ม AC
+    if (!validateForm()) return;
+
     setShowConfirmModal(true);
   };
 
-  if (authLoading || loadingCompany) {
+  if (authLoading || checkingAccess || loadingCompany) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />
@@ -386,7 +515,10 @@ export default function CreateJobPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 font-sans">
+    <form
+      onSubmit={(e) => e.preventDefault()}
+      className="min-h-screen bg-gray-50 font-sans"
+    >
       <Navbar />
 
       {/* Header */}
@@ -452,27 +584,46 @@ export default function CreateJobPage() {
         )}
 
         {/* Section: ข้อมูลพื้นฐาน */}
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 space-y-5">
+        {/* 🟢 ผูก ref ที่ Section นี้จุดเดียว เพื่อใช้สั่งดีดหน้าจอกลับมาเวลาลูกทีมด้านในพัง */}
+        <div ref={basicInfoRef} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 space-y-5">
           <h2 className="font-bold text-gray-700 text-base border-b border-gray-100 pb-3">
             {tt('basicInfo.title')}
           </h2>
 
+          {/* ชื่อตำแหน่งงาน */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1.5">
               {tt('basicInfo.jobTitle')} <span className="text-red-500">*</span>
             </label>
             <input
+              id="job-title" // 🟢 1. เติม ID ตรงนี้เพื่อให้ลอจิกสั่งดึงหน้าจอ (Scroll) ทำงานถูกตัว
               type="text"
               name="title"
               value={form.title}
-              onChange={handleChange}
+              // 🟢 2. ปรับ onChange ให้เก็บค่าลงฟอร์มปกติ พร้อมกับลบ Error ของช่องนี้ทิ้งทันทีเมื่อพิมพ์
+              onChange={(e) => {
+                handleChange(e); // เรียกฟังก์ชัน handle เดิมของคุณเพื่ออัปเดตสเตตตัวแปร form
+
+                // สั่งลบเออร์เรอร์เฉพาะของช่อง title ออกทันที แจ้งเตือนสีแดงจะได้หายวับ
+                setErrors((prev) => {
+                  const updated = { ...prev };
+                  delete updated.title;
+                  return updated;
+                });
+              }}
               required
               placeholder="เช่น Senior Frontend Developer, ผู้จัดการฝ่ายการตลาด"
-              className="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:ring-2 focus:ring-[#020263] focus:border-[#00003D] outline-none text-gray-900 text-sm"
+              className={`w-full px-4 py-2.5 rounded-xl border outline-none text-gray-900 text-sm transition-colors
+                ${errors.title
+                  ? 'border-red-500 focus:ring-2 focus:ring-red-200'
+                  : 'border-gray-300 focus:ring-2 focus:ring-[#020263] focus:border-[#00003D]'
+                }`}
             />
+            {errors.title && <p className="text-xs text-red-500 mt-1">{errors.title}</p>}
           </div>
 
           <div className="grid grid-cols-2 gap-4">
+            {/* ประเภทการจ้างงาน */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1.5">
                 {tt('basicInfo.jobType')} <span className="text-red-500">*</span>
@@ -481,7 +632,11 @@ export default function CreateJobPage() {
                 name="jobType"
                 value={form.jobType}
                 onChange={handleChange}
-                className="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:ring-2 focus:ring-[#020263] focus:border-[#00003D] outline-none text-gray-900 text-sm bg-white"
+                className={`w-full px-4 py-2.5 rounded-xl border outline-none text-gray-900 text-sm bg-white transition-colors
+            ${errors.jobType
+                    ? 'border-red-500 focus:ring-2 focus:ring-red-200'
+                    : 'border-gray-300 focus:ring-2 focus:ring-[#020263] focus:border-[#00003D]'
+                  }`}
               >
                 {JOB_TYPES.map((t) => (
                   <option key={t.value} value={t.value}>
@@ -489,7 +644,10 @@ export default function CreateJobPage() {
                   </option>
                 ))}
               </select>
+              {errors.jobType && <p className="text-xs text-red-500 mt-1">{errors.jobType}</p>}
             </div>
+
+            {/* รูปแบบการทำงาน */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1.5">
                 {tt('basicInfo.workModel')} <span className="text-red-500">*</span>
@@ -498,7 +656,11 @@ export default function CreateJobPage() {
                 name="workModel"
                 value={form.workModel}
                 onChange={handleChange}
-                className="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:ring-2 focus:ring-[#020263] focus:border-[#00003D] outline-none text-gray-900 text-sm bg-white"
+                className={`w-full px-4 py-2.5 rounded-xl border outline-none text-gray-900 text-sm bg-white transition-colors
+            ${errors.workModel
+                    ? 'border-red-500 focus:ring-2 focus:ring-red-200'
+                    : 'border-gray-300 focus:ring-2 focus:ring-[#020263] focus:border-[#00003D]'
+                  }`}
               >
                 {WORK_MODELS.map((m) => (
                   <option key={m.value} value={m.value}>
@@ -506,36 +668,73 @@ export default function CreateJobPage() {
                   </option>
                 ))}
               </select>
+              {errors.workModel && <p className="text-xs text-red-500 mt-1">{errors.workModel}</p>}
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
+            {/* จำนวนอัตราที่รับ */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1.5">
                 {tt('basicInfo.positions')} <span className="text-red-500">*</span>
               </label>
               <input
+                id="job-positions" // 🟢 1. เติม ID ตรงนี้ให้ตรงกับที่ตั้งไว้ใน validateForm เพื่อให้สั่ง Scroll มาเจอ
                 type="number"
                 name="positions"
                 value={form.positions}
-                onChange={handleChange}
+                // 🟢 2. ปรับ onChange ให้ลบเออร์เรอร์ของช่อง positions ทันทีที่เปลี่ยนค่าตัวเลข
+                onChange={(e) => {
+                  handleChange(e); // บันทึกค่าลงสเตตฟอร์มปกติ
+
+                  setErrors((prev) => {
+                    const updated = { ...prev };
+                    delete updated.positions; // ลบแจ้งเตือนสีแดงออกทันที
+                    return updated;
+                  });
+                }}
                 required
                 min="1"
-                className="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:ring-2 focus:ring-[#020263] focus:border-[#00003D] outline-none text-gray-900 text-sm"
+                placeholder="เช่น 1" // แนะนำปรับตามที่คุยกันรอบก่อนเพื่อไม่ให้ชนกับชนิดข้อมูลที่เป็น number
+                className={`w-full px-4 py-2.5 rounded-xl border outline-none text-gray-900 text-sm transition-colors
+                  ${errors.positions
+                    ? 'border-red-500 focus:ring-2 focus:ring-red-200'
+                    : 'border-gray-300 focus:ring-2 focus:ring-[#020263] focus:border-[#00003D]'
+                  }`}
               />
+              {errors.positions && <p className="text-xs text-red-500 mt-1">{errors.positions}</p>}
             </div>
           </div>
+
           <div className="grid grid-cols-2 gap-4 border-t border-gray-100 pt-5">
+            {/* จังหวัด */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1.5">
                 {tt('basicInfo.province')} <span className="text-red-500">*</span>
               </label>
               <select
+                id="job-province" // 🟢 1. เติม ID สำหรับดักลอจิกสั่งดึงหน้าจอเลื่อนมาหาช่องนี้
                 name="locationProvince"
                 value={form.locationProvince}
-                onChange={handleChange}
+                // 🟢 2. ปรับ onChange ให้ลบเออร์เรอร์ข้อผิดพลาดสีแดงออกทันทีที่เลือกจังหวัดใหม่
+                onChange={(e) => {
+                  handleChange(e); // บันทึกค่าลงสเตตฟอร์มปกติ
+
+                  setErrors((prev) => {
+                    const updated = { ...prev };
+                    delete updated.locationProvince; // ลบแจ้งเตือนสีแดงออกทันที
+                    return updated;
+                  });
+                }}
                 required
-                className="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:ring-2 focus:ring-[#020263] outline-none text-gray-900 text-sm bg-white">
+                className={`w-full px-4 py-2.5 rounded-xl border outline-none text-gray-900 text-sm bg-white transition-colors
+                  ${errors.locationProvince
+                    ? 'border-red-500 focus:ring-2 focus:ring-red-200'
+                    : 'border-gray-300 focus:ring-2 focus:ring-[#020263]'
+                  }`}
+              >
+                {/* 🟢 3. เพิ่มตัวเลือกแรกสุดเป็นค่าว่าง เพื่อป้องกันบั๊กแสดงผลหลอกสายตาผู้ใช้ */}
+                <option value="">-- เลือกจังหวัด --</option>
 
                 {Object.keys(th.HeroSearch.provinces)
                   .filter((key) => key !== 'all')
@@ -545,7 +744,10 @@ export default function CreateJobPage() {
                     </option>
                   ))}
               </select>
+              {errors.locationProvince && <p className="text-xs text-red-500 mt-1">{errors.locationProvince}</p>}
             </div>
+
+            {/* เขต/อำเภอ */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1.5">
                 {tt('basicInfo.district')}
@@ -562,6 +764,7 @@ export default function CreateJobPage() {
           </div>
 
           <div className="grid grid-cols-2 gap-4">
+            {/* หมวดหมู่หลัก */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1.5">
                 {tt('basicInfo.category')}
@@ -580,6 +783,8 @@ export default function CreateJobPage() {
                 ))}
               </select>
             </div>
+
+            {/* สายงานย่อย */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1.5">
                 {tt('basicInfo.jobFunction')}
@@ -595,12 +800,13 @@ export default function CreateJobPage() {
             </div>
           </div>
 
+          {/* วันและเวลาทำงาน */}
           <div className="grid grid-cols-1 gap-4 border-t border-gray-100 pt-5">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 {tt('basicInfo.workingDays')}<span className="text-red-500">*</span>
               </label>
-              <div className="flex flex-wrap gap-4 mb-4">
+              <div className="flex flex-wrap gap-4 mb-2">
                 {[tt('basicInfo.workingDaysOptions.fiveDays'), tt('basicInfo.workingDaysOptions.sixDays'), tt('basicInfo.workingDaysOptions.custom')].map((opt) => (
                   <label key={opt} className="flex items-center gap-2 cursor-pointer">
                     <input
@@ -608,46 +814,81 @@ export default function CreateJobPage() {
                       name="workingDays"
                       value={opt}
                       checked={form.workingDays === opt}
-                      onChange={handleChange}
+                      onChange={(e) => {
+                        handleChange(e);
+                        setErrors((prev) => {
+                          const updated = { ...prev };
+                          delete updated.workingDays;
+                          return updated;
+                        });
+                      }}
                       className="w-4 h-4 text-blue-600 focus:ring-blue-500 border-gray-300"
                     />
                     <span className="text-sm text-gray-700">{opt}</span>
                   </label>
                 ))}
               </div>
+              {errors.workingDays && <p className="text-xs text-red-500 mb-3">{errors.workingDays}</p>}
 
-              {form.workingDays === 'บริษัทกำหนดเลือก' && (
-                <div className="grid grid-cols-2 gap-4 bg-gray-50 p-4 rounded-xl border border-gray-100">
-                  <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1.5">
-                      เวลาเข้างาน
-                    </label>
-                    <input
-                      type="time"
-                      name="startTime"
-                      value={form.startTime}
-                      onChange={handleChange}
-                      required={form.workingDays === 'บริษัทกำหนดเลือก'}
-                      className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#020263] focus:border-[#00003D] outline-none text-gray-900 text-sm bg-white"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1.5">
-                      เวลาออกงาน
-                    </label>
-                    <input
-                      type="time"
-                      name="endTime"
-                      value={form.endTime}
-                      onChange={handleChange}
-                      required={form.workingDays === 'บริษัทกำหนดเลือก'}
-                      className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#020263] focus:border-[#00003D] outline-none text-gray-900 text-sm bg-white"
-                    />
-                  </div>
+              {/* 🟢 ดึงกล่องเวลาออกมาโชว์ถาวร ไม่ต้องมีเงื่อนไขซ่อนอีกต่อไป */}
+              <div className="grid grid-cols-2 gap-4 bg-gray-50 p-4 rounded-xl border border-gray-100 mt-2">
+                {/* เวลาเข้างาน */}
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1.5">
+                    เวลาเข้างาน <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    id="job-starttime"
+                    type="time"
+                    name="startTime"
+                    value={form.startTime}
+                    onChange={(e) => {
+                      handleChange(e);
+                      setErrors((prev) => {
+                        const updated = { ...prev };
+                        delete updated.startTime;
+                        return updated;
+                      });
+                    }}
+                    className={`w-full px-4 py-2 rounded-lg border outline-none text-gray-900 text-sm bg-white transition-colors
+                      ${errors.startTime
+                        ? 'border-red-500 focus:ring-2 focus:ring-red-200'
+                        : 'border-gray-300 focus:ring-2 focus:ring-[#020263] focus:border-[#00003D]'
+                      }`}
+                  />
+                  {errors.startTime && <p className="text-xs text-red-500 mt-1">{errors.startTime}</p>}
                 </div>
-              )}
+
+                {/* เวลาออกงาน */}
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1.5">
+                    เวลาออกงาน <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    id="job-endtime"
+                    type="time"
+                    name="endTime"
+                    value={form.endTime}
+                    onChange={(e) => {
+                      handleChange(e);
+                      setErrors((prev) => {
+                        const updated = { ...prev };
+                        delete updated.endTime;
+                        return updated;
+                      });
+                    }}
+                    className={`w-full px-4 py-2 rounded-lg border outline-none text-gray-900 text-sm bg-white transition-colors
+                      ${errors.endTime
+                        ? 'border-red-500 focus:ring-2 focus:ring-red-200'
+                        : 'border-gray-300 focus:ring-2 focus:ring-[#020263] focus:border-[#00003D]'
+                      }`}
+                  />
+                  {errors.endTime && <p className="text-xs text-red-500 mt-1">{errors.endTime}</p>}
+                </div>
+              </div>
             </div>
 
+            {/* สัมภาษณ์ออนไลน์ */}
             <div className="mt-2">
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 {tt('basicInfo.onlineInterview')} <span className="text-red-500">*</span>
@@ -676,6 +917,7 @@ export default function CreateJobPage() {
               </div>
             </div>
 
+            {/* Quick Apply */}
             <div className="mt-2">
               <label className="block text-sm font-medium text-gray-700 mb-2">{tt('basicInfo.quickApply.label')}</label>
               <p className="text-xs text-gray-400 mb-2">
@@ -706,20 +948,37 @@ export default function CreateJobPage() {
             </div>
           </div>
 
+          {/* ที่อยู่ติดต่อ */}
           <div className="border-t border-gray-100 pt-5">
             <label className="block text-sm font-medium text-gray-700 mb-1.5">
-              {tt('basicInfo.contactAddress')}
+              {tt('basicInfo.contactAddress')} <span className="text-red-500">*</span> {/* 🟢 1. เพิ่มดอกจันสีแดง */}
             </label>
             <textarea
+              id="job-address" // 🟢 2. เติม ID สำหรับลอจิก Auto Scroll เลื่อนหน้าจอมาโฟกัส
               name="companyAddress"
               value={form.companyAddress}
-              onChange={handleChange}
+              // 🟢 3. ปรับ onChange ให้ลบเออร์เรอร์สีแดงออกทันทีเมื่อยูสเซอร์พิมพ์แก้ไขที่อยู่
+              onChange={(e) => {
+                handleChange(e); // บันทึกค่าลงสเตตฟอร์มปกติ
+
+                setErrors((prev) => {
+                  const updated = { ...prev };
+                  delete updated.companyAddress; // พิมพ์ปุ๊บ ขอบแดงหายวับปั๊บ
+                  return updated;
+                });
+              }}
               rows={3}
               placeholder="เช่น 111 หมู่ 9 อุทยานวิทยาศาสตร์ประเทศไทย ชั้น 2 ห้อง P-206 ตำบลคลองหนึ่ง อำเภอคลองหลวง จังหวัดปทุมธานี 12120"
-              className="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:ring-2 focus:ring-[#020263] focus:border-[#00003D] outline-none text-gray-900 text-sm resize-none"
+              className={`w-full px-4 py-2.5 rounded-xl border outline-none text-gray-900 text-sm resize-none transition-colors
+                ${errors.companyAddress
+                  ? 'border-red-500 focus:ring-2 focus:ring-red-200'
+                  : 'border-gray-300 focus:ring-2 focus:ring-[#020263] focus:border-[#00003D]'
+                }`}
             />
+            {errors.companyAddress && <p className="text-xs text-red-500 mt-1">{errors.companyAddress}</p>}
           </div>
 
+          {/* ลิงก์แผนที่ */}
           <div className="mt-4 border-t border-gray-100 pt-5">
             <label className="block text-sm font-medium text-gray-700 mb-1.5">
               {tt('basicInfo.mapUrl')}
@@ -730,8 +989,13 @@ export default function CreateJobPage() {
               value={form.mapUrl}
               onChange={handleChange}
               placeholder="เช่น https://goo.gl/maps/... หรือ https://maps.app.goo.gl/..."
-              className="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:ring-2 focus:ring-[#020263] focus:border-[#00003D] outline-none text-gray-900 text-sm"
+              className={`w-full px-4 py-2.5 rounded-xl border outline-none text-gray-900 text-sm
+          ${errors.mapUrl
+                  ? 'border-red-500 focus:ring-2 focus:ring-red-200'
+                  : 'border-gray-300 focus:ring-2 focus:ring-[#020263] focus:border-[#00003D]'
+                }`}
             />
+            {errors.mapUrl && <p className="text-xs text-red-500 mt-1">{errors.mapUrl}</p>}
           </div>
 
           {/* รูปภาพบริษัท */}
@@ -760,8 +1024,12 @@ export default function CreateJobPage() {
                 onChange={handleChange}
                 placeholder="เช่น 15,000 บาท"
                 min={0}
-                className="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:ring-2 focus:ring-[#020263] focus:border-[#00003D] outline-none text-gray-900 text-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                className={`w-full px-4 py-2.5 rounded-xl border outline-none text-gray-900 text-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${errors.salaryMin
+                  ? 'border-red-500 focus:ring-2 focus:ring-red-200'
+                  : 'border-gray-300 focus:ring-2 focus:ring-[#020263] focus:border-[#00003D]'
+                  }`}
               />
+              {errors.salaryMin && <p className="text-xs text-red-500 mt-1">{errors.salaryMin}</p>}
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1.5">
@@ -774,8 +1042,12 @@ export default function CreateJobPage() {
                 onChange={handleChange}
                 placeholder="เช่น 50,000 บาท"
                 min={0}
-                className="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:ring-2 focus:ring-[#020263] focus:border-[#00003D] outline-none text-gray-900 text-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                className={`w-full px-4 py-2.5 rounded-xl border outline-none text-gray-900 text-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${errors.salaryMax
+                  ? 'border-red-500 focus:ring-2 focus:ring-red-200'
+                  : 'border-gray-300 focus:ring-2 focus:ring-[#020263] focus:border-[#00003D]'
+                  }`}
               />
+              {errors.salaryMax && <p className="text-xs text-red-500 mt-1">{errors.salaryMax}</p>}
             </div>
           </div>
           <label className="flex items-center gap-2.5 cursor-pointer">
@@ -800,24 +1072,48 @@ export default function CreateJobPage() {
             <label className="block text-sm font-medium text-gray-700 mb-1.5">
               {tt('jobDetails.title')} <span className="text-red-500">*</span>
             </label>
-            <RichTextEditor
-              value={form.description}
-              onChange={(html) => setForm((prev) => ({ ...prev, description: html }))}
-              placeholder="อธิบายหน้าที่ความรับผิดชอบ สภาพแวดล้อมการทำงาน และรายละเอียดอื่นๆ..."
-              minHeight={200}
-            />
+            <div id="job-description" className={`rounded-xl overflow-hidden border ${errors.description ? 'border-red-500 ring-2 ring-red-100' : 'border-gray-300'}`}>
+              <RichTextEditor
+                value={form.description}
+                onChange={(html) => {
+                  setForm((prev) => ({ ...prev, description: html }));
+
+                  // 🟢 ล้าง Tag HTML ออกเพื่อนับเฉพาะข้อความจริง
+                  const cleanHtml = html.replace(/<[^>]*>/g, '').trim();
+                  // 🟢 ขอบแดงจะหายไป ก็ต่อเมื่อพิมพ์ข้อความจริงยาวตั้งแต่ 20 ตัวอักษรขึ้นไปเท่านั้น
+                  if (cleanHtml.length >= 20 && errors.description) {
+                    setErrors(prev => { const n = { ...prev }; delete n.description; return n; });
+                  }
+                }}
+                placeholder="อธิบายหน้าที่ความรับผิดชอบ สภาพแวดล้อมการทำงาน และรายละเอียดอื่นๆ..."
+                minHeight={200}
+              />
+            </div>
+            {errors.description && <p className="text-xs text-red-500 mt-1">{errors.description}</p>}
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1.5">
               {tt('jobDetails.requirements')} <span className="text-red-500">*</span>
             </label>
-            <RichTextEditor
-              value={form.requirements}
-              onChange={(html) => setForm((prev) => ({ ...prev, requirements: html }))}
-              placeholder="เช่น วุฒิการศึกษา, ประสบการณ์, ทักษะที่จำเป็น, คุณลักษณะที่ต้องการ..."
-              minHeight={160}
-            />
+            <div id="job-requirements" className={`rounded-xl overflow-hidden border ${errors.requirements ? 'border-red-500 ring-2 ring-red-100' : 'border-gray-300'}`}>
+              <RichTextEditor
+                value={form.requirements}
+                onChange={(html) => {
+                  setForm((prev) => ({ ...prev, requirements: html }));
+
+                  // 🟢 ล้าง Tag HTML ออกเพื่อนับเฉพาะข้อความจริง
+                  const cleanHtml = html.replace(/<[^>]*>/g, '').trim();
+                  // 🟢 ขอบแดงจะหายไป ก็ต่อเมื่อพิมพ์ข้อความจริงยาวตั้งแต่ 20 ตัวอักษรขึ้นไปเท่านั้น
+                  if (cleanHtml.length >= 20 && errors.requirements) {
+                    setErrors(prev => { const n = { ...prev }; delete n.requirements; return n; });
+                  }
+                }}
+                placeholder="เช่น วุฒิการศึกษา, ประสบการณ์, ทักษะที่จำเป็น, คุณลักษณะที่ต้องการ..."
+                minHeight={160}
+              />
+            </div>
+            {errors.requirements && <p className="text-xs text-red-500 mt-1">{errors.requirements}</p>}
           </div>
 
           <div>
@@ -880,22 +1176,37 @@ export default function CreateJobPage() {
 
           <div className="flex gap-2">
             <input
+              id="job-skills" // 🟢 3. เติม ID ตรงนี้เพื่อให้สกรอลล์มาโฟกัสกล่องพิมพ์สกิลแท็ก
               type="text"
               value={skillInput}
               onChange={(e) => setSkillInput(e.target.value)}
-              onKeyDown={handleSkillKeyDown}
+              onKeyDown={(e) => {
+                // 🟢 สั่งลบเออร์เรอร์สีแดงของสกิลทันทีเมื่อเขากด Enter เพิ่มสกิลสำเร็จ
+                if (e.key === 'Enter') {
+                  setErrors(prev => { const n = { ...prev }; delete n.requiredSkills; return n; });
+                }
+                if (typeof handleSkillKeyDown === 'function') handleSkillKeyDown(e);
+              }}
               placeholder="พิมพ์ทักษะแล้วกด Enter เช่น React, Python, Excel"
-              className="flex-1 px-4 py-2.5 rounded-xl border border-gray-300 focus:ring-2 focus:ring-[#020263] focus:border-[#00003D] outline-none text-gray-900 text-sm"
+              className={`flex-1 px-4 py-2.5 rounded-xl border outline-none text-gray-900 text-sm ${errors.requiredSkills
+                ? 'border-red-500 focus:ring-2 focus:ring-red-200'
+                : 'border-gray-300 focus:ring-2 focus:ring-[#020263] focus:border-[#00003D]'
+                }`}
             />
             <button
               type="button"
-              onClick={addSkill}
+              onClick={() => {
+                if (typeof addSkill === 'function') addSkill();
+                // 🟢 กดปุ่มคลิกเพิ่มสกิล ก็ให้ลบเออร์เรอร์สีแดงออกด้วยเช่นกัน
+                setErrors(prev => { const n = { ...prev }; delete n.requiredSkills; return n; });
+              }}
               className="px-4 py-2.5 bg-[#E00016] hover:bg-[#E00016]/80 text-white rounded-xl text-sm font-medium flex items-center gap-1.5 transition-colors"
             >
               <Plus className="w-4 h-4" />
               {tt('skills.addBtn')}
             </button>
           </div>
+          {errors.requiredSkills && <p className="text-xs text-red-500">{errors.requiredSkills}</p>}
 
           {form.requiredSkills.length > 0 && (
             <div className="flex flex-wrap gap-2">
@@ -1137,8 +1448,12 @@ export default function CreateJobPage() {
                 value={form.contactName}
                 onChange={handleChange}
                 placeholder="เช่น คุณสมชาย"
-                className="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:ring-2 focus:ring-[#020263] focus:border-[#00003D] outline-none text-gray-900 text-sm"
+                className={`w-full px-4 py-2.5 rounded-xl border outline-none text-gray-900 text-sm ${errors.contactName
+                  ? 'border-red-500 focus:ring-2 focus:ring-red-200'
+                  : 'border-gray-300 focus:ring-2 focus:ring-[#020263] focus:border-[#00003D]'
+                  }`}
               />
+              {errors.contactName && <p className="text-xs text-red-500 mt-1">{errors.contactName}</p>}
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1.5">
@@ -1150,8 +1465,12 @@ export default function CreateJobPage() {
                 value={form.contactPhone}
                 onChange={handleChange}
                 placeholder="เช่น 081-234-5678"
-                className="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:ring-2 focus:ring-[#020263] focus:border-[#00003D] outline-none text-gray-900 text-sm"
+                className={`w-full px-4 py-2.5 rounded-xl border outline-none text-gray-900 text-sm ${errors.contactPhone
+                  ? 'border-red-500 focus:ring-2 focus:ring-red-200'
+                  : 'border-gray-300 focus:ring-2 focus:ring-[#020263] focus:border-[#00003D]'
+                  }`}
               />
+              {errors.contactPhone && <p className="text-xs text-red-500 mt-1">{errors.contactPhone}</p>}
             </div>
           </div>
         </div>
@@ -1201,7 +1520,7 @@ export default function CreateJobPage() {
                   setTransportInput('');
                 }
               }}
-              placeholder="เช่น BTS หมอชิต, รถเมย์สาย 8"
+              placeholder="เช่น BTS หมอชิต, รถเมล์สาย 8"
               className="flex-1 px-4 py-2.5 rounded-xl border border-gray-300 focus:ring-2 focus:ring-[#020263] focus:border-[#00003D] outline-none text-gray-900 text-sm"
             />
             <button
@@ -1226,7 +1545,6 @@ export default function CreateJobPage() {
           {form.transportation.length > 0 && (
             <div className="flex flex-wrap gap-2 mt-3">
               {form.transportation.map((t) => {
-                // Find icon by checking if the text starts with the preset value
                 const preset = TRANSPORT_PRESETS.find((p) => t.startsWith(p.value));
                 const Icon = preset?.icon || MapPin;
 
@@ -1336,6 +1654,6 @@ export default function CreateJobPage() {
           </div>
         )}
       </div>
-    </div>
+    </form>
   );
 }
