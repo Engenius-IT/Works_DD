@@ -1185,7 +1185,7 @@ function JobsContent() {
               }}
             >
               <div
-                className="w-full max-w-4xl max-h-[calc(100vh-3rem)] h-full sm:h-auto overflow-hidden bg-white rounded-3xl shadow-2xl animate-in zoom-in-95 duration-200"
+                className="w-full max-w-4xl h-[calc(100vh-3rem)] overflow-hidden bg-white rounded-3xl shadow-2xl animate-in zoom-in-95 duration-200"
                 onClick={(e) => e.stopPropagation()}
               >
                 <JobDetailPanel

@@ -102,14 +102,14 @@ function RegisterContent() {
           )}
         </div>
 
-        <div className="grid md:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
           {/* Job Seeker Card */}
           <Link
             href="/register/jobseeker"
             onClick={onSelectJobseeker}
-            className={`group relative bg-[#FFFFFF] rounded-2xl p-8 shadow-sm border border-gray-200 hover:shadow-md hover:border-[#020263] transition-all duration-300 flex flex-col items-center text-center ${loading ? 'opacity-50 pointer-events-none' : ''}`}
+           className={`group relative w-full min-w-0 bg-[#FFFFFF] rounded-2xl p-5 sm:p-8 shadow-sm border border-gray-200 hover:shadow-md hover:border-[#020263] transition-all duration-300 flex flex-col items-center text-center overflow-hidden ${loading ? 'opacity-50 pointer-events-none' : ''}`}
           >
-            <div className="w-100 h-100 mb-0 relative transition-transform group-hover:scale-105 duration-300">
+            <div className="w-full max-w-[280px] sm:max-w-[400px] aspect-square mb-0 relative transition-transform group-hover:scale-105 duration-300">
               <Image
                 src="/images/job-seeker-2d.png"
                 alt="ผู้สมัครงาน"
@@ -132,9 +132,9 @@ function RegisterContent() {
           <Link
             href="/register/employer"
             onClick={onSelectEmployer}
-            className={`group relative bg-[#FFFFFF] rounded-2xl p-8 shadow-sm border border-gray-200 hover:shadow-md hover:border-[#020263] transition-all duration-300 flex flex-col items-center text-center ${loading ? 'opacity-50 pointer-events-none' : ''}`}
+              className={`group relative w-full min-w-0 bg-[#FFFFFF] rounded-2xl p-5 sm:p-8 shadow-sm border border-gray-200 hover:shadow-md hover:border-[#020263] transition-all duration-300 flex flex-col items-center text-center overflow-hidden ${loading ? 'opacity-50 pointer-events-none' : ''}`}
           >
-            <div className="w-100 h-100 mb-0 relative transition-transform group-hover:scale-105 duration-300">
+            <div className="w-full max-w-[280px] sm:max-w-[400px] aspect-square mb-0 relative transition-transform group-hover:scale-105 duration-300">
               <Image
                 src="/images/employer-2d.png"
                 alt="ผู้ประกอบการ"
