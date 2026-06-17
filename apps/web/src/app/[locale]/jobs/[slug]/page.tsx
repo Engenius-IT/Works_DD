@@ -158,33 +158,28 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 }
 
 function TextBlock({ text }: { text: string }) {
-  const { translatedText, loading } = useTranslator({ text });
+  const isHtml = text.trimStart().startsWith('<');
 
-  if (loading) {
-    return <div className="animate-pulse bg-gray-100 h-24 rounded-lg w-full" />;
-  }
-
-  const isHtml = translatedText.trimStart().startsWith('<');
   if (isHtml) {
     return (
       <div
-       className="
-text-[#000000] text-sm leading-relaxed
-prose prose-sm max-w-none
-prose-headings:text-gray-800 prose-headings:font-semibold
-prose-h1:text-xl prose-h2:text-lg prose-h3:text-base
-prose-ul:pl-5 prose-ol:pl-5 prose-li:my-0.5
-prose-strong:text-gray-800 prose-em:text-gray-600
-prose-hr:border-gray-200
-overflow-hidden
-break-words
-[overflow-wrap:anywhere]
-whitespace-pre-wrap
-"       dangerouslySetInnerHTML={{ __html: translatedText }}
+        className="text-gray-600 text-sm leading-relaxed prose prose-sm max-w-none overflow-hidden break-words
+          [&_*]:max-w-full [&_*]:break-all
+          prose-headings:text-gray-800 prose-headings:font-semibold
+          prose-h1:text-xl prose-h2:text-lg prose-h3:text-base
+          prose-ul:pl-5 prose-ol:pl-5 prose-li:my-0.5
+          prose-strong:text-gray-800 prose-em:text-gray-600
+          prose-hr:border-gray-200"
+        dangerouslySetInnerHTML={{ __html: text }}
       />
     );
   }
-  return <div className="text-gray-600 text-sm leading-relaxed whitespace-pre-line">{translatedText}</div>;
+
+  return (
+    <div className="text-gray-600 text-sm leading-relaxed whitespace-pre-wrap break-all overflow-hidden">
+      {text}
+    </div>
+  );
 }
 
 function SkeletonDetail() {
@@ -344,7 +339,7 @@ export default function JobDetailPage() {
     <div className="min-h-screen flex flex-col bg-gray-50">
       <Navbar />
 
-      <main className="max-w-7xl mx-auto px-16 py-8 w-full flex-1">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-16 py-8 w-full flex-1 overflow-x-hidden">
         {/* Back button */}
         <button
           onClick={() => {
@@ -404,12 +399,12 @@ export default function JobDetailPage() {
 
         {/* Content */}
         {!loading && job && (
-          <div className="flex flex-col lg:flex-row gap-6 items-start">
+          <div className="flex flex-col lg:flex-row gap-6 items-start w-full min-w-0 overflow-hidden">
             {/* ─── Left Column ─── */}
             <div className="flex-1 min-w-0 space-y-4">
               {/* Header card */}
-              <div className="bg-white rounded-2xl border border-gray-200 p-6 drop-shadow-lg ">
-                <div className="flex gap-5 items-start">
+              <div className="bg-white rounded-2xl border border-gray-200 p-4 sm:p-6 drop-shadow-lg w-full min-w-0 overflow-hidden">
+                <div className="flex flex-col sm:flex-row gap-5 items-start min-w-0">
                   <CompanyAvatar company={job.company} />
                   <div className="flex-1 min-w-0">
                     <h1 className="text-[20px] font-bold text-[#020263] leading-snug">
@@ -480,6 +475,7 @@ export default function JobDetailPage() {
                         </svg>
                         {salaryText(job)}
                       </span>
+                      <div className="flex items-center gap-1.5">
                       <span className="flex items-center gap-1.5 text-gray-400">
                         <svg
                           className="w-4 h-4 shrink-0"
@@ -496,13 +492,10 @@ export default function JobDetailPage() {
                         </svg>
                         โพสต์ {timeAgo(job.createdAt)}
                       </span>
-                    </div>
-                  </div>
-                  {/* Save button */}
-                  <button
+                      <button
                     onClick={toggleSave}
                     title={isSaved ? 'ยกเลิกบันทึก' : 'บันทึกงาน'}
-                    className={`ml-2 shrink-0 flex flex-col items-center gap-1 p-2 rounded-xl transition-all ${
+                    className={`ml-2 shrink-0 flex flex-row items-center gap-1 p-2 rounded-xl transition-all ${
                       isSaved
                         ? 'text-[#E00016] bg-red-50 hover:bg-red-100'
                         : 'text-gray-400 hover:text-[#E00016] hover:bg-red-50'
@@ -517,6 +510,12 @@ export default function JobDetailPage() {
                       {isSaved ? 'บันทึกแล้ว' : 'บันทึกงาน'}
                     </span>
                   </button>
+                  </div>
+                    </div>
+                  </div>
+                  {/* Save button */}
+                  
+                  
                 </div>
               </div>
 
