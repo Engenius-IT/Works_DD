@@ -174,7 +174,7 @@ function JobCard({
   return (
     <div
       id={`job-card-${job.id}`}
-      className={`relative bg-white border-2 rounded-xl drop-shadow-md hover:drop-shadow-xl transition-all duration-300 cursor-pointer ${isSelected
+      className={`relative bg-white border-2 rounded-xl drop-shadow-md hover:drop-shadow-xl transition-all duration-300 cursor-pointer overflow-hidden ${isSelected
           ? 'border-[#020263] ring-2 ring-[#020263]/20 drop-shadow-xl'
           : 'border-gray-200 hover:border-[#00003D]'
         }`}
@@ -190,7 +190,7 @@ function JobCard({
         </div>
       )}
       {/* Main row: logo | info | right panel */}
-      <div className="flex items-stretch gap-5 px-6 py-5">
+      <div className="flex flex-col sm:flex-row sm:items-stretch gap-5 px-6 py-5">
         {/* Logo */}
         <div className="shrink-0 flex items-start pt-0.5">
           <CompanyLogo company={job.company} size="lg" />
@@ -307,9 +307,9 @@ function JobCard({
         </div>
 
         {/* Right panel: urgent + time + bookmark (top) | button (bottom) */}
-        <div className="shrink-0 flex flex-col items-end justify-between gap-4 min-w-[160px]">
+        <div className="shrink-0 flex flex-row items-center justify-between w-full gap-4 sm:w-auto sm:min-w-[160px] sm:flex-col sm:items-end sm:justify-between">
           {/* Top: time + bookmark */}
-          <div className="flex flex-col items-end gap-1.5">
+          <div className="flex w-full items-center justify-between gap-1.5 sm:w-auto sm:flex-col sm:items-end">
             <span className="flex items-center gap-1 text-xs text-gray-400 whitespace-nowrap">
               <svg
                 className="w-3.5 h-3.5 shrink-0"
@@ -377,17 +377,18 @@ function TextBlock({ text }: { text: string }) {
   if (isHtml) {
     return (
       <div
-        className="text-gray-600 text-sm leading-relaxed prose prose-sm max-w-none
-          prose-headings:text-gray-800 prose-headings:font-semibold
-          prose-h1:text-xl prose-h2:text-lg prose-h3:text-base
-          prose-ul:pl-5 prose-ol:pl-5 prose-li:my-0.5
-          prose-strong:text-gray-800 prose-em:text-gray-600
-          prose-hr:border-gray-200"
+        className="text-gray-600 text-sm leading-relaxed prose prose-sm max-w-none overflow-hidden break-words
+    [&_*]:max-w-full [&_*]:break-words
+    prose-headings:text-gray-800 prose-headings:font-semibold
+    prose-h1:text-xl prose-h2:text-lg prose-h3:text-base
+    prose-ul:pl-5 prose-ol:pl-5 prose-li:my-0.5
+    prose-strong:text-gray-800 prose-em:text-gray-600
+    prose-hr:border-gray-200"
         dangerouslySetInnerHTML={{ __html: text }}
       />
     );
   }
-  return <div className="text-gray-600 text-sm leading-relaxed whitespace-pre-line">{text}</div>;
+  return <div className="text-gray-600 text-sm leading-relaxed whitespace-pre-wrap break-words overflow-hidden">{text}</div>;
 }
 
 function DetailSection({ title, children }: { title: string; children: React.ReactNode }) {
@@ -507,11 +508,11 @@ function JobDetailPanel({
         </div>
 
         {/* Apply buttons */}
-        <div className="flex gap-2 mb-5">
+        <div className="flex flex-col gap-2 mb-5 sm:flex-row">
           <button
             onClick={() => onApply(merged.id)}
             disabled={isApplying || applyStatus === 'success' || applyStatus === 'already_applied'}
-            className={`flex-1 py-2.5 rounded-xl text-sm font-bold transition-colors shadow-sm ${applyStatus === 'success' || applyStatus === 'already_applied'
+            className={`w-full sm:w-auto flex-1 py-2.5 rounded-xl text-sm font-bold transition-colors shadow-sm ${applyStatus === 'success' || applyStatus === 'already_applied'
                 ? 'bg-gray-100 text-gray-500 cursor-not-allowed'
                 : 'bg-[#E00016] hover:bg-[#A80010] text-white'
               }`}
@@ -527,7 +528,7 @@ function JobDetailPanel({
           <Link
             href={`/jobs/${merged.slug}`}
             target="_blank"
-            className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl border-2 border-[#020263] text-[#020263] text-sm font-bold hover:bg-[#020263] hover:text-white transition-colors whitespace-nowrap"
+            className="w-full sm:w-auto flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl border-2 border-[#020263] text-[#020263] text-sm font-bold hover:bg-[#020263] hover:text-white transition-colors whitespace-nowrap"
           >
             <ExternalLink className="w-3.5 h-3.5" />
             ดูเต็มหน้า
@@ -1067,7 +1068,7 @@ function JobsContent() {
         <div className="flex gap-5 items-start min-h-screen pb-10">
           {/* Left: Job list */}
           <div
-            className={`flex flex-col gap-4 transition-all duration-300 ${selectedJob ? 'w-[45%] shrink-0' : 'w-full'}`}
+            className="flex flex-col gap-4 transition-all duration-300 w-full"
           >
             {/* Loading */}
             {loading && (
@@ -1171,26 +1172,36 @@ function JobsContent() {
               })()}
           </div>
 
-          {/* Right: Detail panel (sticky) */}
+          {/* Popup: Detail panel */}
           {selectedJob && (
             <div
-              ref={rightPanelRef}
-              className="flex-1 sticky top-[110px] h-[calc(100vh-120px)] bg-white rounded-2xl border-2 border-[#020263]/20 shadow-xl overflow-hidden flex flex-col animate-in slide-in-from-right-4 duration-300"
-              style={{ minWidth: 0 }}
+              className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
+              role="dialog"
+              aria-modal="true"
+              onClick={() => {
+                setSelectedJob(null);
+                setDetailJob(null);
+                setApplyStatus('idle');
+              }}
             >
-              <JobDetailPanel
-                job={selectedJob}
-                detailJob={detailJob}
-                detailLoading={detailLoading}
-                onClose={() => {
-                  setSelectedJob(null);
-                  setDetailJob(null);
-                  setApplyStatus('idle');
-                }}
-                onApply={handleApply}
-                isApplying={isApplying}
-                applyStatus={applyStatus}
-              />
+              <div
+                className="w-full max-w-4xl max-h-[calc(100vh-3rem)] h-full sm:h-auto overflow-hidden bg-white rounded-3xl shadow-2xl animate-in zoom-in-95 duration-200"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <JobDetailPanel
+                  job={selectedJob}
+                  detailJob={detailJob}
+                  detailLoading={detailLoading}
+                  onClose={() => {
+                    setSelectedJob(null);
+                    setDetailJob(null);
+                    setApplyStatus('idle');
+                  }}
+                  onApply={handleApply}
+                  isApplying={isApplying}
+                  applyStatus={applyStatus}
+                />
+              </div>
             </div>
           )}
         </div>
