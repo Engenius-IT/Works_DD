@@ -65,7 +65,7 @@ const JOB_CATEGORIES = [
 ];
 
 const TRANSPORT_PRESETS = [
-  { value: 'รถเมย์', icon: Bus, label: 'รถเมย์' },
+  { value: 'รถเมล์', icon: Bus, label: 'รถเมล์' },
   { value: 'BTS', icon: TrainFront, label: 'BTS' },
   { value: 'MRT', icon: TramFront, label: 'MRT' },
   { value: 'ARL', icon: Plane, label: 'ARL' },
@@ -1230,7 +1230,7 @@ export default function EditJobPage() {
                   setTransportInput('');
                 }
               }}
-              placeholder="เช่น BTS หมอชิต, รถเมย์สาย 8"
+              placeholder="เช่น BTS หมอชิต, รถเมล์สาย 8"
               className="flex-1 px-4 py-2.5 rounded-xl border border-gray-300 focus:ring-2 focus:ring-[#020263] focus:border-[#00003D] outline-none text-gray-900 text-sm"
             />
             <button

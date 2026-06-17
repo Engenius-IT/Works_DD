@@ -65,7 +65,7 @@ const JOB_CATEGORIES = [
 ];
 
 const TRANSPORT_PRESETS = [
-  { value: 'รถเมย์', icon: Bus, label: 'รถเมย์' },
+  { value: 'รถเมล์', icon: Bus, label: 'รถเมล์' },
   { value: 'BTS', icon: TrainFront, label: 'BTS' },
   { value: 'MRT', icon: TramFront, label: 'MRT' },
   { value: 'ARL', icon: Plane, label: 'ARL' },

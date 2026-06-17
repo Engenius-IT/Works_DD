@@ -175,8 +175,8 @@ function JobCard({
     <div
       id={`job-card-${job.id}`}
       className={`relative bg-white border-2 rounded-xl drop-shadow-md hover:drop-shadow-xl transition-all duration-300 cursor-pointer overflow-hidden ${isSelected
-          ? 'border-[#020263] ring-2 ring-[#020263]/20 drop-shadow-xl'
-          : 'border-gray-200 hover:border-[#00003D]'
+        ? 'border-[#020263] ring-2 ring-[#020263]/20 drop-shadow-xl'
+        : 'border-gray-200 hover:border-[#00003D]'
         }`}
       onClick={() => onSelect(job)}
     >
@@ -282,7 +282,7 @@ function JobCard({
             <div className="flex flex-wrap items-center gap-1.5 mt-2">
               {job.transportation.map((t) => {
                 const iconMap: Record<string, React.ElementType> = {
-                  รถเมย์: Bus,
+                  รถเมล์: Bus,
                   BTS: TrainFront,
                   MRT: TramFront,
                   ARL: Plane,
@@ -513,8 +513,8 @@ function JobDetailPanel({
             onClick={() => onApply(merged.id)}
             disabled={isApplying || applyStatus === 'success' || applyStatus === 'already_applied'}
             className={`w-full sm:w-auto flex-1 py-2.5 rounded-xl text-sm font-bold transition-colors shadow-sm ${applyStatus === 'success' || applyStatus === 'already_applied'
-                ? 'bg-gray-100 text-gray-500 cursor-not-allowed'
-                : 'bg-[#E00016] hover:bg-[#A80010] text-white'
+              ? 'bg-gray-100 text-gray-500 cursor-not-allowed'
+              : 'bg-[#E00016] hover:bg-[#A80010] text-white'
               }`}
           >
             {isApplying
@@ -735,7 +735,7 @@ function JobDetailPanel({
                 <div className="flex flex-wrap gap-1.5">
                   {merged.transportation.map((t) => {
                     const iconMap: Record<string, React.ElementType> = {
-                      รถเมย์: Bus,
+                      รถเมล์: Bus,
                       BTS: TrainFront,
                       MRT: TramFront,
                       ARL: Plane,
@@ -1152,8 +1152,8 @@ function JobsContent() {
                           key={p}
                           onClick={() => fetchJobs(p)}
                           className={`w-10 h-10 rounded-xl text-sm font-medium transition-colors ${p === page
-                              ? 'bg-[#020263] text-white shadow-md'
-                              : 'border border-gray-200 text-gray-600 hover:bg-gray-50'
+                            ? 'bg-[#020263] text-white shadow-md'
+                            : 'border border-gray-200 text-gray-600 hover:bg-gray-50'
                             }`}
                         >
                           {p}
