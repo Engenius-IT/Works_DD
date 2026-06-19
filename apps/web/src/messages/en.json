@@ -315,23 +315,65 @@
       "FREELANCE": "Freelance"
     }
   },
-  "FAQ": {
+"FAQ": {
     "title": "Frequently Asked Questions",
     "subtitle": "A collection of questions and answers you might have about using WorksDD so you can start searching for jobs with confidence.",
+    "employerTitle": "For Employers",
+    "candidateTitle": "For Candidates",
+    "employer": [
+      {
+        "q": "Is there a fee to post a job vacancy?",
+        "a": "WorksDD offers flexible job posting options, including both free posts and premium packages that enhance your company's visibility."
+      },
+      {
+        "q": "When can I delete or edit a job post?",
+        "a": "You can manage your job postings at any time through the Employer Dashboard. Changes will be reflected on the website in real-time."
+      },
+      {
+        "q": "Does the system have features to help screen candidates?",
+        "a": "We feature an AI Matching system and application management tools that help you accurately find and sort candidates matching your required skills."
+      },
+      {
+        "q": "How can I view a candidate's resume?",
+        "a": "When a candidate applies for a job, you can view their details and download their resume directly through the application management system in your employer account."
+      },
+      {
+        "q": "What types of jobs does this website support?",
+        "a": "WorksDD supports all forms of job postings, ranging from full-time, part-time, and freelance work to student internship recruitment."
+      },
+      {
+        "q": "If I encounter technical issues while using the platform, how do I get in touch?",
+        "a": "You can immediately submit a request through the Support system on your Dashboard or reach out to our team via the channels specified on our Contact Us page."
+      }
+    ],
+    "candidate": [
+      {
+        "q": "Is there any cost for registering and using the platform?",
+        "a": "Creating a profile and applying for jobs through WorksDD is completely free for all job seekers."
+      },
+      {
+        "q": "What should I do if I forget my password or cannot log in?",
+        "a": "You can click the 'Forgot Password' button on the login page to request a password reset link sent to your registered email."
+      },
+      {
+        "q": "Can I adjust the privacy settings of my resume?",
+        "a": "Yes, you can set your profile status to Private so your personal information won't appear in company search results until you choose to apply for that specific job."
+      },
+      {
+        "q": "How does the website help recommend suitable jobs for me?",
+        "a": "We utilize an AI-powered Recommendation system that analyzes the skills and experience on your resume to suggest the jobs that match you best."
+      },
+      {
+        "q": "Can I apply to multiple companies at the same time?",
+        "a": "There are no limitations. You can submit applications to an unlimited number of positions that interest you, and the system will help track the status of each application on a single page."
+      },
+      {
+        "q": "Can I edit my resume after I have already applied for a job?",
+        "a": "If you wish to update your information, you can upload a new resume on your profile page, which will be saved for your next job applications."
+      }
+    ],
     "stillHaveQuestions": "Still have questions?",
-    "contactUs": "Contact Us",
-    "questions": {
-      "q1": "What is WorksDD?",
-      "a1": "WorksDD is a job search platform designed to help you discover new career opportunities quickly and easily with an accurate and user-friendly job recommendation system.",
-      "q2": "Is registration free?",
-      "a2": "For job seekers, registration and use of our entire platform is 100% free with no hidden costs.",
-      "q3": "How do I start searching for jobs?",
-      "a3": "You can start by typing the job title you're interested in in the search box or choosing from the job categories we've collected. And don't forget to complete your profile to increase your chances of being discovered by top companies.",
-      "q4": "How will employers contact me if they're interested in my profile?",
-      "a4": "If you set your profile to public or have submitted a job application, companies will be able to contact you through the contact information you provided or through the messaging system in WorksDD.",
-      "q5": "Will my personal information be safe?",
-      "a5": "We place the highest priority on the security of your personal information. Everything is kept secure and shared only with the companies you choose to apply to."
-    }
+    "contactUs": "Contact Us"
   },
   "CookieConsent": {
     "title": "We use cookies 🍪",
