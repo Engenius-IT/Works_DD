@@ -286,7 +286,7 @@ function JobCard({
             <div className="flex flex-wrap items-center gap-1.5">
               {job.transportation.map((t) => {
                 const iconMap: Record<string, React.ElementType> = {
-                  รถเมย์: Bus,
+                  รถเมล์: Bus,
                   BTS: TrainFront,
                   MRT: TramFront,
                   ARL: Plane,

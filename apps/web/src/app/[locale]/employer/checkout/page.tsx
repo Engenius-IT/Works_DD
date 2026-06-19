@@ -416,8 +416,8 @@ export default function CheckoutPage() {
                         <div className={`
                             rounded-[2.5rem] p-8 text-white relative overflow-hidden transition-all duration-700
                             ${isVip ? 'bg-gradient-to-br from-rose-500 via-red-600 to-[#020263] shadow-[0_20px_50px_-15px_rgba(225,29,72,0.3)]' : ''}
-                            ${isPremium ? 'bg-amber-500 shadow-[0_20px_50px_-15px_rgba(245,158,11,0.3)]' : ''}
-                            ${isPro ? 'bg-[#020263] shadow-xl shadow-blue-900/20' : ''}
+                            ${isPremium ? 'bg-[#020263] shadow-xl shadow-blue-900/20' : ''} {/* 🌟 เปลี่ยน Premium เป็น Midnight Blue */}
+                            ${isPro ? 'bg-amber-500 shadow-[0_20px_50px_-15px_rgba(245,158,11,0.3)]' : ''} {/* 🌟 เปลี่ยน Pro เป็น สีทอง amber */}
                         `}>
                             {/* --- VIP & Premium Decor --- */}
                             {isVip && (
@@ -432,31 +432,31 @@ export default function CheckoutPage() {
 
                             <div className="flex items-center justify-between mb-8 relative z-10">
                                 <h3 className={`text-[10px] font-black uppercase tracking-[0.2em] opacity-80 
-                                    ${isVip ? 'text-rose-100' : isPremium ? 'text-amber-100' : 'text-blue-300'}`}>
+                                    ${isVip ? 'text-rose-100' : isPremium ? 'text-blue-300' : 'text-amber-100'}`}> {/* 🌟 สลับสี text ย่อย */}
                                     Order Summary
                                 </h3>
                                 <div className="bg-white/10 p-1.5 rounded-lg backdrop-blur-md">
                                     {isVip && <Star className="w-4 h-4 text-rose-300 fill-rose-300 animate-pulse" />}
-                                    {isPremium && <Crown className="w-4 h-4 text-amber-200 fill-amber-200" />}
-                                    {isPro && <Package className="w-4 h-4 text-blue-200" />}
+                                    {isPremium && <Crown className="w-4 h-4 text-blue-200 fill-blue-200" />} {/* 🌟 คราวน์ของพรีเมียมสีฟ้าอ่อนเนื้อ Midnight */}
+                                    {isPro && <Package className="w-4 h-4 text-amber-200" />} {/* 🌟 แพ็คเกจของโปรสีทอง */}
                                 </div>
                             </div>
 
                             <div className="space-y-6 relative z-10">
                                 <div>
-                                    <p className={`text-xs mb-1 ${isVip ? 'text-rose-100/70' : isPremium ? 'text-amber-50/70' : 'text-blue-200/60'}`}>
+                                    <p className={`text-xs mb-1 ${isVip ? 'text-rose-100/70' : isPremium ? 'text-blue-200/60' : 'text-amber-50/70'}`}>
                                         แพ็คเกจที่คุณเลือก
                                     </p>
                                     <h4 className="text-3xl font-black tracking-tight flex items-center gap-2">
                                         {planName} Plan
                                         {isVip && <span className="text-[10px] bg-rose-500 text-white px-2 py-0.5 rounded-full uppercase tracking-tighter">Maximum</span>}
-                                        {isPremium && <span className="text-[10px] bg-amber-600 text-white px-2 py-0.5 rounded-full uppercase tracking-tighter">High</span>}
-                                        {isPro && <span className="text-[10px] bg-blue-500 text-white px-2 py-0.5 rounded-full uppercase tracking-tighter">Basic</span>}
+                                        {isPremium && <span className="text-[10px] bg-blue-600 text-white px-2 py-0.5 rounded-full uppercase tracking-tighter">High</span>} {/* 🌟 ปรับป้ายกำกับ */}
+                                        {isPro && <span className="text-[10px] bg-amber-600 text-white px-2 py-0.5 rounded-full uppercase tracking-tighter">Basic</span>} {/* 🌟 ปรับป้ายกำกับ */}
                                     </h4>
                                 </div>
 
-                                <div className={`pt-6 border-t ${isVip ? 'border-white/20' : isPremium ? 'border-white/20' : 'border-white/10'}`}>
-                                    <p className={`text-xs mb-1 ${isVip ? 'text-rose-100/70' : isPremium ? 'text-amber-50/70' : 'text-blue-200/60'}`}>
+                                <div className={`pt-6 border-t ${isVip ? 'border-white/20' : isPremium ? 'border-white/10' : 'border-white/20'}`}>
+                                    <p className={`text-xs mb-1 ${isVip ? 'text-rose-100/70' : isPremium ? 'text-blue-200/60' : 'text-amber-50/70'}`}>
                                         ยอดชำระสุทธิ
                                     </p>
                                     <div className="flex items-baseline gap-1">
@@ -482,7 +482,7 @@ export default function CheckoutPage() {
                             <p className="text-sm text-slate-400">เลือกช่องทางที่ต้องการเพื่อดำเนินการต่อ</p>
                         </div>
 
-                        {/* 1. PromptPay (คงเดิม) */}
+                        {/* 1. PromptPay */}
                         <PaymentOption
                             onClick={() => handleRealPayment()}
                             icon={<QrCode className="w-5 h-5" />}
@@ -492,27 +492,28 @@ export default function CheckoutPage() {
                             isPremium={isPremium}
                         />
 
-                        {/* 2. บัตรเครดิต (เวอร์ชันแก้ไของค์ประกอบและปุ่มใช้งานจริง) */}
+                        {/* 2. บัตรเครดิต */}
                         <div className={`bg-white border rounded-2xl overflow-hidden transition-all duration-300 ${isCardOpen
-                            ? (isVip ? 'border-rose-400 shadow-[0_15px_35px_-10px_rgba(225,29,72,0.15)] ring-1 ring-rose-400/10' : isPremium ? 'border-amber-400 shadow-[0_15px_35px_-10px_rgba(245,158,11,0.15)] ring-1 ring-amber-400/10' : 'border-blue-600 shadow-[0_15px_35px_-10px_rgba(37,99,235,0.15)] ring-1 ring-blue-600/10')
-                            : (isVip ? 'border-slate-100 hover:border-rose-400 hover:shadow-rose-900/5' : isPremium ? 'border-slate-100 hover:border-amber-400 hover:shadow-amber-900/5' : 'border-slate-100 hover:border-blue-600 hover:shadow-blue-900/5')
-                            }`}>
-
+                            ? (isVip ? 'border-rose-400 shadow-[0_15px_35px_-10px_rgba(225,29,72,0.15)] ring-1 ring-rose-400/10' : isPremium ? 'border-blue-600 shadow-[0_15px_35px_-10px_rgba(37,99,235,0.15)] ring-1 ring-blue-600/10' : 'border-amber-400 shadow-[0_15px_35px_-10px_rgba(245,158,11,0.15)] ring-1 ring-amber-400/10')
+                            : (isVip ? 'border-slate-100 hover:border-rose-400 hover:shadow-rose-900/5' : isPremium ? 'border-slate-100 hover:border-blue-600 hover:shadow-blue-900/5' : 'border-slate-100 hover:border-amber-400 hover:shadow-amber-900/5')
+                            }`}
+                        >
                             <button
                                 onClick={() => setIsCardOpen(!isCardOpen)}
                                 className="w-full flex items-center justify-between p-5 hover:bg-slate-50/50 transition-colors group"
                             >
                                 <div className="flex items-center gap-4">
                                     <div className={`p-2.5 rounded-xl transition-all duration-300 
-                    ${isCardOpen
-                                            ? (isVip ? 'bg-rose-500 text-white' : isPremium ? 'bg-amber-500 text-white' : 'bg-[#020263] text-white')
-                                            : (isVip ? 'bg-rose-50 text-rose-500 group-hover:bg-rose-100' : isPremium ? 'bg-amber-50 text-amber-500 group-hover:bg-amber-100' : 'bg-slate-50 text-[#020263] group-hover:bg-blue-50')
-                                        }`}>
+                                        ${isCardOpen
+                                            ? (isVip ? 'bg-rose-500 text-white' : isPremium ? 'bg-[#020263] text-white' : 'bg-amber-500 text-white')
+                                            : (isVip ? 'bg-rose-50 text-rose-500 group-hover:bg-rose-100' : isPremium ? 'bg-slate-50 text-[#020263] group-hover:bg-blue-50' : 'bg-amber-50 text-amber-500 group-hover:bg-amber-100')
+                                        }`}
+                                    >
                                         <CreditCard className="w-5 h-5" />
                                     </div>
 
                                     <div className="text-left">
-                                        <p className={`text-sm font-bold text-slate-700 transition-colors ${isVip ? 'group-hover:text-rose-600' : isPremium ? 'group-hover:text-amber-600' : 'group-hover:text-blue-600'} ${isCardOpen && (isVip ? 'text-rose-600' : isPremium ? 'text-amber-600' : 'text-blue-600')}`}>
+                                        <p className={`text-sm font-bold text-slate-700 transition-colors ${isVip ? 'group-hover:text-rose-600' : isPremium ? 'group-hover:text-blue-600' : 'group-hover:text-amber-600'} ${isCardOpen && (isVip ? 'text-rose-600' : isPremium ? 'text-blue-600' : 'text-amber-600')}`}>
                                             บัตรเครดิต / เดบิต
                                         </p>
                                         <p className="text-[11px] text-slate-400 font-medium">Mastercard, VISA, JCB</p>
@@ -521,7 +522,7 @@ export default function CheckoutPage() {
 
                                 <div className="flex items-center gap-3">
                                     {cardType !== 'unknown' && (
-                                        <span className={`text-[10px] font-black uppercase px-2 py-1 rounded-md border transition-all ${isVip ? 'bg-rose-50 border-rose-100 text-rose-600' : isPremium ? 'bg-amber-50 border-amber-100 text-amber-600' : 'bg-blue-50 border-blue-100 text-blue-600'}`}>
+                                        <span className={`text-[10px] font-black uppercase px-2 py-1 rounded-md border transition-all ${isVip ? 'bg-rose-50 border-rose-100 text-rose-600' : isPremium ? 'bg-blue-50 border-blue-100 text-blue-600' : 'bg-amber-50 border-amber-100 text-amber-600'}`}>
                                             {cardType}
                                         </span>
                                     )}
@@ -539,7 +540,7 @@ export default function CheckoutPage() {
                                             value={cardData.number}
                                             onChange={handleCardNumberChange}
                                             placeholder="0000 0000 0000 0000"
-                                            className={`w-full p-3.5 bg-slate-50 border border-slate-100 rounded-xl outline-none transition-all font-mono text-slate-800 placeholder:text-slate-300 focus:ring-4 focus:bg-white ${isVip ? 'focus:ring-rose-400/10 focus:border-rose-400' : isPremium ? 'focus:ring-amber-400/10 focus:border-amber-400' : 'focus:ring-blue-600/10 focus:border-blue-600'}`}
+                                            className={`w-full p-3.5 bg-slate-50 border border-slate-100 rounded-xl outline-none transition-all font-mono text-slate-800 placeholder:text-slate-300 focus:ring-4 focus:bg-white ${isVip ? 'focus:ring-rose-400/10 focus:border-rose-400' : isPremium ? 'focus:ring-blue-600/10 focus:border-blue-600' : 'focus:ring-amber-400/10 focus:border-amber-400'}`}
                                         />
                                     </div>
 
@@ -550,7 +551,7 @@ export default function CheckoutPage() {
                                             type="text"
                                             value={cardData.name || ''}
                                             placeholder="NAME SURNAME"
-                                            className={`w-full p-3.5 bg-slate-50 border border-slate-100 rounded-xl outline-none transition-all text-slate-800 placeholder:text-slate-300 focus:ring-4 focus:bg-white ${isVip ? 'focus:ring-rose-400/10 focus:border-rose-400' : isPremium ? 'focus:ring-amber-400/10 focus:border-amber-400' : 'focus:ring-blue-600/10 focus:border-blue-600'}`}
+                                            className={`w-full p-3.5 bg-slate-50 border border-slate-100 rounded-xl outline-none transition-all text-slate-800 placeholder:text-slate-300 focus:ring-4 focus:bg-white ${isVip ? 'focus:ring-rose-400/10 focus:border-rose-400' : isPremium ? 'focus:ring-blue-600/10 focus:border-blue-600' : 'focus:ring-amber-400/10 focus:border-amber-400'}`}
                                             onChange={(e) => setCardData({ ...cardData, name: e.target.value.toUpperCase() })}
                                         />
                                     </div>
@@ -561,17 +562,15 @@ export default function CheckoutPage() {
                                             <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider ml-1">Expiry (MM/YY)</label>
                                             <input
                                                 type="text"
-                                                placeholder="MM/YY" // 🌟 เอาช่องว่างออก
-                                                maxLength={5} // 🌟 เหลือ 5 หลักพอดี (เช่น 12/28)
+                                                placeholder="MM/YY"
+                                                maxLength={5}
                                                 value={cardData.expiry}
-                                                className={`w-full p-3.5 bg-slate-50 border border-slate-100 rounded-xl outline-none transition-all text-slate-800 placeholder:text-slate-300 focus:ring-4 focus:bg-white ${isVip ? 'focus:ring-rose-400/10 focus:border-rose-400' : isPremium ? 'focus:ring-amber-400/10 focus:border-amber-400' : 'focus:ring-blue-600/10 focus:border-blue-600'}`}
+                                                className={`w-full p-3.5 bg-slate-50 border border-slate-100 rounded-xl outline-none transition-all text-slate-800 placeholder:text-slate-300 focus:ring-4 focus:bg-white ${isVip ? 'focus:ring-rose-400/10 focus:border-rose-400' : isPremium ? 'focus:ring-blue-600/10 focus:border-blue-600' : 'focus:ring-amber-400/10 focus:border-amber-400'}`}
                                                 onChange={(e) => {
-                                                    let v = e.target.value.replace(/\D/g, ''); // ลบทุกอย่างที่ไม่ใช่ตัวเลข
+                                                    let v = e.target.value.replace(/\D/g, '');
                                                     if (v.length > 4) v = v.slice(0, 4);
-
                                                     let formatted = v;
                                                     if (v.length > 2) {
-                                                        // 🌟 เชื่อมด้วย / ตรงๆ แบบไม่มีช่องว่างเคาะหน้าหลัง
                                                         formatted = `${v.slice(0, 2)}/${v.slice(2)}`;
                                                     }
                                                     setCardData({ ...cardData, expiry: formatted });
@@ -579,7 +578,7 @@ export default function CheckoutPage() {
                                             />
                                         </div>
 
-                                        {/* CVV (เปลี่ยนเป็นระแบบกดเปิด-ปิดตา แข็งแรงและใช้ง่ายกว่าเยอะครับ) */}
+                                        {/* CVV */}
                                         <div className="space-y-1.5">
                                             <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider ml-1">CVV</label>
                                             <div className="relative flex items-center">
@@ -588,7 +587,7 @@ export default function CheckoutPage() {
                                                     placeholder="•••"
                                                     maxLength={3}
                                                     value={cardData.cvc || ''}
-                                                    className={`w-full p-3.5 pr-10 bg-slate-50 border border-slate-100 rounded-xl outline-none transition-all text-slate-800 placeholder:text-slate-300 focus:ring-4 focus:bg-white ${isVip ? 'focus:ring-rose-400/10 focus:border-rose-400' : isPremium ? 'focus:ring-amber-400/10 focus:border-amber-400' : 'focus:ring-blue-600/10 focus:border-blue-600'}`}
+                                                    className={`w-full p-3.5 pr-10 bg-slate-50 border border-slate-100 rounded-xl outline-none transition-all text-slate-800 placeholder:text-slate-300 focus:ring-4 focus:bg-white ${isVip ? 'focus:ring-rose-400/10 focus:border-rose-400' : isPremium ? 'focus:ring-blue-600/10 focus:border-blue-600' : 'focus:ring-amber-400/10 focus:border-amber-400'}`}
                                                     onChange={(e) => {
                                                         const val = e.target.value.replace(/\D/g, '');
                                                         setCardData({ ...cardData, cvc: val });
@@ -605,13 +604,13 @@ export default function CheckoutPage() {
                                         </div>
                                     </div>
 
-                                    {/* Submit Button - เปลี่ยนให้ผูกกับฟังก์ชันส่ง Token ไปตัดเงินจริง */}
+                                    {/* Submit Button */}
                                     <button
                                         type="button"
                                         disabled={loading}
                                         className={`w-full py-4 text-white font-black rounded-xl shadow-lg active:scale-[0.97] transition-all mt-4 mb-2 flex items-center justify-center gap-2 ${loading
                                             ? 'bg-slate-400 cursor-not-allowed shadow-none'
-                                            : (isVip ? 'bg-rose-500 hover:bg-rose-600 shadow-rose-200' : isPremium ? 'bg-amber-500 hover:bg-amber-600 shadow-amber-200' : 'bg-[#020263] hover:bg-black shadow-blue-200')
+                                            : (isVip ? 'bg-rose-500 hover:bg-rose-600 shadow-rose-200' : isPremium ? 'bg-[#020263] hover:bg-black shadow-blue-200' : 'bg-amber-500 hover:bg-amber-600 shadow-amber-200')
                                             }`}
                                         onClick={handleCreditCardPayment}
                                     >
@@ -623,28 +622,28 @@ export default function CheckoutPage() {
 
                         {/* Mobile Banking (Accordion) */}
                         <div className={`bg-white border rounded-2xl overflow-hidden transition-all duration-300 ${isBankOpen
-                            ? (isVip ? 'border-rose-400 shadow-[0_15px_35px_-10px_rgba(225,29,72,0.15)] ring-1 ring-rose-400/10' : isPremium ? 'border-amber-400 shadow-[0_15px_35px_-10px_rgba(245,158,11,0.15)] ring-1 ring-amber-400/10' : 'border-blue-600 shadow-[0_15px_35px_-10px_rgba(37,99,235,0.15)] ring-1 ring-blue-600/10')
-                            : (isVip ? 'border-slate-100 hover:border-rose-400 hover:shadow-rose-900/5' : isPremium ? 'border-slate-100 hover:border-amber-400 hover:shadow-amber-900/5' : 'border-slate-100 hover:border-blue-600 hover:shadow-blue-900/5')
-                            }`}>
-
+                            ? (isVip ? 'border-rose-400 shadow-[0_15px_35px_-10px_rgba(225,29,72,0.15)] ring-1 ring-rose-400/10' : isPremium ? 'border-blue-600 shadow-[0_15px_35px_-10px_rgba(37,99,235,0.15)] ring-1 ring-blue-600/10' : 'border-amber-400 shadow-[0_15px_35px_-10px_rgba(245,158,11,0.15)] ring-1 ring-amber-400/10')
+                            : (isVip ? 'border-slate-100 hover:border-rose-400 hover:shadow-rose-900/5' : isPremium ? 'border-slate-100 hover:border-blue-600 hover:shadow-blue-900/5' : 'border-slate-100 hover:border-amber-400 hover:shadow-amber-900/5')
+                            }`}
+                        >
                             <button
                                 onClick={() => setIsBankOpen(!isBankOpen)}
                                 className="w-full flex items-center justify-between p-5 hover:bg-slate-50/50 transition-colors group"
                             >
                                 <div className="flex items-center gap-4">
-                                    {/* Icon Box: แก้ไขตัว 'อ' ที่เกินมา และเพิ่มสีให้สดขึ้นเมื่อ Open */}
                                     <div className={`p-2.5 rounded-xl transition-all duration-300 ${isBankOpen
-                                        ? (isVip ? 'bg-rose-500 text-white shadow-lg shadow-rose-200' : isPremium ? 'bg-amber-500 text-white shadow-lg shadow-amber-200' : 'bg-[#020263] text-white shadow-lg shadow-blue-200')
+                                        ? (isVip ? 'bg-rose-500 text-white shadow-lg shadow-rose-200' : isPremium ? 'bg-[#020263] text-white shadow-lg shadow-blue-200' : 'bg-amber-500 text-white shadow-lg shadow-amber-200')
                                         : (isVip ? 'bg-rose-50 text-rose-500 group-hover:bg-rose-100' :
-                                            isPremium ? 'bg-amber-50 text-amber-500 group-hover:bg-amber-100' :
-                                                'bg-slate-50 text-[#020263] group-hover:bg-blue-50')
-                                        }`}>
+                                            isPremium ? 'bg-slate-50 text-[#020263] group-hover:bg-blue-50' :
+                                                'bg-amber-50 text-amber-500 group-hover:bg-amber-100')
+                                        }`}
+                                    >
                                         <Building2 className="w-5 h-5" />
                                     </div>
 
                                     <div className="text-left">
                                         <p className={`text-sm font-bold transition-colors ${isBankOpen
-                                            ? (isVip ? 'text-rose-600' : isPremium ? 'text-amber-600' : 'text-blue-600')
+                                            ? (isVip ? 'text-rose-600' : isPremium ? 'text-blue-600' : 'text-amber-600')
                                             : 'text-slate-700'}`}>
                                             Mobile Banking
                                         </p>
@@ -668,23 +667,21 @@ export default function CheckoutPage() {
                                                 onClick={() => setSelectedBank(bank.id)}
                                                 className={`p-4 rounded-[2rem] border-2 transition-all flex flex-col items-center gap-3 group relative overflow-hidden ${selectedBank === bank.id
                                                     ? (isVip ? 'border-rose-500 bg-white shadow-xl scale-105' :
-                                                        isPremium ? 'border-amber-500 bg-white shadow-xl scale-105' :
-                                                            'border-blue-600 bg-white shadow-xl scale-105')
+                                                        isPremium ? 'border-blue-600 bg-white shadow-xl scale-105' :
+                                                            'border-amber-500 bg-white shadow-xl scale-105')
                                                     : 'border-slate-100 hover:border-slate-300 bg-white'
                                                     }`}
                                             >
-                                                {/* 1. ตัวครอบโลโก้: เพิ่ม overflow-hidden เพื่อให้รูปที่ขยายไม่ล้นขอบความมน */}
                                                 <div className="w-16 h-16 flex items-center justify-center p-0.5 bg-slate-50 rounded-2xl overflow-hidden transition-transform group-hover:scale-110">
                                                     <img
                                                         src={bank.logoUrl}
                                                         alt={bank.label}
-                                                        /* 2. ตัวรูป: เพิ่ม rounded และ object-cover เพื่อให้โค้งมนสวยงาม */
                                                         className="w-full h-full object-cover rounded-xl"
                                                     />
                                                 </div>
 
                                                 <span className={`text-xs font-black tracking-tight transition-colors ${selectedBank === bank.id
-                                                    ? (isVip ? 'text-rose-600' : isPremium ? 'text-amber-600' : 'text-blue-600')
+                                                    ? (isVip ? 'text-rose-600' : isPremium ? 'text-blue-600' : 'text-amber-600')
                                                     : 'text-slate-400 group-hover:text-slate-600'
                                                     }`}>
                                                     {bank.label}
@@ -692,7 +689,7 @@ export default function CheckoutPage() {
 
                                                 {/* Indicator */}
                                                 {selectedBank === bank.id && (
-                                                    <div className={`absolute top-0 left-0 w-full h-1 ${isVip ? 'bg-rose-500' : isPremium ? 'bg-amber-500' : 'bg-blue-600'}`} />
+                                                    <div className={`absolute top-0 left-0 w-full h-1 ${isVip ? 'bg-rose-500' : isPremium ? 'bg-blue-600' : 'bg-amber-500'}`} />
                                                 )}
                                             </button>
                                         ))}
@@ -703,16 +700,15 @@ export default function CheckoutPage() {
                                         <button
                                             disabled={!selectedBank || loading}
                                             onClick={() => {
-                                                // ✅ เรียกฟังก์ชันชำระเงินจริง โดยส่ง id ธนาคารที่เลือกอยู่เข้าไป
                                                 handleRealPayment(selectedBank);
                                             }}
                                             className={`w-full py-4 text-white font-black rounded-xl shadow-lg active:scale-[0.97] transition-all flex items-center justify-center gap-2 ${!selectedBank
                                                 ? 'bg-slate-300 cursor-not-allowed shadow-none'
                                                 : loading
-                                                    ? 'bg-slate-400' // แสดงสีโหลดถ้ากำลังยิง API
+                                                    ? 'bg-slate-400'
                                                     : (isVip ? 'bg-rose-500 hover:bg-rose-600 shadow-rose-200'
-                                                        : isPremium ? 'bg-amber-500 hover:bg-amber-600 shadow-amber-200'
-                                                            : 'bg-[#020263] hover:bg-black shadow-blue-200')
+                                                        : isPremium ? 'bg-[#020263] hover:bg-black shadow-blue-200'
+                                                            : 'bg-amber-500 hover:bg-amber-600 shadow-amber-200')
                                                 }`}
                                         >
                                             {loading ? (
@@ -740,15 +736,15 @@ export default function CheckoutPage() {
 
                         {/* --- Developer Bypass --- */}
                         <div className={`mt-12 p-6 rounded-[2rem] border flex items-center justify-between shadow-sm transition-colors
-                            ${isVip ? 'bg-rose-50/50 border-rose-100' : isPremium ? 'bg-amber-50/50 border-amber-100' : 'bg-slate-50 border-slate-100'}`}>
+                            ${isVip ? 'bg-rose-50/50 border-rose-100' : isPremium ? 'bg-slate-50 border-slate-100' : 'bg-amber-50/50 border-amber-100'}`}>
                             <div className="flex items-center gap-4">
                                 <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center shadow-sm">
-                                    <Zap className={`w-6 h-6 fill-current ${isVip ? 'text-rose-500' : isPremium ? 'text-amber-500' : 'text-slate-400'}`} />
+                                    <Zap className={`w-6 h-6 fill-current ${isVip ? 'text-rose-500' : isPremium ? 'text-[#020263]' : 'text-amber-500'}`} />
                                 </div>
                                 <div>
                                     <p className={`text-[10px] font-black uppercase tracking-widest opacity-60 
-                                        ${isVip ? 'text-rose-800' : isPremium ? 'text-amber-800' : 'text-slate-500'}`}>Sandbox Mode</p>
-                                    <p className={`text-xs font-bold ${isVip ? 'text-rose-900/80' : isPremium ? 'text-amber-900/80' : 'text-slate-700'}`}>จำลองการชำระเงินสำเร็จ</p>
+                                        ${isVip ? 'text-rose-800' : isPremium ? 'text-slate-500' : 'text-amber-800'}`}>Sandbox Mode</p>
+                                    <p className={`text-xs font-bold ${isVip ? 'text-rose-900/80' : isPremium ? 'text-slate-700' : 'text-amber-900/80'}`}>จำลองการชำระเงินสำเร็จ</p>
                                 </div>
                             </div>
                             <button
@@ -756,8 +752,8 @@ export default function CheckoutPage() {
                                 disabled={loading}
                                 className={`text-white text-[11px] font-black px-8 py-3 rounded-xl transition-all active:scale-95 shadow-lg disabled:opacity-50
                                     ${isVip ? 'bg-gradient-to-r from-rose-500 via-red-600 to-blue-900 hover:brightness-110 shadow-rose-900/20' :
-                                        isPremium ? 'bg-amber-500 hover:bg-amber-600 shadow-amber-900/20' :
-                                            'bg-[#020263] hover:bg-black shadow-blue-900/20'}`}
+                                        isPremium ? 'bg-[#020263] hover:bg-black shadow-blue-900/20' :
+                                            'bg-amber-500 hover:bg-amber-600 shadow-amber-900/20'}`}
                             >
                                 {loading ? "PROCESSING..." : "BYPASS PAYMENT"}
                             </button>
@@ -805,35 +801,36 @@ export default function CheckoutPage() {
 
 // Sub-components
 function PaymentOption({ icon, title, description, isVip, isPremium, onClick }: any) {
-    // เพิ่ม Logic สำหรับ Pro (เมื่อไม่ใช่ Vip และไม่ใช่ Premium)
+
     const hoverBorderClass = isVip
         ? 'hover:border-rose-400 hover:shadow-rose-900/5'
         : isPremium
-            ? 'hover:border-amber-400 hover:shadow-amber-900/5'
-            : 'hover:border-blue-600 hover:shadow-blue-900/5'; // สำหรับ Pro
+            ? 'hover:border-[#020263] hover:shadow-blue-900/5'   // 🌟 Premium: เปลี่ยนเป็น Midnight Blue
+            : 'hover:border-amber-400 hover:shadow-amber-900/5'; // 🌟 Pro: เปลี่ยนเป็นสีทอง Amber
 
     const bgClass = isVip
-        ? 'bg-rose-50 group-hover:bg-rose-500 group-hover:text-white' // Hover แล้วพื้นหลังเข้ม ตัวหนังสือขาว
+        ? 'bg-rose-50 group-hover:bg-rose-500 group-hover:text-white'
         : isPremium
-            ? 'bg-amber-50 group-hover:bg-amber-500 group-hover:text-white'
-            : 'bg-blue-50 group-hover:bg-[#020263] group-hover:text-white'; // สำหรับ Pro
+            ? 'bg-blue-50 group-hover:bg-[#020263] group-hover:text-white'   // 🌟 Premium: เปลี่ยนเป็น Midnight Blue
+            : 'bg-amber-50 group-hover:bg-amber-500 group-hover:text-white'; // 🌟 Pro: เปลี่ยนเป็นสีทอง Amber
 
     const textHoverClass = isVip
         ? 'group-hover:text-rose-600'
         : isPremium
-            ? 'group-hover:text-amber-600'
-            : 'group-hover:text-blue-700';
+            ? 'group-hover:text-blue-700'   // 🌟 Premium: เปลี่ยนเป็นโทนสีน้ำเงิน
+            : 'group-hover:text-amber-600'; // 🌟 Pro: เปลี่ยนเป็นโทนสีทอง Amber
 
     const iconColorClass = isVip
         ? 'text-rose-500'
         : isPremium
-            ? 'text-amber-500'
-            : 'text-[#020263]';
+            ? 'text-[#020263]'  // 🌟 Premium: เปลี่ยนเป็น Midnight Blue
+            : 'text-amber-500'; // 🌟 Pro: เปลี่ยนเป็นสีทอง Amber
 
     return (
         <button onClick={onClick} className={`w-full bg-white flex items-center justify-between p-5 border border-slate-100 rounded-2xl transition-all group ${hoverBorderClass}`}>
             <div className="flex items-center gap-4">
-                <div className={`p-2.5 rounded-xl transition-all duration-300 ${bgClass} ${!isVip && !isPremium ? 'text-[#020263]' : iconColorClass}`}>
+                {/* ตรงนี้ยุบมาใช้ iconColorClass ตรงๆ ตัวหนังสือกับไอคอนจะได้ไปในทิศทางเดียวกันและไม่เอ๋อครับ */}
+                <div className={`p-2.5 rounded-xl transition-all duration-300 ${bgClass} ${iconColorClass}`}>
                     {icon}
                 </div>
                 <div className="text-left">

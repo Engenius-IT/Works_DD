@@ -158,28 +158,33 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 }
 
 function TextBlock({ text }: { text: string }) {
-  const isHtml = text.trimStart().startsWith('<');
+  const { translatedText, loading } = useTranslator({ text });
 
+  if (loading) {
+    return <div className="animate-pulse bg-gray-100 h-24 rounded-lg w-full" />;
+  }
+
+  const isHtml = translatedText.trimStart().startsWith('<');
   if (isHtml) {
     return (
       <div
-        className="text-gray-600 text-sm leading-relaxed prose prose-sm max-w-none overflow-hidden break-words
-          [&_*]:max-w-full [&_*]:break-all
-          prose-headings:text-gray-800 prose-headings:font-semibold
-          prose-h1:text-xl prose-h2:text-lg prose-h3:text-base
-          prose-ul:pl-5 prose-ol:pl-5 prose-li:my-0.5
-          prose-strong:text-gray-800 prose-em:text-gray-600
-          prose-hr:border-gray-200"
-        dangerouslySetInnerHTML={{ __html: text }}
+        className="
+text-[#000000] text-sm leading-relaxed
+prose prose-sm max-w-none
+prose-headings:text-gray-800 prose-headings:font-semibold
+prose-h1:text-xl prose-h2:text-lg prose-h3:text-base
+prose-ul:pl-5 prose-ol:pl-5 prose-li:my-0.5
+prose-strong:text-gray-800 prose-em:text-gray-600
+prose-hr:border-gray-200
+overflow-hidden
+break-words
+[overflow-wrap:anywhere]
+whitespace-pre-wrap
+"       dangerouslySetInnerHTML={{ __html: translatedText }}
       />
     );
   }
-
-  return (
-    <div className="text-gray-600 text-sm leading-relaxed whitespace-pre-wrap break-all overflow-hidden">
-      {text}
-    </div>
-  );
+  return <div className="text-gray-600 text-sm leading-relaxed whitespace-pre-line">{translatedText}</div>;
 }
 
 function SkeletonDetail() {
@@ -339,7 +344,7 @@ export default function JobDetailPage() {
     <div className="min-h-screen flex flex-col bg-gray-50">
       <Navbar />
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-16 py-8 w-full flex-1 overflow-x-hidden">
+      <main className="max-w-7xl mx-auto px-16 py-8 w-full flex-1">
         {/* Back button */}
         <button
           onClick={() => {
@@ -369,11 +374,10 @@ export default function JobDetailPage() {
 
         {/* Save toast */}
         <div
-          className={`fixed bottom-6 right-6 z-50 flex items-center gap-2 px-4 py-3 rounded-xl shadow-lg text-sm font-semibold transition-all duration-300 ${
-            saveToast
+          className={`fixed bottom-6 right-6 z-50 flex items-center gap-2 px-4 py-3 rounded-xl shadow-lg text-sm font-semibold transition-all duration-300 ${saveToast
               ? 'opacity-100 translate-y-0 bg-[#020263] text-white'
               : 'opacity-0 translate-y-2 pointer-events-none bg-[#020263] text-white'
-          }`}
+            }`}
         >
           <Bookmark className={`w-4 h-4 ${isSaved ? 'fill-white' : 'fill-none'}`} />
           {isSaved ? 'บันทึกงานแล้ว!' : 'ยกเลิกการบันทึกแล้ว'}
@@ -399,12 +403,12 @@ export default function JobDetailPage() {
 
         {/* Content */}
         {!loading && job && (
-          <div className="flex flex-col lg:flex-row gap-6 items-start w-full min-w-0 overflow-hidden">
+          <div className="flex flex-col lg:flex-row gap-6 items-start">
             {/* ─── Left Column ─── */}
             <div className="flex-1 min-w-0 space-y-4">
               {/* Header card */}
-              <div className="bg-white rounded-2xl border border-gray-200 p-4 sm:p-6 drop-shadow-lg w-full min-w-0 overflow-hidden">
-                <div className="flex flex-col sm:flex-row gap-5 items-start min-w-0">
+              <div className="bg-white rounded-2xl border border-gray-200 p-6 drop-shadow-lg ">
+                <div className="flex gap-5 items-start">
                   <CompanyAvatar company={job.company} />
                   <div className="flex-1 min-w-0">
                     <h1 className="text-[20px] font-bold text-[#020263] leading-snug">
@@ -475,7 +479,6 @@ export default function JobDetailPage() {
                         </svg>
                         {salaryText(job)}
                       </span>
-                      <div className="flex items-center gap-1.5">
                       <span className="flex items-center gap-1.5 text-gray-400">
                         <svg
                           className="w-4 h-4 shrink-0"
@@ -492,30 +495,25 @@ export default function JobDetailPage() {
                         </svg>
                         โพสต์ {timeAgo(job.createdAt)}
                       </span>
-                      <button
+                    </div>
+                  </div>
+                  {/* Save button */}
+                  <button
                     onClick={toggleSave}
                     title={isSaved ? 'ยกเลิกบันทึก' : 'บันทึกงาน'}
-                    className={`ml-2 shrink-0 flex flex-row items-center gap-1 p-2 rounded-xl transition-all ${
-                      isSaved
+                    className={`ml-2 shrink-0 flex flex-col items-center gap-1 p-2 rounded-xl transition-all ${isSaved
                         ? 'text-[#E00016] bg-red-50 hover:bg-red-100'
                         : 'text-gray-400 hover:text-[#E00016] hover:bg-red-50'
-                    }`}
+                      }`}
                   >
                     <Bookmark
-                      className={`w-5 h-5 transition-all ${
-                        isSaved ? 'fill-[#E00016] stroke-[#E00016]' : 'fill-none stroke-current'
-                      }`}
+                      className={`w-5 h-5 transition-all ${isSaved ? 'fill-[#E00016] stroke-[#E00016]' : 'fill-none stroke-current'
+                        }`}
                     />
                     <span className="text-[10px] font-semibold leading-none">
                       {isSaved ? 'บันทึกแล้ว' : 'บันทึกงาน'}
                     </span>
                   </button>
-                  </div>
-                    </div>
-                  </div>
-                  {/* Save button */}
-                  
-                  
                 </div>
               </div>
 
@@ -604,63 +602,63 @@ export default function JobDetailPage() {
                 job.qualificationAgeMin ||
                 job.qualificationAgeMax ||
                 job.qualificationExperience != null) && (
-                <Section title="คุณสมบัติผู้สมัคร">
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                    {job.qualificationGender && (
-                      <div className="flex items-center gap-2.5 text-sm">
-                        <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center shrink-0">
-                          <User className="w-4 h-4 text-blue-500" />
+                  <Section title="คุณสมบัติผู้สมัคร">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                      {job.qualificationGender && (
+                        <div className="flex items-center gap-2.5 text-sm">
+                          <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center shrink-0">
+                            <User className="w-4 h-4 text-blue-500" />
+                          </div>
+                          <div>
+                            <p className="text-xs text-gray-400">เพศ</p>
+                            <p className="font-medium text-gray-700">{job.qualificationGender}</p>
+                          </div>
                         </div>
-                        <div>
-                          <p className="text-xs text-gray-400">เพศ</p>
-                          <p className="font-medium text-gray-700">{job.qualificationGender}</p>
+                      )}
+                      {(job.qualificationAgeMin || job.qualificationAgeMax) && (
+                        <div className="flex items-center gap-2.5 text-sm">
+                          <div className="w-8 h-8 rounded-lg bg-orange-50 flex items-center justify-center shrink-0">
+                            <Calendar className="w-4 h-4 text-orange-500" />
+                          </div>
+                          <div>
+                            <p className="text-xs text-gray-400">อายุ</p>
+                            <p className="font-medium text-gray-700">
+                              {job.qualificationAgeMin && job.qualificationAgeMax
+                                ? `${job.qualificationAgeMin} – ${job.qualificationAgeMax} ปี`
+                                : job.qualificationAgeMin
+                                  ? `${job.qualificationAgeMin}+ ปี`
+                                  : `ไม่เกิน ${job.qualificationAgeMax} ปี`}
+                            </p>
+                          </div>
                         </div>
-                      </div>
-                    )}
-                    {(job.qualificationAgeMin || job.qualificationAgeMax) && (
-                      <div className="flex items-center gap-2.5 text-sm">
-                        <div className="w-8 h-8 rounded-lg bg-orange-50 flex items-center justify-center shrink-0">
-                          <Calendar className="w-4 h-4 text-orange-500" />
+                      )}
+                      {job.education && (
+                        <div className="flex items-center gap-2.5 text-sm">
+                          <div className="w-8 h-8 rounded-lg bg-green-50 flex items-center justify-center shrink-0">
+                            <GraduationCap className="w-4 h-4 text-green-500" />
+                          </div>
+                          <div>
+                            <p className="text-xs text-gray-400">วุฒิการศึกษา</p>
+                            <p className="font-medium text-gray-700">{job.education}</p>
+                          </div>
                         </div>
-                        <div>
-                          <p className="text-xs text-gray-400">อายุ</p>
-                          <p className="font-medium text-gray-700">
-                            {job.qualificationAgeMin && job.qualificationAgeMax
-                              ? `${job.qualificationAgeMin} – ${job.qualificationAgeMax} ปี`
-                              : job.qualificationAgeMin
-                                ? `${job.qualificationAgeMin}+ ปี`
-                                : `ไม่เกิน ${job.qualificationAgeMax} ปี`}
-                          </p>
+                      )}
+                      {job.qualificationExperience != null && job.qualificationExperience > 0 && (
+                        <div className="flex items-center gap-2.5 text-sm">
+                          <div className="w-8 h-8 rounded-lg bg-purple-50 flex items-center justify-center shrink-0">
+                            <BriefcaseIcon className="w-4 h-4 text-purple-500" />
+                          </div>
+                          <div>
+                            <p className="text-xs text-gray-400">ประสบการณ์</p>
+                            <p className="font-medium text-gray-700">
+                              {job.qualificationExperience} ปี
+                            </p>
+                          </div>
                         </div>
-                      </div>
-                    )}
-                    {job.education && (
-                      <div className="flex items-center gap-2.5 text-sm">
-                        <div className="w-8 h-8 rounded-lg bg-green-50 flex items-center justify-center shrink-0">
-                          <GraduationCap className="w-4 h-4 text-green-500" />
-                        </div>
-                        <div>
-                          <p className="text-xs text-gray-400">วุฒิการศึกษา</p>
-                          <p className="font-medium text-gray-700">{job.education}</p>
-                        </div>
-                      </div>
-                    )}
-                    {job.qualificationExperience != null && job.qualificationExperience > 0 && (
-                      <div className="flex items-center gap-2.5 text-sm">
-                        <div className="w-8 h-8 rounded-lg bg-purple-50 flex items-center justify-center shrink-0">
-                          <BriefcaseIcon className="w-4 h-4 text-purple-500" />
-                        </div>
-                        <div>
-                          <p className="text-xs text-gray-400">ประสบการณ์</p>
-                          <p className="font-medium text-gray-700">
-                            {job.qualificationExperience} ปี
-                          </p>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </Section>
-              )}
+                      )}
+                    </div>
+                  </Section>
+                )}
 
               {/* คุณสมบัติเพิ่มเติม */}
               {job.additionalQualifications && job.additionalQualifications.length > 0 && (
@@ -684,7 +682,7 @@ export default function JobDetailPage() {
                   <div className="flex flex-wrap gap-2">
                     {job.transportation.map((t) => {
                       const iconMap: Record<string, React.ElementType> = {
-                        รถเมย์: Bus,
+                        รถเมล์: Bus,
                         BTS: TrainFront,
                         MRT: TramFront,
                         ARL: Plane,
@@ -777,11 +775,10 @@ export default function JobDetailPage() {
                   disabled={
                     isApplying || applyStatus === 'success' || applyStatus === 'already_applied'
                   }
-                  className={`w-full font-bold text-base py-3.5 rounded-xl transition-colors shadow-sm ${
-                    applyStatus === 'success' || applyStatus === 'already_applied'
+                  className={`w-full font-bold text-base py-3.5 rounded-xl transition-colors shadow-sm ${applyStatus === 'success' || applyStatus === 'already_applied'
                       ? 'bg-gray-100 text-gray-500 cursor-not-allowed'
                       : 'bg-[#E00016] hover:bg-[#A80010] text-white'
-                  }`}
+                    }`}
                 >
                   {isApplying
                     ? 'กำลังส่งคำขอ...'

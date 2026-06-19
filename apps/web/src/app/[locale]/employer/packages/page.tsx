@@ -74,87 +74,16 @@ export default function PackagesPage() {
             <section className="flex-grow bg-white relative py-16 px-4">
                 <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 justify-items-center relative z-10 -mt-20">
 
-                    {/* --- การ์ด PRO --- */}
+                    {/* --- การ์ดแรก: แพ็กเกจ PRO (ใช้ธีมสีทองหรูหรา Modern Golden) --- */}
                     <div className="relative w-full max-w-md group">
-                        {/* ป้าย Pro ด้านบน พร้อมสายฟ้ากระพริบ */}
-                        <div className="absolute -top-5 left-1/2 -translate-x-1/2 z-20 bg-[#020263] border-2 border-white text-white px-8 py-1.5 rounded-full shadow-lg flex items-center gap-2">
-                            <Zap className="w-4 h-4 text-blue-300 fill-blue-300 animate-pulse drop-shadow-[0_0_8px_rgba(147,197,253,0.8)]" />
+                        {/* ป้ายชื่อ Pro สีทองพร้อมมงกุฎสง่างาม */}
+                        <div className="absolute -top-5 left-1/2 -translate-x-1/2 z-20 bg-gradient-to-r from-amber-500 to-yellow-600 border-2 border-white text-white px-8 py-1.5 rounded-full shadow-lg flex items-center gap-2">
+                            <Zap className="w-4 h-4 text-white fill-white animate-pulse" />
                             <span className="text-sm font-bold uppercase tracking-widest">Pro</span>
                         </div>
 
-                        {/* ตัวการ์ดหลัก */}
-                        <div className="h-full bg-white border-2 border-slate-100 group-hover:border-blue-600 rounded-[2.5rem] p-8 pt-16 shadow-xl group-hover:shadow-blue-900/10 transition-all duration-500 group-hover:-translate-y-2 flex flex-col relative overflow-hidden">
-
-                            {/* --- เส้นคาดแสงสีฟ้า (Slim Blue Sweep) --- */}
-                            <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden rounded-[2.5rem]">
-                                <div className="absolute -top-[150%] -left-[150%] w-[30%] h-[300%] bg-gradient-to-r from-transparent via-blue-500/20 to-transparent rotate-[45deg] group-hover:animate-sweep-swing" />
-                            </div>
-
-                            <div className="text-center mb-8 relative z-10">
-                                <div className="flex justify-center items-baseline gap-1">
-                                    <span className="text-6xl font-black text-[#020263]">2,990</span>
-                                    <span className="text-xl font-bold text-slate-400">บาท 1 เดือน</span>
-                                </div>
-                            </div>
-
-                            <div className="space-y-3 flex-grow relative z-10">
-                                {/* Quota CC */}
-                                <div className="flex items-center gap-4 bg-slate-50 p-4 rounded-2xl border border-transparent group-hover:border-blue-50 transition-colors">
-                                    <div className="bg-blue-100 rounded-lg p-2">
-                                        <Sparkles className="w-5 h-5 text-[#020263]" />
-                                    </div>
-                                    <div>
-                                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tight">โควตาติดต่อบุคลากร (CC)</p>
-                                        <p className="text-lg font-black text-[#020263]">100 Credits / เดือน</p>
-                                    </div>
-                                </div>
-
-                                {/* Quota AC */}
-                                <div className="flex items-center gap-4 bg-slate-50 p-4 rounded-2xl border border-transparent group-hover:border-blue-50 transition-colors">
-                                    <div className="bg-blue-100 rounded-lg p-2">
-                                        <Zap className="w-5 h-5 text-[#020263]" />
-                                    </div>
-                                    <div>
-                                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tight">โควตาการลงงาน (AC)</p>
-                                        <p className="text-lg font-black text-[#020263]">10 AC </p>
-                                    </div>
-                                </div>
-
-                                {/* รายละเอียดเพิ่มเติม */}
-                                <div className="pt-4 space-y-2 border-t border-slate-50">
-                                    <div className="flex items-center gap-2 text-sm text-slate-600 font-black">
-                                        <Check className="w-4 h-4 text-blue-600 stroke-[3px]" />
-                                        ปลดล็อคการมองเห็นข้อมูลติดต่อผู้สมัคร
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* --- ปุ่มกด (สว่างขึ้นเมื่อ Hover) --- */}
-                            <button
-                                onClick={() => handleUpgrade('Pro', 2990)}
-                                disabled={userTier >= 1} // ถ้าเป็น Pro, Premium, VIP อยู่แล้ว ห้ามกด
-                                className={`mt-8 w-full font-black py-4 rounded-xl transition-all duration-300 border-b-4 relative overflow-hidden uppercase text-sm tracking-widest ${userTier >= 1
-                                    ? 'bg-gray-200 text-gray-400 border-gray-300 cursor-not-allowed grayscale'
-                                    : 'bg-[#020263] text-white border-black/20 hover:brightness-125 hover:scale-[1.02] active:scale-95'
-                                    }`}
-                            >
-                                <span className="relative z-10">
-                                    {userTier === 1 ? 'กำลังใช้งาน' : userTier > 1 ? 'กำลังใช้งานแพ็คเกจระดับสูงกว่า' : 'เลือกแผนเริ่มต้น'}
-                                </span>
-                            </button>
-                        </div>
-                    </div>
-
-                    {/* --- การ์ด PREMIUM --- */}
-                    <div className="relative w-full max-w-md group">
-                        {/* ป้าย Premium ด้านบน พร้อม Crown กระพริบเบาๆ */}
-                        <div className="absolute -top-5 left-1/2 -translate-x-1/2 z-20 bg-gradient-to-r from-amber-500 to-yellow-600 border-2 border-white text-white px-8 py-1.5 rounded-full shadow-lg flex items-center gap-2">
-                            <Crown className="w-4 h-4 text-white fill-white animate-pulse" />
-                            <span className="text-sm font-bold uppercase tracking-widest">Premium</span>
-                        </div>
-
-                        {/* ตัวการ์ดหลัก */}
-                        <div className="h-full bg-white border-2 border-slate-100 group-hover:border-amber-400 rounded-[2.5rem] p-8 pt-16 shadow-xl group-hover:shadow-amber-500/10 transition-all duration-500 group-hover:-translate-y-2 flex flex-col relative overflow-hidden">
+                        {/* ตัวการ์ดหลัก - โทนสีพื้นหลังเนื้อครีมทองและกรอบสีทอง */}
+                        <div className="h-full bg-gradient-to-b from-amber-50/60 via-white to-white border-2 border-slate-100 group-hover:border-amber-400 rounded-[2.5rem] p-8 pt-16 shadow-xl group-hover:shadow-amber-500/10 transition-all duration-500 group-hover:-translate-y-2 flex flex-col relative overflow-hidden">
 
                             {/* --- เส้นคาดแสงสีทอง (Slim Golden Sweep) --- */}
                             <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden rounded-[2.5rem]">
@@ -163,25 +92,25 @@ export default function PackagesPage() {
 
                             <div className="text-center mb-8 relative z-10">
                                 <div className="flex justify-center items-baseline gap-1">
-                                    <span className="text-6xl font-black text-slate-900 tracking-tighter">5,990</span>
-                                    <span className="text-xl font-bold text-slate-400">บาท 3 เดือน</span>
+                                    <span className="text-6xl font-black text-slate-900 tracking-tighter">2,990</span>
+                                    <span className="text-xl font-bold text-amber-700/70">บาท 1 เดือน</span>
                                 </div>
                             </div>
 
                             <div className="space-y-3 flex-grow relative z-10">
-                                {/* Quota CC */}
-                                <div className="flex items-center gap-4 bg-amber-50/40 p-4 rounded-2xl border border-transparent group-hover:border-amber-100 transition-colors">
+                                {/* Quota CC - กล่องดีไซน์สีทองนุ่มนวล */}
+                                <div className="flex items-center gap-4 bg-amber-50/80 p-4 rounded-2xl border border-amber-100/40 group-hover:border-amber-200/60 shadow-[0_0_15px_rgba(245,158,11,0.05)] transition-colors">
                                     <div className="bg-amber-100 rounded-lg p-2">
                                         <Sparkles className="w-5 h-5 text-amber-600" />
                                     </div>
                                     <div>
                                         <p className="text-[10px] text-amber-600 font-bold uppercase tracking-tight">โควตาติดต่อบุคลากร (CC)</p>
-                                        <p className="text-lg font-black text-slate-800">150 Credits / เดือน</p>
+                                        <p className="text-lg font-black text-slate-800">100 Credits / เดือน</p>
                                     </div>
                                 </div>
 
-                                {/* Quota AC */}
-                                <div className="flex items-center gap-4 bg-amber-50/40 p-4 rounded-2xl border border-transparent group-hover:border-amber-100 transition-colors">
+                                {/* Quota AC - กล่องดีไซน์สีทองนุ่มนวล */}
+                                <div className="flex items-center gap-4 bg-amber-50/80 p-4 rounded-2xl border border-amber-100/40 group-hover:border-amber-200/60 shadow-[0_0_15px_rgba(245,158,11,0.05)] transition-colors">
                                     <div className="bg-amber-100 rounded-lg p-2">
                                         <Zap className="w-5 h-5 text-amber-600" />
                                     </div>
@@ -191,27 +120,99 @@ export default function PackagesPage() {
                                     </div>
                                 </div>
 
-                                {/* Features ลิสต์เพิ่มเติม */}
-                                <div className="pt-4 space-y-2 border-t border-slate-50">
-                                    <div className="flex items-center gap-2 text-sm text-slate-700 font-black">
+                                {/* รายละเอียดเพิ่มเติม */}
+                                <div className="pt-4 space-y-2 border-t border-amber-100">
+                                    <div className="flex items-center gap-2 text-sm text-slate-700 font-bold">
                                         <Check className="w-4 h-4 text-amber-500 stroke-[3px]" />
                                         ปลดล็อคการมองเห็นข้อมูลติดต่อผู้สมัคร
                                     </div>
-                                    <div className="flex items-center gap-2 text-sm text-slate-700 font-black">
-                                        <Check className="w-4 h-4 text-amber-500 stroke-[3px]" />
+                                </div>
+                            </div>
+
+                            {/* --- ปุ่มกดสีทองอร่ามแมทช์กับตัวการ์ด --- */}
+                            <button
+                                onClick={() => handleUpgrade('Pro', 2990)}
+                                disabled={userTier >= 1}
+                                className={`mt-8 w-full bg-gradient-to-r from-amber-500 to-amber-600 text-white font-black py-4 rounded-xl transition-all duration-300 border-b-4 border-amber-800 relative overflow-hidden uppercase text-sm tracking-widest shadow-md ${userTier >= 1
+                                    ? 'opacity-50 cursor-not-allowed grayscale'
+                                    : 'hover:brightness-115 hover:scale-[1.02] active:scale-95 hover:shadow-amber-500/40'
+                                    }`}
+                            >
+                                <span className="relative z-10">
+                                    {userTier === 1 ? 'กำลังใช้งาน' : userTier > 1 ? 'กำลังใช้งานแพ็คเกจระดับสูงกว่า' : 'เลือกแผนเริ่มต้น'}
+                                </span>
+                            </button>
+                        </div>
+                    </div>
+
+
+                    {/* --- การ์ดสอง: แพ็กเกจ PREMIUM (ธีมสีน้ำเงินเข้มสุดหรู Midnight Rich - ปรับพื้นหลังเข้มพิเศษ) --- */}
+                    <div className="relative w-full max-w-md group">
+                        {/* ป้ายชื่อ Premium สีน้ำเงินเข้มขอบทอง/ขาว พร้อมมงกุฎเปล่งประกาย */}
+                        <div className="absolute -top-5 left-1/2 -translate-x-1/2 z-20 bg-[#020263] border-2 border-blue-400 text-white px-8 py-1.5 rounded-full shadow-[0_0_15px_rgba(30,144,255,0.5)] flex items-center gap-2">
+                            <Crown className="w-4 h-4 text-blue-300 fill-blue-300 animate-pulse drop-shadow-[0_0_8px_rgba(147,197,253,0.8)]" />
+                            <span className="text-sm font-bold uppercase tracking-widest text-blue-100">Premium</span>
+                        </div>
+
+                        {/* ตัวการ์ดหลัก - ปรับเป็น Gradient สีน้ำเงินเข้มลึก ลุ่มลึกและมีมิติ */}
+                        <div className="h-full bg-gradient-to-b from-slate-900 via-[#03034f] to-[#01013a] border-2 border-blue-900/50 group-hover:border-blue-500 rounded-[2.5rem] p-8 pt-16 shadow-2xl shadow-black/50 group-hover:shadow-blue-500/20 transition-all duration-500 group-hover:-translate-y-2 flex flex-col relative overflow-hidden">
+
+                            {/* --- เส้นคาดแสงสีฟ้าสว่างชัดเจนขึ้น (Bright Blue Sweep) --- */}
+                            <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden rounded-[2.5rem]">
+                                <div className="absolute -top-[150%] -left-[150%] w-[30%] h-[300%] bg-gradient-to-r from-transparent via-blue-400/30 to-transparent rotate-[45deg] group-hover:animate-sweep-swing" />
+                            </div>
+
+                            {/* ราคา - ปรับฟอนต์สีขาว/ฟ้าสว่าง เพื่อให้ลอยเด่นออกมาจากพื้นหลังเข้ม */}
+                            <div className="text-center mb-8 relative z-10">
+                                <div className="flex justify-center items-baseline gap-1">
+                                    <span className="text-6xl font-black text-white tracking-tighter drop-shadow-[0_2px_10px_rgba(0,0,0,0.5)]">5,990</span>
+                                    <span className="text-xl font-bold text-blue-300/70">บาท 3 เดือน</span>
+                                </div>
+                            </div>
+
+                            <div className="space-y-3 flex-grow relative z-10">
+                                {/* Quota CC - กล่องดีไซน์โปร่งแสงบนพื้นหลังเข้ม (Glassmorphism) */}
+                                <div className="flex items-center gap-4 bg-white/5 p-4 rounded-2xl border border-white/10 group-hover:border-blue-500/40 transition-colors backdrop-blur-sm">
+                                    <div className="bg-blue-950 rounded-lg p-2 border border-blue-800/50">
+                                        <Sparkles className="w-5 h-5 text-blue-400" />
+                                    </div>
+                                    <div>
+                                        <p className="text-[10px] text-blue-300/60 font-bold uppercase tracking-tight">โควตาติดต่อบุคลากร (CC)</p>
+                                        <p className="text-lg font-black text-white">150 Credits / เดือน</p>
+                                    </div>
+                                </div>
+
+                                {/* Quota AC - กล่องดีไซน์โปร่งแสงบนพื้นหลังเข้ม */}
+                                <div className="flex items-center gap-4 bg-white/5 p-4 rounded-2xl border border-white/10 group-hover:border-blue-500/40 transition-colors backdrop-blur-sm">
+                                    <div className="bg-blue-950 rounded-lg p-2 border border-blue-800/50">
+                                        <Zap className="w-5 h-5 text-blue-400" />
+                                    </div>
+                                    <div>
+                                        <p className="text-[10px] text-blue-300/60 font-bold uppercase tracking-tight">โควตาการลงงาน (AC)</p>
+                                        <p className="text-lg font-black text-white">10 AC </p>
+                                    </div>
+                                </div>
+
+                                {/* Features ลิสต์เพิ่มเติม - ปรับสีตัวอักษรให้อ่านง่ายบนพื้นหลังมืด */}
+                                <div className="pt-4 space-y-2 border-t border-white/10">
+                                    <div className="flex items-center gap-2 text-sm text-blue-100 font-bold">
+                                        <Check className="w-4 h-4 text-blue-400 stroke-[3px]" />
+                                        ปลดล็อคการมองเห็นข้อมูลติดต่อผู้สมัคร
+                                    </div>
+                                    <div className="flex items-center gap-2 text-sm text-blue-100 font-bold">
+                                        <Check className="w-4 h-4 text-blue-400 stroke-[3px]" />
                                         เพิ่มระดับการมองเห็นงานแก่ผู้สมัคร
                                     </div>
                                 </div>
                             </div>
 
-                            {/* --- ปุ่มกด (สว่างขึ้นเมื่อ Hover) --- */}
+                            {/* --- ปุ่มกดสีน้ำเงินนีออนตัดขอบ เพิ่มความโดดเด่นบนตัวการ์ด --- */}
                             <button
                                 onClick={() => handleUpgrade('Premium', 5990)}
-                                // ปิดปุ่มถ้า user เป็น Premium (2) หรือ VIP (3) อยู่แล้ว
                                 disabled={userTier >= 2}
-                                className={`mt-8 w-full bg-gradient-to-r from-amber-500 to-amber-600 text-white font-black py-4 rounded-xl transition-all duration-300 border-b-4 border-amber-800 relative overflow-hidden uppercase text-sm tracking-widest shadow-md ${userTier >= 2
-                                    ? 'opacity-50 cursor-not-allowed grayscale' // สไตล์ตอนปิดปุ่ม
-                                    : 'hover:brightness-115 hover:scale-[1.02] active:scale-95 hover:shadow-amber-500/40' // สไตล์ตอนเปิดปกติ
+                                className={`mt-8 w-full font-black py-4 rounded-xl transition-all duration-300 border-b-4 relative overflow-hidden uppercase text-sm tracking-widest ${userTier >= 2
+                                    ? 'bg-slate-800 text-slate-500 border-slate-900 cursor-not-allowed grayscale'
+                                    : 'bg-gradient-to-r from-blue-700 to-indigo-800 text-white border-blue-950 hover:from-blue-600 hover:to-indigo-700 hover:scale-[1.02] active:scale-95 shadow-[0_4px_20px_rgba(37,99,235,0.3)] hover:shadow-[0_4px_25px_rgba(37,99,235,0.5)]'
                                     }`}
                             >
                                 <span className="relative z-10">
