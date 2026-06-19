@@ -309,7 +309,7 @@ function JobCard({
         {/* Right panel: urgent + time + bookmark (top) | button (bottom) */}
         <div className="shrink-0 flex flex-row items-center justify-between w-full gap-4 sm:w-auto sm:min-w-[160px] sm:flex-col sm:items-end sm:justify-between">
           {/* Top: time + bookmark */}
-          <div className="flex w-full items-center justify-between gap-1.5 sm:w-auto sm:flex-col sm:items-end">
+          <div className="flex items-center gap-4 text-gray-400">
             <span className="flex items-center gap-1 text-xs text-gray-400 whitespace-nowrap">
               <svg
                 className="w-3.5 h-3.5 shrink-0"
@@ -333,7 +333,7 @@ function JobCard({
                 onToggleSave();
               }}
               title={isSaved ? 'ยกเลิกบันทึก' : 'บันทึกงาน'}
-              className={`flex items-center gap-1 mt-1 transition-colors ${isSaved ? 'text-[#E00016] hover:text-[#E00016]/80' : 'text-gray-300 hover:text-[#E00016]/80'
+              className={`shrink-0 flex items-center gap-1 text-xs font-medium whitespace-nowrap transition-colors ${isSaved ? 'text-[#E00016] hover:text-[#E00016]/80' : 'text-gray-400 hover:text-[#E00016]/80'
                 }`}
             >
               <svg
