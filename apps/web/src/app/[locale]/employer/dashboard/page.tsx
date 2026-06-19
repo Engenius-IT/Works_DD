@@ -23,8 +23,6 @@ import {
   Trash2,
   Heart,
   Star,
-  Crown,
-  Zap,
 } from 'lucide-react';
 import { EmployerVerificationModal } from '@/components/EmployerVerificationModal';
 
@@ -819,7 +817,7 @@ export default function EmployerDashboard() {
       router.push('/login');
       return;
     }
-    if (!authLoading && user && user.role !== 'EMPLOYER') {
+    if (!authLoading && user && user.role !== 'EMPLOYER' && user.role !== 'ADMIN') {
       router.push('/');
       return;
     }
@@ -1161,50 +1159,41 @@ export default function EmployerDashboard() {
             </button>
           </div>
 
-          {/* Card 3: Package Container - ปรับโทนสีหรูหรา ลุ่มลึก และเพิ่มมิติแสงเงาตามธีม Package ของแต่ละ Tier */}
-          <div className={`rounded-2xl border-2 flex flex-col gap-4 transition-all duration-500 p-6 shadow-2xl relative overflow-hidden ${!packageInfo ? 'bg-white border-gray-200 text-slate-900' :
-            packageInfo?.name === 'VIP'
-              ? 'bg-gradient-to-br from-rose-800 via-red-900 to-[#020263]/80 border-white/20 shadow-[0_20px_50px_-15px_rgba(225,29,72,0.4)]'
-              : packageInfo?.name === 'Premium'
-                ? 'bg-gradient-to-b from-slate-900 via-[#03034f] to-[#01013a] border-blue-900/50 shadow-[0_20px_50px_-15px_rgba(0,0,0,0.5)]'
-                : packageInfo?.name === 'Pro'
-                  ? 'bg-gradient-to-b from-amber-50/60 via-white to-white border-slate-100 shadow-xl shadow-amber-500/5'
-                  : 'bg-white border-gray-200 text-slate-900'
-            }`}>
-
-            {/* --- เอฟเฟกต์แสงเงาเบื้องหลัง (Background Effects) เพื่อดึงเลเยอร์ของ Package ออกมา --- */}
-            {packageInfo?.name === 'VIP' && (
-              <>
-                <div className="absolute top-0 right-0 w-48 h-48 bg-rose-500/20 rounded-full blur-[60px] -mr-16 -mt-16 pointer-events-none" />
-                <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden">
-                  <div className="absolute -top-[150%] -left-[150%] w-[40%] h-[300%] bg-gradient-to-r from-transparent via-rose-300/20 to-transparent rotate-[45deg] animate-[sweep_5s_infinite]" />
+          {/* Admin Dashboard Button for ADMIN role */}
+          {user?.role === 'ADMIN' && (
+            <div className="bg-red-50 border border-red-200 rounded-2xl shadow-lg p-6 flex flex-col gap-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-red-100 flex items-center justify-center">
+                  <svg className="w-5 h-5 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                  </svg>
                 </div>
-              </>
-            )}
-            {packageInfo?.name === 'Premium' && (
-              <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden">
-                <div className="absolute -top-[150%] -left-[150%] w-[30%] h-[300%] bg-gradient-to-r from-transparent via-blue-400/15 to-transparent rotate-[45deg] animate-[sweep_6s_infinite]" />
+                <span className="font-bold text-gray-800">ส่วนผู้ดูแลระบบ</span>
               </div>
-            )}
-            {packageInfo?.name === 'Pro' && (
-              <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden">
-                <div className="absolute -top-[150%] -left-[150%] w-[30%] h-[300%] bg-gradient-to-r from-transparent via-amber-400/10 to-transparent rotate-[45deg] animate-[sweep_7s_infinite]" />
-              </div>
-            )}
+              <p className="text-xs text-gray-500">คุณล็อกอินด้วยสิทธิ์ Admin สามารถเข้าจัดการระบบหลังบ้านได้ที่นี่</p>
+              <button
+                onClick={() => router.push('/admin')}
+                className="w-full flex items-center justify-center gap-2 bg-red-600 hover:bg-red-700 text-white font-semibold py-2.5 rounded-xl transition-colors text-sm shadow-md shadow-red-500/20"
+              >
+                เข้าสู่ Admin Dashboard
+              </button>
+            </div>
+          )}
 
-            {/* ส่วนหัว: จัดการระยะห่าง ไม่ให้ Ring เบียดขอบ */}
-            <div className="flex items-center gap-4.5 p-0.5 relative z-10">
-              {/* Icon Container: ปรับแต่งสีพื้นหลังไอคอนให้รับกับตัวการ์ด */}
-              <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-500 shrink-0 ${!packageInfo ? 'bg-gray-100' :
-                packageInfo?.name === 'VIP'
-                  ? 'bg-gradient-to-br from-rose-500 to-red-600 shadow-lg shadow-rose-950/50 text-white'
-                  : packageInfo?.name === 'Premium'
-                    ? 'bg-blue-950 border border-blue-800/50 text-blue-400'
-                    : packageInfo?.name === 'Pro'
-                      ? 'bg-amber-100 text-amber-600 border border-amber-200/50'
-                      : 'bg-orange-100'
+          {/* Card 3: Package - รองรับ VIP ธีม Rose Red */}
+          <div className={`bg-white rounded-2xl border shadow-lg p-6 flex flex-col gap-4 transition-all duration-500 ${packageInfo?.name === 'VIP' ? 'border-rose-200 shadow-rose-100' : 'border-gray-300'}`}>
+            <div className="flex items-center gap-3">
+              {/* Icon Container: ปรับตามระดับแพ็คเกจ */}
+              <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${!packageInfo ? 'bg-gray-50' :
+                packageInfo.name === 'VIP' ? 'bg-rose-50 border border-rose-100 shadow-sm' :
+                  packageInfo.name === 'Premium' ? 'bg-amber-100 border border-amber-200' :
+                    packageInfo.name === 'Pro' ? 'bg-indigo-50' : 'bg-orange-50'
                 }`}>
-                <Package className="w-5 h-5" />
+                <Package className={`w-5 h-5 ${!packageInfo ? 'text-gray-400' :
+                  packageInfo.name === 'VIP' ? 'text-rose-600' :
+                    packageInfo.name === 'Premium' ? 'text-amber-600' :
+                      packageInfo.name === 'Pro' ? 'text-indigo-600' : 'text-orange-500'
+                  }`} />
               </div>
 
               <div className="flex-1">
@@ -1212,87 +1201,83 @@ export default function EmployerDashboard() {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center">
                     {!packageInfo ? (
-                      <span className={`font-bold text-sm ${packageInfo === false ? 'text-gray-800' : 'text-gray-600'}`}>
+                      <span className="font-bold text-gray-800">
                         {packageInfo === false ? 'ดึงข้อมูลไม่สำเร็จ' : 'กำลังโหลด...'}
                       </span>
-                    ) : packageInfo?.name === 'VIP' ? (
-                      <span className="px-3 py-1 rounded-full bg-gradient-to-r from-rose-500 via-red-600 to-rose-800 border border-white/20 text-white text-[10px] font-black shadow-md tracking-widest uppercase">
+                    ) : packageInfo.name === 'VIP' ? (
+                      <span className="px-2 py-0.5 rounded-lg bg-gradient-to-r from-rose-600 via-red-600 to-red-800 text-white text-[10px] font-black shadow-sm tracking-wider uppercase">
                         VIP ACCOUNT
                       </span>
-                    ) : packageInfo?.name === 'Premium' ? (
-                      <span className="px-3 py-1 rounded-full bg-[#020263] border border-blue-400 text-blue-100 text-[10px] font-black shadow-md tracking-widest uppercase">
+                    ) : packageInfo.name === 'Premium' ? (
+                      <span className="px-2 py-0.5 rounded-lg bg-gradient-to-r from-amber-500 to-yellow-400 text-white text-[10px] font-bold shadow-sm">
                         PREMIUM
                       </span>
-                    ) : packageInfo?.name === 'Pro' ? (
-                      <span className="px-3 py-1 rounded-full bg-gradient-to-r from-amber-500 to-yellow-600 border border-white text-white text-[10px] font-black shadow-sm tracking-widest uppercase">
+                    ) : packageInfo.name === 'Pro' ? (
+                      <span className="px-2 py-0.5 rounded-lg bg-indigo-600 text-white text-[10px] font-bold shadow-sm">
                         PRO ACCOUNT
                       </span>
                     ) : (
-                      <span className={`font-bold text-xs ${packageInfo?.name === 'VIP' || packageInfo?.name === 'Premium' ? 'text-white' : 'text-slate-800'}`}>
-                        {packageInfo?.name || 'Standard'}
+                      <span className="font-bold text-gray-800 text-xs">
+                        {packageInfo.name || 'Standard'}
                       </span>
                     )}
                   </div>
 
                   {/* ป้าย Bonus แบบกะทัดรัด (Compact) */}
                   {(packageInfo?.bonusQuotaCC > 0 || packageInfo?.bonusQuotaAC > 0) && (
-                    <div className="flex items-center gap-1.5 bg-fuchsia-100 border border-fuchsia-200 px-2.5 py-1 rounded-full shadow-sm">
-                      <div className="w-1.5 h-1.5 bg-fuchsia-600 rounded-full animate-ping" />
-                      <span className="text-[9px] font-black text-fuchsia-800 italic uppercase tracking-tighter">
+                    <div className="flex items-center gap-1.5 bg-fuchsia-50/50 border border-fuchsia-100 px-1.5 py-0.5 rounded-md shadow-sm">
+                      <div className="w-1 h-1 bg-fuchsia-500 rounded-full animate-ping" />
+                      <span className="text-[9px] font-black text-fuchsia-600 italic uppercase tracking-tighter">
                         Bonus
                       </span>
-                      <span className="text-[9px] font-medium text-fuchsia-700 border-l border-fuchsia-200 pl-1.5">
-                        {getTimeLeftLabel(packageInfo?.bonusEndsAt, now)}
+                      <span className="text-[9px] font-medium text-fuchsia-500/80 border-l border-fuchsia-200 pl-1.5">
+                        {getTimeLeftLabel(packageInfo.bonusEndsAt, now)}
                       </span>
                     </div>
                   )}
                 </div>
 
-                {/* Status Dot */}
-                <div className="flex items-center gap-1.5 mt-1.5 relative z-10">
+                {/* Status Dot: ปรับขนาดลงเล็กน้อยให้เข้ากับดีไซน์ใหม่ */}
+                <div className="flex items-center gap-1.5 mt-0.5">
                   <span className={`w-1.5 h-1.5 rounded-full inline-block animate-pulse ${!packageInfo ? 'bg-gray-300' :
-                    packageInfo?.name === 'VIP' ? 'bg-rose-400 shadow-[0_0_8px_rgba(244,63,94,0.8)]' :
-                      packageInfo?.name === 'Premium' ? 'bg-blue-400 shadow-[0_0_8px_rgba(96,165,250,0.8)]' :
-                        packageInfo?.name === 'Pro' ? 'bg-amber-500 shadow-[0_0_6px_rgba(245,158,11,0.6)]' :
-                          'bg-gray-500'
+                    packageInfo.name === 'VIP' ? 'bg-rose-500 shadow-[0_0_6px_rgba(225,29,72,0.6)]' :
+                      packageInfo.name === 'Premium' ? 'bg-amber-500' :
+                        'bg-blue-500'
                     }`} />
-                  <span className={`text-xs font-semibold ${packageInfo?.name === 'VIP' || packageInfo?.name === 'Premium' ? 'text-slate-300' : packageInfo?.name === 'Pro' ? 'text-amber-700' : 'text-gray-500'}`}>
+                  <span className="text-xs text-gray-500 font-medium">
                     {packageInfo
-                      ? (packageInfo?.name === 'VIP'
+                      ? (packageInfo.name === 'VIP'
                         ? 'สิทธิพิเศษขั้นสูงสุด · Active'
-                        : (packageInfo?.name === 'Premium' ? 'สิทธิพิเศษขั้นสูง · Active' : (packageInfo?.name === 'Pro' ? 'สิทธิพิเศษขั้นพื้นฐาน · Active' : 'ฟรีทดลอง · ทดลองใช้')))
+                        : (packageInfo.name === 'Premium' ? 'สิทธิพิเศษขั้นสูง · Active' : (packageInfo.name === 'Pro' ? 'สิทธิพิเศษขั้นพื้นฐาน · Active' : 'ฟรีทดลอง · ทดลองใช้')))
                       : 'สถานะการเชื่อมต่อ API'}
                   </span>
                 </div>
               </div>
             </div>
 
-            {/* Quota Progress */}
-            <div className="space-y-3.5 relative z-10">
-              {/* CC Quota */}
+            {/* Quota Progress: VIP จะเป็นสีแดง Rose */}
+            <div className="space-y-3">
+              {/* CC Quota - คลีนกว่าเดิม โชว์โบนัสเฉพาะตอนมีค่าเท่านั้น */}
               <div>
-                <div className="flex justify-between text-xs mb-1.5 font-bold">
-                  <span className={!packageInfo ? 'text-gray-600' :
-                    packageInfo?.name === 'VIP' ? 'text-rose-200' :
-                      packageInfo?.name === 'Premium' ? 'text-blue-300' :
-                        packageInfo?.name === 'Pro' ? 'text-amber-700' : 'text-gray-600'
-                  }>
-                    โควตา CC คงเหลือ
-                  </span>
-                  <span className={!packageInfo ? "text-red-400" :
-                    packageInfo?.name === 'VIP' ? 'text-white' :
-                      packageInfo?.name === 'Premium' ? 'text-white' :
-                        packageInfo?.name === 'Pro' ? 'text-slate-800' : 'text-slate-700'
-                  }>
+                <div className="flex justify-between text-xs mb-1">
+                  <div className="flex items-center gap-1">
+                    <span className="text-gray-600 font-medium">โควตา CC คงเหลือ</span>
+                  </div>
+                  <span className={packageInfo ? "text-gray-800 font-medium" : "text-red-400"}>
                     {packageInfo ? (
                       <>
-                        {Math.max(0, (packageInfo?.ccQuotaTotal || 0) - (packageInfo?.ccQuotaUsed || 0))} / {packageInfo?.ccQuotaTotal || 0}
-                        {(packageInfo?.bonusQuotaCC || 0) > 0 && (
-                          <span className={`text-[10px] ml-1 font-normal ${packageInfo?.name === 'VIP' ? 'text-rose-300/80' : packageInfo?.name === 'Premium' ? 'text-blue-300/80' : 'text-gray-400'}`}>
+                        {/* 1. ตัวเลขคงเหลือรวม / ทั้งหมด */}
+                        {Math.max(0, (packageInfo.ccQuotaTotal || 0) - (packageInfo.ccQuotaUsed || 0))} / {packageInfo.ccQuotaTotal || 0}
+
+                        {/* 2. แสดงวงเล็บแยกยอด เฉพาะเมื่อมีโบนัสเท่านั้น */}
+                        {(packageInfo.bonusQuotaCC || 0) > 0 && (
+                          <span className="text-[10px] ml-1 font-normal text-gray-400">
                             (
-                            <span>{(packageInfo?.ccQuotaTotal || 0) - (packageInfo?.bonusQuotaCC || 0)}</span>
-                            <span className="mx-0.5">+</span>
-                            <span className="font-bold text-fuchsia-500">{packageInfo?.bonusQuotaCC}</span>
+                            <span className={packageInfo.name === 'VIP' ? 'text-rose-500' : 'text-blue-500'}>
+                              {(packageInfo.ccQuotaTotal || 0) - (packageInfo.bonusQuotaCC || 0)}
+                            </span>
+                            <span className="mx-0.5 text-gray-300">+</span>
+                            <span className="text-fuchsia-600 font-black">{packageInfo.bonusQuotaCC}</span>
                             )
                           </span>
                         )}
@@ -1301,35 +1286,30 @@ export default function EmployerDashboard() {
                   </span>
                 </div>
 
-                {/* Progress Track: ปรับตามธีมพื้นหลังของแต่ละ Tier */}
-                <div className={`h-2 rounded-full overflow-hidden flex border shadow-inner ${!packageInfo ? 'bg-gray-100 border-gray-200' :
-                  packageInfo?.name === 'VIP' ? 'bg-black/40 border-rose-950/20' :
-                    packageInfo?.name === 'Premium' ? 'bg-black/40 border-blue-950/20' :
-                      packageInfo?.name === 'Pro' ? 'bg-amber-100/60 border-amber-200/50' : 'bg-gray-100 border-gray-200'
-                  }`}>
+                <div className="h-2 bg-gray-100 rounded-full overflow-hidden flex shadow-inner border border-gray-50">
                   {packageInfo ? (() => {
-                    const total = packageInfo?.ccQuotaTotal || 1;
-                    const used = packageInfo?.ccQuotaUsed || 0;
-                    const bonusTotal = packageInfo?.bonusQuotaCC || 0;
+                    const total = packageInfo.ccQuotaTotal || 1;
+                    const used = packageInfo.ccQuotaUsed || 0;
+                    const bonusTotal = packageInfo.bonusQuotaCC || 0;
                     const baseTotal = total - bonusTotal;
                     const remainingTotal = Math.max(0, total - used);
+
                     const baseWidth = (Math.min(remainingTotal, baseTotal) / total) * 100;
                     const bonusWidth = (Math.max(0, remainingTotal - baseTotal) / total) * 100;
+
                     return (
                       <>
                         <div
-                          className={`h-full transition-all duration-1000 shadow-sm ${packageInfo?.name === 'VIP' ? 'bg-gradient-to-r from-rose-500 to-red-600' :
-                            packageInfo?.name === 'Premium' ? 'bg-gradient-to-r from-blue-500 to-indigo-600' :
-                              packageInfo?.name === 'Pro' ? 'bg-gradient-to-r from-amber-400 to-yellow-600' : 'bg-blue-600'
-                            }`}
+                          className={`h-full transition-all duration-1000 ${packageInfo.name === 'VIP' ? 'bg-rose-600' : 'bg-blue-600'}`}
                           style={{ width: `${baseWidth}%` }}
                         />
+                        {/* หลอดโบนัสจะ Render เฉพาะเมื่อมีพื้นที่เหลือ (Width > 0) */}
                         {bonusWidth > 0 && (
                           <div
-                            className="h-full transition-all duration-1000 border-l border-white/20 bg-gradient-to-r from-fuchsia-400 to-fuchsia-600 relative"
+                            className="h-full transition-all duration-1000 border-l border-white/30 bg-gradient-to-r from-fuchsia-400 via-fuchsia-500 to-fuchsia-600 relative"
                             style={{ width: `${bonusWidth}%` }}
                           >
-                            <div className="absolute inset-0 bg-white/15 h-[40%]" />
+                            <div className="absolute inset-0 bg-white/10 h-[40%]" />
                           </div>
                         )}
                       </>
@@ -1340,30 +1320,27 @@ export default function EmployerDashboard() {
                 </div>
               </div>
 
-              {/* AC Quota */}
+              {/* AC Quota - คลีนกว่าเดิม โชว์โบนัสเฉพาะตอนมีค่าเท่านั้น */}
               <div>
-                <div className="flex justify-between text-xs mb-1.5 font-bold">
-                  <span className={!packageInfo ? 'text-gray-600' :
-                    packageInfo?.name === 'VIP' ? 'text-rose-200' :
-                      packageInfo?.name === 'Premium' ? 'text-blue-300' :
-                        packageInfo?.name === 'Pro' ? 'text-amber-700' : 'text-gray-600'
-                  }>
-                    โควตา AC คงเหลือ
-                  </span>
-                  <span className={!packageInfo ? "text-red-400" :
-                    packageInfo?.name === 'VIP' ? 'text-white' :
-                      packageInfo?.name === 'Premium' ? 'text-white' :
-                        packageInfo?.name === 'Pro' ? 'text-slate-800' : 'text-slate-700'
-                  }>
+                <div className="flex justify-between text-xs mb-1">
+                  <div className="flex items-center gap-1">
+                    <span className="text-gray-600 font-medium">โควตา AC คงเหลือ</span>
+                  </div>
+                  <span className={packageInfo ? "text-gray-800 font-medium" : "text-red-400"}>
                     {packageInfo ? (
                       <>
-                        {Math.max(0, (packageInfo?.acQuotaTotal || 0) - (packageInfo?.acQuotaUsed || 0))} / {packageInfo?.acQuotaTotal || 0}
-                        {(packageInfo?.bonusQuotaAC || 0) > 0 && (
-                          <span className={`text-[10px] ml-1 font-normal ${packageInfo?.name === 'VIP' ? 'text-rose-300/80' : packageInfo?.name === 'Premium' ? 'text-blue-300/80' : 'text-gray-400'}`}>
+                        {/* 1. ตัวเลขคงเหลือรวม / ทั้งหมด */}
+                        {Math.max(0, (packageInfo.acQuotaTotal || 0) - (packageInfo.acQuotaUsed || 0))} / {packageInfo.acQuotaTotal || 0}
+
+                        {/* 2. แสดงวงเล็บแยกยอด เฉพาะเมื่อมีโบนัสเท่านั้น */}
+                        {(packageInfo.bonusQuotaAC || 0) > 0 && (
+                          <span className="text-[10px] ml-1 font-normal text-gray-400">
                             (
-                            <span>{(packageInfo?.acQuotaTotal || 0) - (packageInfo?.bonusQuotaAC || 0)}</span>
-                            <span className="mx-0.5">+</span>
-                            <span className="font-bold text-fuchsia-500">{packageInfo?.bonusQuotaAC}</span>
+                            <span className={packageInfo.name === 'VIP' ? 'text-rose-500' : 'text-blue-500'}>
+                              {(packageInfo.acQuotaTotal || 0) - (packageInfo.bonusQuotaAC || 0)}
+                            </span>
+                            <span className="mx-0.5 text-gray-300">+</span>
+                            <span className="text-fuchsia-600 font-black">{packageInfo.bonusQuotaAC}</span>
                             )
                           </span>
                         )}
@@ -1372,35 +1349,29 @@ export default function EmployerDashboard() {
                   </span>
                 </div>
 
-                {/* Progress Track */}
-                <div className={`h-2 rounded-full overflow-hidden flex border shadow-inner ${!packageInfo ? 'bg-gray-100 border-gray-200' :
-                  packageInfo?.name === 'VIP' ? 'bg-black/40 border-rose-950/20' :
-                    packageInfo?.name === 'Premium' ? 'bg-black/40 border-blue-950/20' :
-                      packageInfo?.name === 'Pro' ? 'bg-amber-100/60 border-amber-200/50' : 'bg-gray-100 border-gray-200'
-                  }`}>
+                <div className="h-2 bg-gray-100 rounded-full overflow-hidden flex shadow-inner border border-gray-50">
                   {packageInfo ? (() => {
-                    const total = packageInfo?.acQuotaTotal || 1;
-                    const used = packageInfo?.acQuotaUsed || 0;
-                    const bonusTotal = packageInfo?.bonusQuotaAC || 0;
+                    const total = packageInfo.acQuotaTotal || 1;
+                    const used = packageInfo.acQuotaUsed || 0;
+                    const bonusTotal = packageInfo.bonusQuotaAC || 0;
                     const baseTotal = total - bonusTotal;
                     const remainingTotal = Math.max(0, total - used);
+
                     const baseWidth = (Math.min(remainingTotal, baseTotal) / total) * 100;
                     const bonusWidth = (Math.max(0, remainingTotal - baseTotal) / total) * 100;
+
                     return (
                       <>
                         <div
-                          className={`h-full transition-all duration-1000 shadow-sm ${packageInfo?.name === 'VIP' ? 'bg-gradient-to-r from-rose-500 to-red-600' :
-                            packageInfo?.name === 'Premium' ? 'bg-gradient-to-r from-blue-500 to-indigo-600' :
-                              packageInfo?.name === 'Pro' ? 'bg-gradient-to-r from-amber-400 to-yellow-600' : 'bg-blue-600'
-                            }`}
+                          className={`h-full transition-all duration-1000 ${packageInfo.name === 'VIP' ? 'bg-red-700' : 'bg-indigo-500'}`}
                           style={{ width: `${baseWidth}%` }}
                         />
                         {bonusWidth > 0 && (
                           <div
-                            className="h-full transition-all duration-1000 border-l border-white/20 bg-gradient-to-r from-fuchsia-400 to-fuchsia-600 relative"
+                            className="h-full transition-all duration-1000 border-l border-white/30 bg-gradient-to-r from-fuchsia-400 via-fuchsia-500 to-fuchsia-600 relative"
                             style={{ width: `${bonusWidth}%` }}
                           >
-                            <div className="absolute inset-0 bg-white/15 h-[40%]" />
+                            <div className="absolute inset-0 bg-white/10 h-[40%]" />
                           </div>
                         )}
                       </>
@@ -1412,22 +1383,29 @@ export default function EmployerDashboard() {
               </div>
             </div>
 
-            {/* ส่วนแสดงระยะเวลาแพ็คเกจ */}
+            {/* เช็คว่าถ้าไม่ใช่ Free Plan ถึงจะวาดส่วนระยะเวลาแพ็คเกจออกมา */}
             {packageInfo?.name !== 'Free Plan' && (
-              <div className={`pt-3 border-t flex flex-col gap-1 relative z-10 ${packageInfo?.name === 'VIP' || packageInfo?.name === 'Premium' ? 'border-white/10' : packageInfo?.name === 'Pro' ? 'border-amber-100' : 'border-gray-200'}`}>
-                <div className={`flex items-center justify-between text-[11px] font-bold ${packageInfo?.name === 'VIP' || packageInfo?.name === 'Premium' ? 'text-white' : packageInfo?.name === 'Pro' ? 'text-slate-800' : 'text-gray-600'}`}>
-                  <div className="flex items-center gap-1.5 opacity-80">
-                    <Calendar className="w-3.5 h-3.5 text-current" />
+              <div className="pt-2 border-t border-gray-50 flex flex-col gap-1">
+                <div className="flex items-center justify-between text-[11px]">
+                  <div className="flex items-center gap-1.5 text-gray-400">
+                    <Calendar className="w-3 h-3" />
                     <span>ระยะเวลาแพ็คเกจ</span>
                   </div>
-                  <span className={packageInfo?.name === 'VIP' ? 'text-rose-200' : packageInfo?.name === 'Premium' ? 'text-blue-300' : packageInfo?.name === 'Pro' ? 'text-amber-800' : ''}>
+                  <span className={`font-semibold ${packageInfo?.name === 'VIP' ? 'text-rose-600' : 'text-gray-600'}`}>
                     {packageInfo?.startDate && packageInfo?.endDate
                       ? `${new Date(packageInfo.startDate).toLocaleDateString('th-TH', { day: 'numeric', month: 'short' })} - ${new Date(packageInfo.endDate).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: '2-digit' })}`
                       : 'ไม่ระบุ'}
                   </span>
                 </div>
+
+                {/* ตัวนับถอยหลังแบบ Dynamic */}
                 {packageInfo?.endDate && (
-                  <div className={`text-[10px] text-right italic font-medium ${packageInfo?.name === 'VIP' ? 'text-rose-300/80' : packageInfo?.name === 'Premium' ? 'text-blue-300/80' : packageInfo?.name === 'Pro' ? 'text-amber-600' : 'text-gray-400'}`}>
+                  <div className={`text-[10px] text-right italic transition-colors duration-300 ${
+                    // ถ้าเหลือน้อยกว่า 1 วัน ให้ใช้สีแดง/Rose เพื่อเตือน
+                    (new Date(packageInfo.endDate).getTime() - new Date().getTime()) < 86400000
+                      ? 'text-rose-500 font-medium'
+                      : 'text-gray-400'
+                    }`}>
                     {getTimeLeftLabel(packageInfo.endDate, now)}
                   </div>
                 )}
@@ -1435,54 +1413,34 @@ export default function EmployerDashboard() {
             )}
 
             {/* Button Area */}
-            <div className="mt-auto pt-2 flex gap-2.5 items-center relative z-10">
-              {!packageInfo ? (
-                <div className="flex-1 text-center py-2.5 text-xs text-gray-400 bg-gray-50 rounded-xl border border-dashed">
-                  {packageInfo === false ? 'เซิร์ฟเวอร์ขัดข้อง' : 'กำลังตรวจสอบข้อมูลบัญชี...'}
-                </div>
+            <div className="flex gap-2 mt-auto">
+              {packageInfo?.name === 'VIP' ? (
+                /* กรณีเป็น VIP: แสดงปุ่มระดับสูงสุด (คลิกไม่ได้หรือให้ไปหน้า Billing แทน) */
+                <button
+                  disabled
+                  className="flex-1 font-bold py-2.5 rounded-xl transition-all text-sm flex items-center justify-center gap-2 border border-rose-200 bg-rose-50 text-rose-600 cursor-default"
+                >
+                  <Star className="w-4 h-4 fill-red-500" /> {/* อย่าลืม import Crown จาก lucide-react */}
+                  บัญชีของท่านเป็นระดับสูงสุดแล้ว
+                </button>
               ) : (
+                /* กรณีอื่นๆ (Pro, Premium, หรือ Free): แสดงปุ่มอัปเกรด */
                 <>
-                  {/* ฝั่งซ้าย: ปุ่มอัปเกรด หรือ กล่องสถานะบัญชี */}
-                  {packageInfo?.name === 'Free Plan' || packageInfo?.name === 'Standard' || !packageInfo?.name ? (
-                    <button
-                      onClick={() => router.push('/employer/packages')}
-                      className="flex-1 min-h-[44px] font-black py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white transition-all text-sm shadow-md active:scale-[0.98]"
-                    >
-                      อัปเกรดแพ็คเกจ
-                    </button>
-                  ) : (
-                    <div className="flex-1 min-h-[44px] flex items-center">
-                      {packageInfo?.name === 'VIP' ? (
-                        <div className="w-full h-full font-black py-2.5 rounded-xl text-xs flex items-center justify-center gap-1.5 border-2 border-white/20 shadow-xl bg-gradient-to-r from-rose-500 via-red-600 to-rose-600 text-white tracking-wide">
-                          <Star className="w-4 h-4 fill-white text-white animate-pulse" />
-                          บัญชีระดับสูงสุด (VIP)
-                        </div>
-                      ) : packageInfo?.name === 'Premium' ? (
-                        <div className="w-full h-full font-black py-2.5 rounded-xl text-xs flex items-center justify-center gap-1.5 border-2 border-blue-950/40 shadow-xl bg-gradient-to-r from-blue-700 to-indigo-800 text-white tracking-wide">
-                          <Crown className="w-4 h-4 text-blue-200 fill-blue-200" />
-                          บัญชีระดับพรีเมียม (Premium)
-                        </div>
-                      ) : packageInfo?.name === 'Pro' ? (
-                        <div className="w-full h-full font-black py-2.5 rounded-xl text-xs flex items-center justify-center gap-1.5 border-b-4 border-amber-800 bg-gradient-to-r from-amber-500 to-amber-600 text-white tracking-wide">
-                          <Zap className="w-4 h-4 text-white fill-white" />
-                          บัญชีระดับโปร (Pro Account)
-                        </div>
-                      ) : (
-                        <div className="w-full h-full font-medium py-2.5 rounded-xl text-xs flex items-center justify-center border border-gray-200 bg-gray-50 text-gray-600">
-                          {packageInfo?.name}
-                        </div>
-                      )}
-                    </div>
-                  )}
+                  <button
+                    onClick={() => router.push('/employer/packages')}
+                    disabled={!packageInfo}
+                    className={`flex-1 font-semibold py-2.5 rounded-xl transition-colors text-sm shadow-sm ${!packageInfo
+                      ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                      : 'bg-blue-600 hover:bg-blue-700 text-white'
+                      }`}
+                  >
+                    {packageInfo === false ? 'เซิร์ฟเวอร์ขัดข้อง' : 'อัปเกรดแพ็คเกจ'}
+                  </button>
 
-                  {/* ฝั่งขวา: ปุ่มประวัติการชำระเงิน (Billing History) ปรับสีให้แมทช์กับ Contrast พื้นหลัง */}
+                  {/* ปุ่มดูรายละเอียด Billing เล็กๆ ด้านข้าง */}
                   <button
                     onClick={() => router.push('/employer/settings/billing')}
-                    className={`w-[44px] h-[44px] flex items-center justify-center border-2 rounded-xl transition-all shadow-md active:scale-[0.98] shrink-0 ${packageInfo?.name === 'VIP' ? 'border-rose-400/30 bg-white/10 text-white hover:bg-white/20' :
-                      packageInfo?.name === 'Premium' ? 'border-blue-400/30 bg-white/5 text-blue-200 hover:bg-white/10' :
-                        packageInfo?.name === 'Pro' ? 'border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-100' :
-                          'border-gray-200 text-gray-400 bg-white hover:bg-gray-50'
-                      }`}
+                    className="w-10 h-10 flex items-center justify-center border border-gray-200 rounded-xl hover:bg-gray-50 text-gray-400 transition-colors"
                     title="ประวัติการชำระเงิน"
                   >
                     <FileText className="w-4 h-4" />

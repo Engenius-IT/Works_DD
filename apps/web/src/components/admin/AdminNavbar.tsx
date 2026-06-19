@@ -1,7 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { Bell, Settings, User, LogOut, X, Check } from 'lucide-react';
+import { Bell, Settings, User, LogOut, X, Check, LayoutGrid } from 'lucide-react';
+import { useRouter } from '@/i18n/routing';
 import { useAuth } from '@/context/AuthContext';
 
 interface Notification {
@@ -14,6 +15,7 @@ interface Notification {
 }
 
 export function AdminNavbar() {
+  const router = useRouter();
   const { logout } = useAuth();
   const [showNotifications, setShowNotifications] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
@@ -96,6 +98,14 @@ export function AdminNavbar() {
 
         {/* Right Section */}
         <div className="flex items-center gap-4">
+          {/* Switch to Employer Button */}
+          <button
+            onClick={() => router.push('/employer/dashboard')}
+            className="flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-xl transition-all font-bold text-xs border border-blue-200 shadow-sm"
+          >
+            <LayoutGrid className="w-4 h-4" />
+            Employer Workspace
+          </button>
           {/* Notifications */}
           <div className="relative">
             <button
