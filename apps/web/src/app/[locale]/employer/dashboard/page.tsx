@@ -817,7 +817,7 @@ export default function EmployerDashboard() {
       router.push('/login');
       return;
     }
-    if (!authLoading && user && user.role !== 'EMPLOYER') {
+    if (!authLoading && user && user.role !== 'EMPLOYER' && user.role !== 'ADMIN') {
       router.push('/');
       return;
     }
@@ -1158,6 +1158,27 @@ export default function EmployerDashboard() {
               เพิ่มประกาศงานและจัดการผู้สมัคร
             </button>
           </div>
+
+          {/* Admin Dashboard Button for ADMIN role */}
+          {user?.role === 'ADMIN' && (
+            <div className="bg-red-50 border border-red-200 rounded-2xl shadow-lg p-6 flex flex-col gap-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-red-100 flex items-center justify-center">
+                  <svg className="w-5 h-5 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                  </svg>
+                </div>
+                <span className="font-bold text-gray-800">ส่วนผู้ดูแลระบบ</span>
+              </div>
+              <p className="text-xs text-gray-500">คุณล็อกอินด้วยสิทธิ์ Admin สามารถเข้าจัดการระบบหลังบ้านได้ที่นี่</p>
+              <button
+                onClick={() => router.push('/admin')}
+                className="w-full flex items-center justify-center gap-2 bg-red-600 hover:bg-red-700 text-white font-semibold py-2.5 rounded-xl transition-colors text-sm shadow-md shadow-red-500/20"
+              >
+                เข้าสู่ Admin Dashboard
+              </button>
+            </div>
+          )}
 
           {/* Card 3: Package - รองรับ VIP ธีม Rose Red */}
           <div className={`bg-white rounded-2xl border shadow-lg p-6 flex flex-col gap-4 transition-all duration-500 ${packageInfo?.name === 'VIP' ? 'border-rose-200 shadow-rose-100' : 'border-gray-300'}`}>
