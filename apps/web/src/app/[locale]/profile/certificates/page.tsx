@@ -315,108 +315,95 @@ export default function CertificatesPage() {
       <Navbar />
 
       {/* Progress Banner */}
-      <div
-        className="relative overflow-hidden"
-        style={{
-          background: 'linear-gradient(135deg, #0a1628 0%, #0e2a5e 40%, #1a3a7a 70%, #243b82 100%)',
-        }}
-      >
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute -top-20 -right-20 w-72 h-72 rounded-full opacity-[0.07]" style={{ background: 'radial-gradient(circle, #60a5fa, transparent)' }} />
-          <div className="absolute -bottom-32 -left-16 w-80 h-80 rounded-full opacity-[0.05]" style={{ background: 'radial-gradient(circle, #818cf8, transparent)' }} />
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full opacity-[0.03]" style={{ background: 'radial-gradient(circle, #93c5fd, transparent)' }} />
-        </div>
+<div
+  className="relative overflow-hidden"
+  style={{
+    background: 'linear-gradient(135deg, #0a1628 0%, #0e2a5e 40%, #1a3a7a 70%, #243b82 100%)',
+  }}
+>
+  <div className="absolute inset-0 overflow-hidden pointer-events-none">
+    <div className="absolute -top-20 -right-20 w-72 h-72 rounded-full opacity-[0.07]" style={{ background: 'radial-gradient(circle, #60a5fa, transparent)' }} />
+    <div className="absolute -bottom-32 -left-16 w-80 h-80 rounded-full opacity-[0.05]" style={{ background: 'radial-gradient(circle, #818cf8, transparent)' }} />
+    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full opacity-[0.03]" style={{ background: 'radial-gradient(circle, #93c5fd, transparent)' }} />
+  </div>
 
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 py-10 md:py-14 relative z-10">
-          <div className="flex items-center gap-3 mb-8">
-            <div className="w-1 h-6 rounded-full bg-linear-to-b from-blue-400 to-cyan-400" />
-            <h2 className="text-white text-2xl md:text-3xl lg:text-4xl font-semibold tracking-wide">
-              {t.completeness}
-            </h2>
-          </div>
+  <div className="max-w-5xl mx-auto px-4 sm:px-6 py-10 md:py-14 relative z-10">
+    <div className="flex items-center gap-3 mb-8">
+      <div className="w-1 h-6 rounded-full bg-linear-to-b from-blue-400 to-cyan-400" />
+      <h2 className="text-white text-2xl md:text-3xl lg:text-4xl font-semibold tracking-wide">
+        {t.completeness}
+      </h2>
+    </div>
 
-          <div
-            className="rounded-2xl border border-white/10 p-6 md:p-8"
-            style={{ background: 'rgba(255,255,255,0.05)', backdropFilter: 'blur(20px)' }}
-          >
-            <div className="flex flex-col lg:flex-row items-center gap-8 lg:gap-12">
-              {/* Progress Ring */}
-              <div className="relative shrink-0">
-                <div className="relative w-32 h-32 md:w-36 md:h-36">
-                  <svg className="w-full h-full -rotate-90" viewBox="0 0 120 120">
-                    <circle cx="60" cy="60" r="54" fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="8" />
-                    <circle
-                      cx="60" cy="60" r="54" fill="none" stroke="url(#progressGradient)" strokeWidth="8"
-                      strokeLinecap="round" strokeDasharray={circumference} strokeDashoffset={strokeDashoffset}
-                      className="transition-all duration-1000 ease-out"
-                    />
-                    <defs>
-                      <linearGradient id="progressGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                        <stop offset="0%" stopColor="#60a5fa" /><stop offset="50%" stopColor="#38bdf8" /><stop offset="100%" stopColor="#22d3ee" />
-                      </linearGradient>
-                    </defs>
-                  </svg>
-                  <div className="absolute inset-0 flex flex-col items-center justify-center">
-                    <span className="text-3xl md:text-4xl font-bold text-white">{completionPercent}%</span>
-                    <span className="text-[10px] text-blue-300/80 mt-0.5">{t.success}</span>
-                  </div>
-                </div>
-                <div className="absolute inset-0 rounded-full opacity-20 blur-xl" style={{ background: 'radial-gradient(circle, #38bdf8, transparent)' }} />
-              </div>
-
-              {/* Steps */}
-              <div className="flex-1 w-full">
-                <div className="grid grid-cols-1 sm:grid-cols-6 gap-3 sm:gap-2">
-                  {profileSteps.map((step, index) => {
-                    const Icon = step.icon;
-                    return (
-                      <button
-                        key={index}
-                        type="button"
-                        onClick={() => handleStepClick(step.path)}
-                        className={`group relative flex sm:flex-col items-center gap-3 sm:gap-2.5 p-3 sm:p-4 rounded-xl transition-all duration-300 cursor-pointer
-                          ${step.active ? 'bg-white/15 border border-white/20 shadow-lg shadow-blue-500/10' : 'hover:bg-white/6 border border-transparent'}`}
-                      >
-                        <div
-                          className={`relative shrink-0 w-10 h-10 sm:w-11 sm:h-11 rounded-xl flex items-center justify-center transition-all duration-300
-                          ${step.completed ? 'bg-linear-to-br from-blue-400 to-cyan-400 shadow-md shadow-cyan-400/20' : step.active ? 'bg-white/15 border border-white/20' : 'bg-white/6 border border-white/10'}`}
-                        >
-                          {step.completed ? (
-                            <Check className="w-5 h-5 text-white" strokeWidth={2.5} />
-                          ) : (
-                            <Icon className={`w-5 h-5 ${step.active ? 'text-blue-300' : 'text-white/30'}`} />
-                          )}
-                        </div>
-                        <span className={`text-xs sm:text-[11px] sm:text-center leading-tight font-medium transition-colors ${step.active || step.completed ? 'text-white' : 'text-white/40 group-hover:text-white/60'}`}>
-                          {step.label}
-                        </span>
-                        {step.active && (
-                          <div className="sm:hidden ml-auto w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
-                        )}
-                      </button>
-                    );
-                  })}
-                </div>
-                <div className="hidden sm:block mt-5">
-                  <div className="h-1.5 bg-white/6 rounded-full overflow-hidden">
-                    <div
-                      className="h-full rounded-full transition-all duration-1000 ease-out"
-                      style={{
-                        width: `${completionPercent}%`,
-                        background: 'linear-gradient(90deg, #60a5fa, #38bdf8, #22d3ee)',
-                      }}
-                    />
-                  </div>
-                  <div className="flex justify-between mt-2 text-[10px] text-white/30">
-                    <span>{t.start}</span>
-                    <span>{t.complete}</span>
-                  </div>
-                </div>
-              </div>
+    {/* Main Glass Card */}
+    <div
+      className="rounded-2xl border border-white/10 p-6 md:p-8"
+      style={{ background: 'rgba(255,255,255,0.05)', backdropFilter: 'blur(20px)' }}
+    >
+      <div className="flex flex-col lg:flex-row items-center gap-8 lg:gap-12">
+        {/* Progress Ring */}
+        <div className="relative shrink-0">
+          <div className="relative w-32 h-32 md:w-36 md:h-36">
+            <svg className="w-full h-full -rotate-90" viewBox="0 0 120 120">
+              <circle cx="60" cy="60" r="54" fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="8" />
+              <circle
+                cx="60" cy="60" r="54" fill="none" stroke="url(#progressGradient)" strokeWidth="8"
+                strokeLinecap="round" strokeDasharray={circumference} strokeDashoffset={strokeDashoffset}
+                className="transition-all duration-1000 ease-out"
+              />
+              <defs>
+                <linearGradient id="progressGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#60a5fa" /><stop offset="50%" stopColor="#38bdf8" /><stop offset="100%" stopColor="#22d3ee" />
+                </linearGradient>
+              </defs>
+            </svg>
+            <div className="absolute inset-0 flex flex-col items-center justify-center">
+              <span className="text-3xl md:text-4xl font-bold text-white">{completionPercent}%</span>
+              <span className="text-[10px] text-blue-300/80 mt-0.5">{t.success}</span>
             </div>
           </div>
+          <div className="absolute inset-0 rounded-full opacity-20 blur-xl" style={{ background: 'radial-gradient(circle, #38bdf8, transparent)' }} />
         </div>
+
+        {/* Steps Navigation */}
+        <div className="flex-1 w-full">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+            {profileSteps.map((step, index) => {
+              const Icon = step.icon;
+              return (
+                <button
+                  key={index}
+                  type="button"
+                  onClick={() => handleStepClick(step.path)}
+                  className={`group relative flex flex-col items-center gap-2 p-3 rounded-xl transition-all duration-300 cursor-pointer
+                    ${step.active
+                      ? 'bg-white/15 border border-white/20'
+                      : 'hover:bg-white/6 border border-transparent'
+                    }`}
+                >
+                  <div
+                    className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-300
+                    ${step.completed ? 'bg-linear-to-br from-blue-400 to-cyan-400' : 'bg-white/10'}`}
+                  >
+                    {step.completed ? (
+                      <Check className="w-5 h-5 text-white" />
+                    ) : (
+                      <Icon className="w-5 h-5 text-white/30" />
+                    )}
+                  </div>
+                  <span className="text-[11px] text-center font-medium text-white/70">
+                    {step.label}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
       </div>
+    </div>
+  </div>
+</div>
 
       {/* Main Content Form */}
       <div className="max-w-4xl mx-auto px-4 py-8">

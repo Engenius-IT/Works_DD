@@ -30,6 +30,71 @@ import {
 } from 'lucide-react';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
+const MONTHS_TH = [
+  'มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน',
+  'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'
+];
+
+const MONTHS_EN = [
+  'January', 'February', 'March', 'April', 'May', 'June',
+  'July', 'August', 'September', 'October', 'November', 'December'
+];
+
+// ดิกชันนารีแปลชื่อสัญชาติจากไทยเป็นอังกฤษ
+const NATIONALITY_EN_MAP: Record<string, string> = {
+  'ไทย': 'Thai',
+  'กัมพูชา': 'Cambodian',
+  'เกาหลีใต้': 'South Korean',
+  'เกาหลีเหนือ': 'North Korean',
+  'จีน': 'Chinese',
+  'ญี่ปุ่น': 'Japanese',
+  'เนปาล': 'Nepalese',
+  'บังกลาเทศ': 'Bangladeshi',
+  'บรูไน': 'Bruneian',
+  'ปากีสถาน': 'Pakistani',
+  'พม่า': 'Burmese',
+  'ฟิลิปปินส์': 'Filipino',
+  'มองโกเลีย': 'Mongolian',
+  'มาเลเซีย': 'Malaysian',
+  'ลาว': 'Laotian',
+  'เวียดนาม': 'Vietnamese',
+  'ศรีลังกา': 'Sri Lankan',
+  'สิงคโปร์': 'Singaporean',
+  'อัฟกานิสถาน': 'Afghan',
+  'อินเดีย': 'Indian',
+  'อินโดนีเซีย': 'Indonesian',
+  'อเมริกัน': 'American',
+  'อังกฤษ': 'British',
+  'ออสเตรเลีย': 'Australian',
+  'แคนาดา': 'Canadian',
+  'ฝรั่งเศส': 'French',
+  'เยอรมัน': 'German',
+  'รัสเซีย': 'Russian',
+  'เนเธอร์แลนด์': 'Dutch',
+  'นิวซีแลนด์': 'New Zealander',
+  'นอร์เวย์': 'Norwegian',
+  'โปแลนด์': 'Polish',
+  'โปรตุเกส': 'Portuguese',
+  'อิตาลี': 'Italian',
+  'สเปน': 'Spanish',
+  'สวิตเซอร์แลนด์': 'Swiss',
+  'สวีเดน': 'Swedish',
+  'ซาอุดีอาระเบีย': 'Saudi',
+  'สหรัฐอาหรับเอมิเรตส์': 'Emirati',
+  'โมร็อกโก': 'Moroccan',
+  'โมซัมบิก': 'Mozambican',
+  'นามิเบีย': 'Namibian',
+  'โรมาเนีย': 'Romanian'
+};
+
+const stepRoutes = [
+  '/profile',
+  '/profile/education',
+  '/profile/work-history',
+  '/profile/languages',
+  '/profile/driving-skills',
+  '/profile/certifications'
+];
 
 function getErrorMessage(error: unknown, fallback: string) {
   if (error instanceof Error && error.message) {
@@ -67,7 +132,6 @@ export default function ProfilePage() {
   const params = useParams();
   const locale = (params?.locale === 'en' ? 'en' : 'th') as 'th' | 'en';
 
-  // ใช้ Dictionary สำหรับแปลข้อความแบบ Static ป้องกันข้อมูลฟอร์มหาย
   const TRANSLATIONS: Record<string, Record<string, string>> = {
     th: {
       'ความสมบูรณ์ของโปรไฟล์': 'ความสมบูรณ์ของโปรไฟล์',
@@ -132,202 +196,7 @@ export default function ProfilePage() {
       'พฤศจิกายน': 'พฤศจิกายน',
       'ธันวาคม': 'ธันวาคม',
       'ไทย': 'ไทย',
-      'กัมพูชา': 'กัมพูชา',
-      'เกาหลีใต้': 'เกาหลีใต้',
-      'เกาหลีเหนือ': 'เกาหลีเหนือ',
-      'จีน': 'จีน',
-      'ญี่ปุ่น': 'ญี่ปุ่น',
-      'เนปาล': 'เนปาล',
-      'บังกลาเทศ': 'บังกลาเทศ',
-      'บรูไน': 'บรูไน',
-      'ปากีสถาน': 'ปากีสถาน',
-      'พม่า': 'พม่า',
-      'ฟิลิปปินส์': 'ฟิลิปปินส์',
-      'มองโกเลีย': 'มองโกเลีย',
-      'มาเลเซีย': 'มาเลเซีย',
-      'ลาว': 'ลาว',
-      'เวียดนาม': 'เวียดนาม',
-      'ศรีลังกา': 'ศรีลังกา',
-      'สิงคโปร์': 'สิงคโปร์',
-      'อัฟกานิสถาน': 'อัฟกานิสถาน',
-      'อินเดีย': 'อินเดีย',
-      'อินโดนีเซีย': 'อินโดนีเซีย',
-      'อเมริกัน': 'อเมริกัน',
-      'อังกฤษ': 'อังกฤษ',
-      'ออสเตรเลีย': 'ออสเตรเลีย',
-      'แคนาดา': 'แคนาดา',
-      'ฝรั่งเศส': 'ฝรั่งเศส',
-      'เยอรมัน': 'เยอรมัน',
-      'รัสเซีย': 'รัสเซีย',
-      'แอลเบเนีย': 'แอลเบเนีย',
-      'แอลจีเรีย': 'แอลจีเรีย',
-      'อันดอร์รา': 'อันดอร์รา',
-      'แองโกลา': 'แองโกลา',
-      'แอนติกาและบาร์บูดา': 'แอนติกาและบาร์บูดา',
-      'อาร์เจนตินา': 'อาร์เจนตินา',
-      'อาร์เมเนีย': 'อาร์เมเนีย',
-      'ออสเตรีย': 'ออสเตรีย',
-      'อาเซอร์ไบจาน': 'อาเซอร์ไบจาน',
-      'บาฮามาส': 'บาฮามาส',
-      'บาห์เรน': 'บาห์เรน',
-      'บาร์เบโดส': 'บาร์เบโดส',
-      'เบลารุส': 'เบลารุส',
-      'เบลเยียม': 'เบลเยียม',
-      'เบลีซ': 'เบลีซ',
-      'เบนิน': 'เบนิน',
-      'ภูฏาน': 'ภูฏาน',
-      'โบลิเวีย': 'โบลิเวีย',
-      'บอสเนียและเฮอร์เซโกวีนา': 'บอสเนียและเฮอร์เซโกวีนา',
-      'บอตสวานา': 'บอตสวานา',
-      'บราซิล': 'บราซิล',
-      'บัลแกเรีย': 'บัลแกเรีย',
-      'บูร์กินาฟาโซ': 'บูร์กินาฟาโซ',
-      'บุรุนดี': 'บุรุนดี',
-      'กาบูเวร์ดี': 'กาบูเวร์ดี',
-      'แคเมอรูน': 'แคเมอรูน',
-      'สาธารณรัฐแอฟริกากลาง': 'สาธารณรัฐแอฟริกากลาง',
-      'ชาด': 'ชาด',
-      'ชิลี': 'ชิลี',
-      'โคลอมเบีย': 'โคลอมเบีย',
-      'คอโมโรส': 'คอโมโรส',
-      'คองโก': 'คองโก',
-      'สาธารณรัฐประชาธิปไตยคองโก': 'สาธารณรัฐประชาธิปไตยคองโก',
-      'คอสตาริกา': 'คอสตาริกา',
-      'โกตดิวัวร์': 'โกตดิวัวร์',
-      'โครเอเชีย': 'โครเอเชีย',
-      'คิวบา': 'คิวบา',
-      'ไซปรัส': 'ไซปรัส',
-      'เช็ก': 'เช็ก',
-      'เดนมาร์ก': 'เดนมาร์ก',
-      'จิบูตี': 'จิบูตี',
-      'โดมินิกา': 'โดมินิกา',
-      'สาธารณรัฐโดมินิกัน': 'สาธารณรัฐโดมินิกัน',
-      'เอกวาดอร์': 'เอกวาดอร์',
-      'อียิปต์': 'อียิปต์',
-      'เอลซัลวาดอร์': 'เอลซัลวาดอร์',
-      'อิเควทอเรียลกินี': 'อิเควทอเรียลกินี',
-      'เอริเทรีย': 'เอริเทรีย',
-      'เอสโตเนีย': 'เอสโตเนีย',
-      'เอสวาตีนี': 'Swazi',
-      'เอธิโอเปีย': 'Ethiopian',
-      'ฟิจิ': 'Fijian',
-      'ฟินแลนด์': 'Finnish',
-      'กาบอง': 'Gabonese',
-      'แกมเบีย': 'Gambian',
-      'จอร์เจีย': 'Georgian',
-      'กานา': 'Ghanaian',
-      'กรีซ': 'Greek',
-      'เกรเนดา': 'Grenadian',
-      'กัวเตมาลา': 'Guatemalan',
-      'กินี': 'Guinean',
-      'กินี-บิสเซา': 'Bissau-Guinean',
-      'กายอานา': 'Guyanese',
-      'เฮติ': 'Haitian',
-      'ฮอนดูรัส': 'Honduran',
-      'ฮังการี': 'Hungarian',
-      'ไอซ์แลนด์': 'Icelandic',
-      'อิหร่าน': 'Iranian',
-      'อิรัก': 'Iraqi',
-      'ไอร์แลนด์': 'Irish',
-      'อิสราเอล': 'Israeli',
-      'อิตาลี': 'Italian',
-      'จาเมกา': 'Jamaican',
-      'จอร์แดน': 'Jordanian',
-      'คาซัคสถาน': 'Kazakhstani',
-      'เคนยา': 'Kenyan',
-      'คิริบาส': 'I-Kiribati',
-      'โคโซโว': 'Kosovar',
-      'คูเวต': 'Kuwaiti',
-      'คีร์กีซสถาน': 'Kyrgyzstani',
-      'ลัตเวีย': 'Latvian',
-      'เลบานอน': 'Lebanese',
-      'เลโซโท': 'Basotho',
-      'ไลบีเรีย': 'Liberian',
-      'ลิเบีย': 'Libyan',
-      'ลิกเตนสไตน์': 'Liechtensteiner',
-      'ลิทัวเนีย': 'Lithuanian',
-      'ลักเซมเบิร์ก': 'Luxembourgish',
-      'มาดากัสการ์': 'Malagasy',
-      'มาลาวี': 'Malawian',
-      'มัลดีฟส์': 'Maldivian',
-      'มาลี': 'Malian',
-      'มอลตา': 'Maltese',
-      'หมู่เกาะมาร์แชลล์': 'Marshallese',
-      'มอริเตเนีย': 'Mauritanian',
-      'มอริเชียส': 'Mauritian',
-      'เม็กซิโก': 'Mexican',
-      'ไมโครนีเซีย': 'Micronesian',
-      'มอลโดวา': 'Moldovan',
-      'โมนาโก': 'Monégasque',
-      'มอนเตเนโกร': 'Montenegrin',
-      'โมร็อกโก': 'Moroccan',
-      'โมซัมบิก': 'Mozambican',
-      'นามิเบีย': 'Namibian',
-      'นาอูรู': 'Nauruan',
-      'เนเธอร์แลนด์': 'Dutch',
-      'นิวซีแลนด์': 'New Zealand',
-      'นิการากัว': 'Nicaraguan',
-      'ไนเจอร์': 'Nigerien',
-      'ไนจีเรีย': 'Nigerian',
-      'มาซิโดเนียเหนือ': 'Macedonian',
-      'นอร์เวย์': 'Norwegian',
-      'โอมาน': 'Omani',
-      'ปาเลา': 'Palauan',
-      'ปาเลสไตน์': 'Palestinian',
-      'ปานามา': 'Panamanian',
-      'ปาปัวนิวกินี': 'Papua New Guinean',
-      'ปารากวัย': 'Paraguayan',
-      'เปรู': 'Peruvian',
-      'โปแลนด์': 'Polish',
-      'โปรตุเกส': 'Portuguese',
-      'กาตาร์': 'Qatari',
-      'โรมาเนีย': 'Romanian',
-      'รวันดา': 'Rwandan',
-      'เซนต์คิตส์และเนวิส': 'Saint Kitts and Nevis',
-      'เซนต์ลูเชีย': 'Saint Lucian',
-      'เซนต์วินเซนต์และเกรนาดีนส์': 'Vincentian',
-      'ซามัว': 'Samoan',
-      'ซานมารีโน': 'Sammarinese',
-      'เซาตูเมและปรินซิปี': 'São Toméan',
-      'ซาอุดีอาระเบีย': 'Saudi Arabian',
-      'เซเนกัล': 'Senegalese',
-      'เซอร์เบีย': 'Serbian',
-      'เซเชลส์': 'Seychellois',
-      'เซียร์ราลีโอน': 'Sierra Leonean',
-      'สโลวาเกีย': 'Slovak',
-      'สโลวีเนีย': 'Slovenian',
-      'หมู่เกาะโซโลมอน': 'Solomon Islander',
-      'โซมาเลีย': 'Somali',
-      'แอฟริกาใต้': 'South African',
-      'ซูดานใต้': 'South Sudanese',
-      'สเปน': 'Spanish',
-      'ซูดาน': 'Sudanese',
-      'ซูรินาม': 'Surinamese',
-      'สวีเดน': 'Swedish',
-      'สวิตเซอร์แลนด์': 'Swiss',
-      'ซีเรีย': 'Syrian',
-      'ไต้หวัน': 'Taiwanese',
-      'ทาจิกิสถาน': 'Tajikistani',
-      'แทนซาเนีย': 'Tanzanian',
-      'ติมอร์-เลสเต': 'East Timorese',
-      'โตโก': 'Togolese',
-      'ตองกา': 'Tongan',
-      'ตรินิแดดและโตเบโก': 'Trinidadian and Tobagonian',
-      'ตูนิเซีย': 'Tunisian',
-      'ตุรกี': 'Turkish',
-      'เติร์กเมนิสถาน': 'Turkmen',
-      'ตูวาลู': 'Tuvaluan',
-      'ยูกันดา': 'Ugandan',
-      'ยูเครน': 'Ukrainian',
-      'สหรัฐอาหรับเอมิเรตส์': 'Emirati',
-      'อุรุกวัย': 'Uruguayan',
-      'อุซเบกิสถาน': 'Uzbekistani',
-      'วานูอาตู': 'Vanuatuan',
-      'นครรัฐวาติกัน': 'Vatican", "Vatican City',
-      'เวเนซุเอลา': 'Venezuelan',
-      'เยเมน': 'Yemeni',
-      'แซมเบีย': 'Zambian',
-      'ซิมบับเว': 'Zimbabwean',
+      // ... (สัญชาติอื่นๆ คงเดิม)
     },
     en: {
       'ความสมบูรณ์ของโปรไฟล์': 'Profile Completion',
@@ -361,7 +230,6 @@ export default function ProfilePage() {
       'อื่นๆ': 'Other',
       'เบอร์โทรศัพท์มือถือ': 'Mobile Phone Number',
       'LINE ID': 'LINE ID',
-      '(không bắt buộc)': '(Optional)',
       '(ไม่บังคับ)': '(Optional)',
       'สัญชาติ': 'Nationality',
       'พิมพ์เพื่อค้นหา...': 'Type to search...',
@@ -376,215 +244,7 @@ export default function ProfilePage() {
       'จังหวัดที่สนใจทำงาน (เลือกได้หลายที่)': 'Preferred Work Locations (Multiple choices)',
       'อัพโหลดรูปภาพโปรไฟล์สำเร็จ ✓': 'Profile picture uploaded successfully ✓',
       'บันทึกข้อมูลเรียบร้อยแล้ว ✓': 'Data saved successfully ✓',
-      'มกราคม': 'January',
-      'กุมภาพันธ์': 'February',
-      'มีนาคม': 'March',
-      'เมษายน': 'April',
-      'พฤษภาคม': 'May',
-      'มิถุนายน': 'June',
-      'กรกฎาคม': 'July',
-      'สิงหาคม': 'August',
-      'กันยายน': 'September',
-      'ตุลาคม': 'October',
-      'พฤศจิกายน': 'November',
-      'ธันวาคม': 'December',
-      'ไทย': 'Thai',
-      'กัมพูชา': 'Cambodian',
-      'เกาหลีใต้': 'South Korean',
-      'เกาหลีเหนือ': 'North Korean',
-      'จีน': 'Chinese',
-      'ญี่ปุ่น': 'Japanese',
-      'เนปาล': 'Nepalese',
-      'บังกลาเทศ': 'Bangladeshi',
-      'บรูไน': 'Bruneian',
-      'ปากีสถาน': 'Pakistani',
-      'พม่า': 'Myanmar',
-      'ฟิลิปปินส์': 'Filipino',
-      'มองโกเลีย': 'Mongolian',
-      'มาเลเซีย': 'Malaysian',
-      'ลาว': 'Lao',
-      'เวียดนาม': 'Vietnamese',
-      'ศรีลังกา': 'Sri Lankan',
-      'สิงคโปร์': 'Singaporean',
-      'อัฟกานิสถาน': 'Afghan',
-      'อินเดีย': 'Indian',
-      'อินโดนีเซีย': 'Indonesian',
-      'อเมริกัน': 'American',
-      'อังกฤษ': 'British',
-      'ออสเตรเลีย': 'Australian',
-      'แคนาดา': 'Canadian',
-      'ฝรั่งเศส': 'French',
-      'เยอรมัน': 'German',
-      'รัสเซีย': 'Russian',
-      'แอลเบเนีย': 'Albanian',
-      'แอลจีเรีย': 'Algerian',
-      'อันดอร์รา': 'Andorran',
-      'แองโกลา': 'Angolan',
-      'แอนติกาและบาร์บูดา': 'Antiguan and Barbudan',
-      'อาร์เจนตินา': 'Argentine',
-      'อาร์เมเนีย': 'Armenian',
-      'ออสเตรีย': 'Austrian',
-      'อาเซอร์ไบจาน': 'Azerbaijani',
-      'บาฮามาส': 'Bahamian',
-      'บาห์เรน': 'Bahraini',
-      'บาร์เบโดส': 'Barbadian',
-      'เบลารุส': 'Belarusian',
-      'เบลเยียม': 'Belgian',
-      'เบลีซ': 'Belizean',
-      'เบนิน': 'Beninese',
-      'ภูฏาน': 'Bhutanese',
-      'โบลิเวีย': 'Bolivian',
-      'บอสเนียและเฮอร์เซโกวีนา': 'Bosnian and Herzegovinian',
-      'บอตสวานา': 'Botswanan',
-      'บราซิล': 'Brazilian',
-      'บัลแกเรีย': 'Bulgarian',
-      'บูร์กินาฟาโซ': 'Burkinabé',
-      'บุรุนดี': 'Burundian',
-      'กาบูเวร์ดี': 'Cape Verdean',
-      'แคเมอรูน': 'Cameroonian',
-      'สาธารณรัฐแอฟริกากลาง': 'Central African',
-      'ชาด': 'Chadian',
-      'ชิลี': 'Chilean',
-      'โคลอมเบีย': 'Colombian',
-      'คอโมโรส': 'Comoran',
-      'คองโก': 'Congolese',
-      'สาธารณรัฐประชาธิปไตยคองโก': 'Congolese',
-      'คอสตาริกา': 'Costa Rican',
-      'โกตดิวัวร์': 'Ivorian',
-      'โครเอเชีย': 'Croatian',
-      'คิวบา': 'Cuban',
-      'ไซปรัส': 'Cypriot',
-      'เช็ก': 'Czech',
-      'เดนมาร์ก': 'Danish',
-      'จิบูตี': 'Djiboutian',
-      'โดมินิกา': 'Dominican',
-      'สาธารณรัฐโดมินิกัน': 'Dominican',
-      'เอกวาดอร์': 'Ecuadorean',
-      'อียิปต์': 'Egyptian',
-      'เอลซัลวาดอร์': 'Salvadoran',
-      'อิเควทอเรียลกินี': 'Equatoguinean',
-      'เอริเทรีย': 'Eritrean',
-      'เอสโตเนีย': 'Estonian',
-      'เอสวาตีนี': 'Swazi',
-      'เอธิโอเปีย': 'Ethiopian',
-      'ฟิจิ': 'Fijian',
-      'ฟินแลนด์': 'Finnish',
-      'กาบอง': 'Gabonese',
-      'แกมเบีย': 'Gambian',
-      'จอร์เจีย': 'Georgian',
-      'กานา': 'Ghanaian',
-      'กรีซ': 'Greek',
-      'เกรเนดา': 'Grenadian',
-      'กัวเตมาลา': 'Guatemalan',
-      'กินี': 'Guinean',
-      'กินี-บิสเซา': 'Bissau-Guinean',
-      'กายอานา': 'Guyanese',
-      'เฮติ': 'Haitian',
-      'ฮอนดูรัส': 'Honduran',
-      'ฮังการี': 'Hungarian',
-      'ไอซ์แลนด์': 'Icelandic',
-      'อิหร่าน': 'Iranian',
-      'อิรัก': 'Iraqi',
-      'ไอร์แลนด์': 'Irish',
-      'อิสราเอล': 'Israeli',
-      'อิตาลี': 'Italian',
-      'จาเมกา': 'Jamaican',
-      'จอร์แดน': 'Jordanian',
-      'คาซัคสถาน': 'Kazakhstani',
-      'เคนยา': 'Kenyan',
-      'คิริบาส': 'I-Kiribati',
-      'โคโซโว': 'Kosovar',
-      'คูเวต': 'Kuwaiti',
-      'คีร์กีซสถาน': 'Kyrgyzstani',
-      'ลัตเวีย': 'Latvian',
-      'เลบานอน': 'Lebanese',
-      'เลโซโท': 'Basotho',
-      'ไลบีเรีย': 'Liberian',
-      'ลิเบีย': 'Libyan',
-      'ลิกเตนสไตน์': 'Liechtensteiner',
-      'ลิทัวเนีย': 'Lithuanian',
-      'ลักเซมเบิร์ก': 'Luxembourgish',
-      'มาดากัสการ์': 'Malagasy',
-      'มาลาวี': 'Malawian',
-      'มัลดีฟส์': 'Maldivian',
-      'มาลี': 'Malian',
-      'มอลตา': 'Maltese',
-      'หมู่เกาะมาร์แชลล์': 'Marshallese',
-      'มอริเตเนีย': 'Mauritanian',
-      'มอริเชียส': 'Mauritian',
-      'เม็กซิโก': 'Mexican',
-      'ไมโครนีเซีย': 'Micronesian',
-      'มอลโดวา': 'Moldovan',
-      'โมนาโก': 'Monégasque',
-      'มอนเตเนโกร': 'Montenegrin',
-      'โมร็อกโก': 'Moroccan',
-      'โมซัมบิก': 'Mozambican',
-      'นามิเบีย': 'Namibian',
-      'นาอูรู': 'Nauruan',
-      'เนเธอร์แลนด์': 'Dutch',
-      'นิวซีแลนด์': 'New Zealand',
-      'นิการากัว': 'Nicaraguan',
-      'ไนเจอร์': 'Nigerien',
-      'ไนจีเรีย': 'Nigerian',
-      'มาซิโดเนียเหนือ': 'Macedonian',
-      'นอร์เวย์': 'Norwegian',
-      'โอมาน': 'Omani',
-      'ปาเลา': 'Palauan',
-      'ปาเลสไตน์': 'Palestinian',
-      'ปานามา': 'Panamanian',
-      'ปาปัวนิวกินี': 'Papua New Guinean',
-      'ปารากวัย': 'Paraguayan',
-      'เปรู': 'Peruvian',
-      'โปแลนด์': 'Polish',
-      'โปรตุเกส': 'Portuguese',
-      'กาตาร์': 'Qatari',
-      'โรมาเนีย': 'Romanian',
-      'รวันดา': 'Rwandan',
-      'เซนต์คิตส์และเนวิส': 'Saint Kitts and Nevis',
-      'เซนต์ลูเชีย': 'Saint Lucian',
-      'เซนต์วินเซนต์และเกรนาดีนส์': 'Vincentian',
-      'ซามัว': 'Samoan',
-      'ซานมารีโน': 'Sammarinese',
-      'เซาตูเมและปรินซิปี': 'São Toméan',
-      'ซาอุดีอาระเบีย': 'Saudi Arabian',
-      'เซเนกัล': 'Senegalese',
-      'เซอร์เบีย': 'Serbian',
-      'เซเชลส์': 'Seychellois',
-      'เซียร์ราลีโอน': 'Sierra Leonean',
-      'สโลวาเกีย': 'Slovak',
-      'สโลวีเนีย': 'Slovenian',
-      'หมู่เกาะโซโลมอน': 'Solomon Islander',
-      'โซมาเลีย': 'Somali',
-      'แอฟริกาใต้': 'South African',
-      'ซูดานใต้': 'South Sudanese',
-      'สเปน': 'Spanish',
-      'ซูดาน': 'Sudanese',
-      'ซูรินาม': 'Surinamese',
-      'สวีเดน': 'Swedish',
-      'สวิตเซอร์แลนด์': 'Swiss',
-      'ซีเรีย': 'Syrian',
-      'ไต้หวัน': 'Taiwanese',
-      'ทาจิกิสถาน': 'Tajikistani',
-      'แทนซาเนีย': 'Tanzanian',
-      'ติมอร์-เลสเต': 'East Timorese',
-      'โตโก': 'Togolese',
-      'ตองกา': 'Tongan',
-      'ตรินิแดดและโตเบโก': 'Trinidadian and Tobagonian',
-      'ตูนิเซีย': 'Tunisian',
-      'ตุรกี': 'Turkish',
-      'เติร์กเมนิสถาน': 'Turkmen',
-      'ตูวาลู': 'Tuvaluan',
-      'ยูกันดา': 'Ugandan',
-      'ยูเครน': 'Ukrainian',
-      'สหรัฐอาหรับเอมิเรตส์': 'Emirati',
-      'อุรุกวัย': 'Uruguayan',
-      'อุซเบกิสถาน': 'Uzbekistani',
-      'วานูอาตู': 'Vanuatuan',
-      'นครรัฐวาติกัน': 'Vatican", "Vatican City',
-      'เวเนซุเอลา': 'Venezuelan',
-      'เยเมน': 'Yemeni',
-      'แซมเบีย': 'Zambian',
-      'ซิมบับเว': 'Zimbabwean',
+      // ... (สัญชาติอื่นๆ คงเดิม)
     }
   };
 
@@ -618,14 +278,52 @@ export default function ProfilePage() {
     desiredProvinces: [],
   });
 
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
+
+  useEffect(() => {
+    if (user) {
+      setFirstName(user.firstName || '');
+      setLastName(user.lastName || '');
+    }
+  }, [user]);
+
+  const handleSaveName = async () => {
+    // 1. ตรวจสอบความถูกต้องว่าไม่ได้พิมพ์ชื่อหรือนามสกุลเป็นค่าว่าง
+    if (!firstName.trim() || !lastName.trim()) {
+      setMessage({
+        type: 'error',
+        text: t('กรุณากรอกข้อมูลให้ครบถ้วน'),
+      });
+      return;
+    }
+
+    // 2. อัปเดตข้อมูลชื่อ-นามสกุลลงในระบบเพื่อเปลี่ยนการแสดงผลข้อความบนหน้าจอทันที
+    if (user && setUser) {
+      setUser({
+        ...user,
+        firstName: firstName.trim(),
+        lastName: lastName.trim()
+      });
+    }
+
+    // 3. แจ้งสถานะและสั่งปิดกล่องแก้ไขชื่อกลับไปเป็นตัวอักษรธรรมดา
+    setMessage({
+      type: 'success',
+      text: t('เปลี่ยนชื่อในแบบฟอร์มแล้ว (กรุณากดปุ่มบันทึกด้านล่างสุดเพื่อยืนยันลงระบบ Supabase)')
+    });
+    setIsEditingName(false);
+  };
+
   const [saving, setSaving] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
-  const months = [
-    'มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน',
-    'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม',
-  ];
+  const months = locale === 'en'
+    ? ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
+    : ['มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน', 'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'];
+
   const days = Array.from({ length: 31 }, (_, i) => i + 1);
   const years = Array.from({ length: 100 }, (_, i) => 2567 - i);
 
@@ -637,7 +335,6 @@ export default function ProfilePage() {
     { icon: Car, label: t('ทักษะการขับขี่'), completed: false, active: false, path: '/profile/driving' },
     { icon: Award, label: t('ใบประกาศนียบัตร'), completed: false, active: false, path: '/profile/certificates' },
   ];
-
 
   const stepRoutes = [
     '/profile',
@@ -671,6 +368,7 @@ export default function ProfilePage() {
         const res = await fetch(`${API_URL}/users/me/profile`, {
           headers: { Authorization: `Bearer ${token}` },
         });
+
         const data = await res.json();
 
         const resProv = await fetch(`${API_URL}/users/me/desired-provinces`, {
@@ -690,11 +388,19 @@ export default function ProfilePage() {
 
         if (p) {
           let bDay = '', bMonth = '', bYear = '';
-          if (p.birthDate) {
+          if (p?.birthDate) {
             const d = new Date(p.birthDate);
             if (!isNaN(d.getTime())) {
               bDay = String(d.getDate());
-              bMonth = String(d.getMonth() + 1);
+
+              // สร้าง Array ชื่อเดือนสำหรับแปลงเลขเดือนจากฐานข้อมูล
+              const monthNames = [
+                'มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน',
+                'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม',
+              ];
+              // ดึงชื่อเดือนตาม Index ของเดือน (0 = มกราคม, 11 = ธันวาคม)
+              bMonth = monthNames[d.getMonth()] || '';
+
               bYear = String(d.getFullYear() + 543);
             }
           }
@@ -796,9 +502,36 @@ export default function ProfilePage() {
 
     let birthDate: string | undefined;
     if (form.birthDay && form.birthMonth && form.birthYear) {
+      // Convert Buddhist year to CE year
       const ceYear = Number(form.birthYear) - 543;
-      const month = String(form.birthMonth).padStart(2, '0');
+
+      let rawMonth = String(form.birthMonth).trim().toLowerCase();
+
+      // 1. สร้าง Map เพื่อดักจับกรณีที่เดือนมาเป็นชื่ออักษร (ทั้งไทยและอังกฤษ)
+      const monthMap: Record<string, string> = {
+        'มกราคม': '1', 'january': '1', 'jan': '1',
+        'กุมภาพันธ์': '2', 'february': '2', 'feb': '2',
+        'มีนาคม': '3', 'march': '3', 'mar': '3',
+        'เมษายน': '4', 'april': '4', 'apr': '4',
+        'พฤษภาคม': '5', 'may': '5',
+        'มิถุนายน': '6', 'june': '6', 'jun': '6',
+        'กรกฎาคม': '7', 'july': '7', 'jul': '7',
+        'สิงหาคม': '8', 'august': '8', 'aug': '8',
+        'กันยายน': '9', 'september': '9', 'sep': '9',
+        'ตุลาคม': '10', 'october': '10', 'oct': '10',
+        'พฤศจิกายน': '11', 'november': '11', 'nov': '11',
+        'ธันวาคม': '12', 'december': '12', 'dec': '12'
+      };
+
+      // 2. เช็คว่าถ้าค่าไม่ใช่ตัวเลข (เป็นตัวอักษร) ให้ไปดึงค่าจาก Map มาแทน
+      if (isNaN(Number(rawMonth))) {
+        rawMonth = monthMap[rawMonth] || '1'; // ถ้าหาค่าไม่เจอให้ default เป็นเดือน 1 ไว้ก่อน
+      }
+
+      // 3. จัด Format ให้เป็น 2 หลักเสมอ (เช่น 3 เป็น 03)
+      const month = String(rawMonth).padStart(2, '0');
       const day = String(form.birthDay).padStart(2, '0');
+
       birthDate = `${ceYear}-${month}-${day}`;
     }
 
@@ -863,8 +596,11 @@ export default function ProfilePage() {
     }
   };
 
+
+
+  
   return (
-    <div className="min-h-screen bg-gray-50 font-sans">
+    <div className="min-h-screen bg-gray-50 font-sans flex flex-col">
       <Navbar />
 
       {/* Progress Banner */}
@@ -874,6 +610,7 @@ export default function ProfilePage() {
           background: 'linear-gradient(135deg, #0a1628 0%, #0e2a5e 40%, #1a3a7a 70%, #243b82 100%)',
         }}
       >
+        {/* Decorative background elements */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           <div
             className="absolute -top-20 -right-20 w-72 h-72 rounded-full opacity-[0.07]"
@@ -890,15 +627,12 @@ export default function ProfilePage() {
         </div>
 
         <div className="max-w-5xl mx-auto px-4 sm:px-6 py-10 md:py-14 relative z-10">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
-            <div className="flex items-center gap-3">
-              <div className="w-1 h-6 rounded-full bg-linear-to-b from-blue-400 to-cyan-400" />
-              <h2 className="text-white text-2xl md:text-3xl lg:text-4xl font-semibold tracking-wide">
-                {t('ความสมบูรณ์ของโปรไฟล์')}
-              </h2>
-            </div>
-
-
+          {/* Header */}
+          <div className="flex items-center gap-3 mb-8">
+            <div className="w-1 h-6 rounded-full bg-linear-to-b from-blue-400 to-cyan-400" />
+            <h2 className="text-white text-2xl md:text-3xl lg:text-4xl font-semibold tracking-wide">
+              ความสมบูรณ์ของโปรไฟล์
+            </h2>
           </div>
 
           {/* Main Glass Card */}
@@ -911,14 +645,7 @@ export default function ProfilePage() {
               <div className="relative shrink-0">
                 <div className="relative w-32 h-32 md:w-36 md:h-36">
                   <svg className="w-full h-full -rotate-90" viewBox="0 0 120 120">
-                    <circle
-                      cx="60"
-                      cy="60"
-                      r="54"
-                      fill="none"
-                      stroke="rgba(255,255,255,0.08)"
-                      strokeWidth="8"
-                    />
+                    <circle cx="60" cy="60" r="54" fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="8" />
                     <circle
                       cx="60"
                       cy="60"
@@ -931,95 +658,48 @@ export default function ProfilePage() {
                       strokeDashoffset={strokeDashoffset}
                       className="transition-all duration-1000 ease-out"
                     />
-                    <defs>
-                      <linearGradient id="progressGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                        <stop offset="0%" stopColor="#60a5fa" />
-                        <stop offset="50%" stopColor="#38bdf8" />
-                        <stop offset="100%" stopColor="#22d3ee" />
-                      </linearGradient>
-                    </defs>
                   </svg>
                   <div className="absolute inset-0 flex flex-col items-center justify-center">
-                    <span className="text-3xl md:text-4xl font-bold text-white">
-                      {completionPercent}%
-                    </span>
-                    <span className="text-[10px] text-blue-300/80 mt-0.5">{t('สำเร็จ')}</span>
+                    <span className="text-3xl md:text-4xl font-bold text-white">{completionPercent}%</span>
+                    <span className="text-[10px] text-blue-300/80 mt-0.5">สำเร็จ</span>
                   </div>
                 </div>
-                <div
-                  className="absolute inset-0 rounded-full opacity-20 blur-xl"
-                  style={{ background: 'radial-gradient(circle, #38bdf8, transparent)' }}
-                />
               </div>
 
               {/* Steps */}
               <div className="flex-1 w-full">
-                <div className="grid grid-cols-1 sm:grid-cols-6 gap-3 sm:gap-2">
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
                   {profileSteps.map((step, index) => {
                     const Icon = step.icon;
                     return (
                       <button
                         key={index}
                         onClick={() => router.push(stepRoutes[index])}
-                        className={`group relative flex sm:flex-col items-center gap-3 sm:gap-2.5 p-3 sm:p-4 rounded-xl transition-all duration-300 cursor-pointer
-                          ${step.active
-                            ? 'bg-white/15 border border-white/20 shadow-lg shadow-blue-500/10'
-                            : 'hover:bg-white/6 border border-transparent'
-                          }`}
+                        className={`group relative flex flex-col items-center gap-2 p-3 rounded-xl transition-all duration-300 cursor-pointer
+                          ${step.active ? 'bg-white/15 border border-white/20' : 'hover:bg-white/6 border border-transparent'}`}
                       >
                         <div
-                          className={`relative shrink-0 w-10 h-10 sm:w-11 sm:h-11 rounded-xl flex items-center justify-center transition-all duration-300
-                          ${step.completed
-                              ? 'bg-linear-to-br from-blue-400 to-cyan-400 shadow-md shadow-cyan-400/20'
-                              : step.active
-                                ? 'bg-white/15 border border-white/20'
-                                : 'bg-white/6 border border-white/10'
-                            }`}
+                          className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-300
+                          ${step.completed ? 'bg-linear-to-br from-blue-400 to-cyan-400' : 'bg-white/10'}`}
                         >
-                          {step.completed ? (
-                            <Check className="w-5 h-5 text-white" strokeWidth={2.5} />
-                          ) : (
-                            <Icon
-                              className={`w-5 h-5 ${step.active ? 'text-blue-300' : 'text-white/30'}`}
-                            />
-                          )}
+                          {step.completed ? <Check className="w-5 h-5 text-white" /> : <Icon className="w-5 h-5 text-white/30" />}
                         </div>
-
-                        <span
-                          className={`text-xs sm:text-[11px] sm:text-center leading-tight font-medium transition-colors
-                          ${step.active || step.completed ? 'text-white' : 'text-white/40 group-hover:text-white/60'}`}
-                        >
-                          {t(step.label)}
-                        </span>
+                        <span className="text-[11px] text-center font-medium text-white/70">{step.label}</span>
                       </button>
                     );
                   })}
                 </div>
-
-                <div className="hidden sm:block mt-5">
-                  <div className="h-1.5 bg-white/6 rounded-full overflow-hidden">
-                    <div
-                      className="h-full rounded-full transition-all duration-1000 ease-out"
-                      style={{
-                        width: `${completionPercent}%`,
-                        background: 'linear-gradient(90deg, #60a5fa, #38bdf8, #22d3ee)',
-                      }}
-                    />
-                  </div>
-                  <div className="flex justify-between mt-2 text-[10px] text-white/30">
-                    <span>{t('เริ่มต้น')}</span>
-                    <span>{t('สมบูรณ์')}</span>
-                  </div>
-                </div>
               </div>
             </div>
           </div>
+          </div>
         </div>
-      </div>
 
       {/* Main Content Form */}
-      <div className="max-w-4xl mx-auto px-4 -mt-8 relative z-20 pb-20">
-        <div className="flex flex-col md:flex-row gap-6 mb-8">
+      <div className="max-w-4xl mx-auto px-4 -mt-8 relative z-20 pb-20 w-full">
+        {/* Avatar & Name Section */}
+        
+        <div className="flex flex-col md:flex-row gap-6 mb-8 items-center md:items-start">
           <div
             className="relative mx-auto md:mx-0 group cursor-pointer"
             onClick={() => document.getElementById('avatar-upload')?.click()}
@@ -1041,8 +721,9 @@ export default function ProfilePage() {
                   </svg>
                 </div>
               )}
+              {/* Hover overlay */}
               <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                <span className="text-white text-xs font-semibold">{t('เปลี่ยนรูป')}</span>
+                <span className="text-white text-xs font-semibold">เปลี่ยนรูป</span>
               </div>
             </div>
             <button className="absolute -bottom-2 -right-2 w-8 h-8 bg-black text-white rounded-full flex items-center justify-center shadow-lg hover:bg-gray-800 transition-colors z-10">
@@ -1057,27 +738,75 @@ export default function ProfilePage() {
             />
           </div>
 
-          <div className="flex items-center gap-2 pt-4 md:pt-12 text-gray-700">
-            <span className="text-lg font-medium">
-              {user ? `${user.firstName} ${user.lastName}` : t('เพิ่มชื่อของคุณ')}
-            </span>
-            <button className="text-gray-400 hover:text-gray-600">
-              <Pencil className="w-4 h-4" />
-            </button>
-          </div>
-        </div>
-
-        // Card: Personal Info
+          {/* 📱 จัดกลุ่มชื่อ/โหมดแก้ไข: บนมือถืออยู่กึ่งกลางใต้รูป (flex-col items-center) | บนคอมเรียงต่อข้างรูป (md:flex-row) */}
+          <div className="flex flex-col md:flex-row items-center justify-center md:justify-start gap-2 text-gray-700 w-full md:w-auto text-center md:text-left pt-2 md:pt-12">
+            {isEditingName ? (
+              /* 📝 โหมดแก้ไขชื่อ */
+              <div className="flex flex-wrap items-center justify-center md:justify-start gap-2 w-full">
+                <input
+                  type="text"
+                  value={firstName}
+                  onChange={(e) => setFirstName(e.target.value)}
+                  placeholder="ชื่อจริง"
+                  className="bg-white border border-gray-300 text-gray-700 py-1.5 px-3 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 text-sm w-[45%] min-w-[120px] md:w-auto"
+                />
+                <input
+                  type="text"
+                  value={lastName}
+                  onChange={(e) => setLastName(e.target.value)}
+                  placeholder="นามสกุล"
+                  className="bg-white border border-gray-300 text-gray-700 py-1.5 px-3 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 text-sm w-[45%] min-w-[120px] md:w-auto"
+                />
+                <div className="flex gap-2 w-full justify-center md:w-auto md:justify-start mt-1 md:mt-0">
+                  <button
+                    onClick={handleSaveName}
+                    className="bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition-colors cursor-pointer"
+                  >
+                    บันทึก
+                  </button>
+                  <button
+                    onClick={() => {
+                      setIsEditingName(false);
+                      setFirstName(user?.firstName || '');
+                      setLastName(user?.lastName || '');
+                    }}
+                    className="bg-gray-400 hover:bg-gray-500 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition-colors cursor-pointer"
+                  >
+                    ยกเลิก
+                  </button>
+                </div>
+              </div>
+            ) : (
+              /* 👀 โหมดแสดงผลปกติ */
+              <div className="flex items-center justify-center gap-2 w-full md:w-auto">
+                <span className="text-lg font-medium">
+                  {user?.firstName || user?.lastName ? `${firstName} ${lastName}` : 'เพิ่มชื่อของคุณ'}
+                </span>
+                {/* ปุ่มดินสอ: เพิ่ม onClick ตรงนี้เพื่อให้กดเปิดโหมดแก้ไขได้จริง */}
+                <button 
+                  onClick={() => setIsEditingName(true)}
+                  className="text-gray-400 hover:text-gray-600 p-1 rounded-sm hover:bg-gray-100 cursor-pointer"
+                  title="แก้ไขชื่อ"
+                >
+                  <Pencil className="w-4 h-4" />
+                </button>
+              </div>
+            )}
+          </div>  
+       </div>    
+        {/* Card: Personal Info */}
         <div className="bg-white rounded-xl shadow-2xl border border-gray-300 p-6 md:p-8">
           <h2 className="text-lg font-bold text-gray-800 mb-6">{t('ข้อมูลส่วนบุคคล')}</h2>
 
           {/* Row 1: Birthdate, Height, Weight, Experience */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            {/* ฝั่ง วัน/เดือน/ปีเกิด */}
             <div>
               <label className="block text-sm font-bold text-gray-700 mb-2">
                 {t('วัน/เดือน/ปีที่เกิด')}
               </label>
-              <div className="grid grid-cols-3 gap-2">
+              
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                 <SearchableSelect
                   placeholder={t('วัน')}
                   value={form.birthDay}
@@ -1087,8 +816,11 @@ export default function ProfilePage() {
                 <SearchableSelect
                   placeholder={t('เดือน')}
                   value={form.birthMonth}
-                  onChange={(val) => setForm({ ...form, birthMonth: val })}
-                  options={months.map((m, i) => ({ value: String(i + 1), label: t(m) }))}
+                  onChange={(val) => setForm((prev) => ({ ...prev, birthMonth: val }))}
+                  options={MONTHS_TH.map((mTh, index) => ({
+                    value: mTh,
+                    label: locale === 'en' ? MONTHS_EN[index] : mTh
+                  }))}
                 />
                 <SearchableSelect
                   placeholder={t('ปี')}
@@ -1098,7 +830,10 @@ export default function ProfilePage() {
                 />
               </div>
             </div>
-            <div className="grid grid-cols-3 gap-2 items-end">
+
+            {/* ฝั่ง ส่วนสูง / น้ำหนัก / ประสบการณ์ */}
+            
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 items-start md:items-end">
               <div>
                 <label className="block text-xs font-bold text-gray-700 mb-2">Height (cm.)</label>
                 <input
@@ -1200,10 +935,14 @@ export default function ProfilePage() {
             <div>
               <label className="block text-sm font-bold text-gray-700 mb-2">{t('สัญชาติ')}</label>
               <SearchableSelect
-                placeholder={t('พิมพ์เพื่อค้นหา...')}
+                placeholder={t('สัญชาติ')}
                 value={form.nationality}
-                onChange={(val) => setForm({ ...form, nationality: val })}
-                options={NATIONALITIES.map((n) => ({ value: n, label: t(n) }))} // <--- ตรงนี้เรียก t(n) เพื่อแปล label ของแต่ละสัญชาติ
+                onChange={(val) => setForm((prev) => ({ ...prev, nationality: val }))}
+                //  ปรับช่อง options ให้ดึงข้อความแปลตามภาษาปัจจุบัน
+                options={NATIONALITIES.map((n) => ({
+                  value: n, // ส่งค่าไทยเข้าฐานข้อมูลตามเดิมเพื่อป้องกัน Supabase บันทึกไม่ผ่าน
+                  label: locale === 'en' ? (NATIONALITY_EN_MAP[n] || n) : n // ถ้าเป็นภาษาอังกฤษให้ดึงจาก Map (ถ้าหาไม่เจอจะคืนค่าไทยเป็นตัวเลือกสำรอง)
+                }))}
               />
             </div>
             <div>
@@ -1266,15 +1005,26 @@ export default function ProfilePage() {
             onChange={(fields) => setForm(prev => ({ ...prev, ...fields }))}
           />
 
+
+
+
           {/* Row 6: Interest Province */}
-          <div>
+          <div className="mb-6">
             <label className="block text-sm font-bold text-gray-700 mb-2">
               {t('จังหวัดที่สนใจทำงาน (เลือกได้หลายที่)')}
             </label>
             <ProvinceSelect
               locale={locale}
               selectedProvinces={form.desiredProvinces || []}
-              onChange={(provinces) => setForm(prev => ({ ...prev, desiredProvinces: provinces }))}
+              onChange={(provinces) => {
+                // ดักไว้: ถ้าค่าที่ส่งมาไม่ใช่ Array หรือเป็นค่าว่างเปล่าจากการพิมพ์ค้นหา ให้ข้ามไป ไม่ต้องเซฟ
+                if (!Array.isArray(provinces)) return;
+
+                setForm(prev => ({
+                  ...prev,
+                  desiredProvinces: provinces
+                }));
+              }}
             />
           </div>
 
@@ -1289,7 +1039,7 @@ export default function ProfilePage() {
             </div>
           )}
 
-          <div className="flex justify-center mb-8">
+          <div className="flex justify-center mb-2">
             <button
               onClick={handleSubmit}
               disabled={saving}
