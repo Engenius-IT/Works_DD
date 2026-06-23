@@ -10,7 +10,7 @@ import type { JwtPayload } from '../auth/types/jwt-payload.interface';
 @ApiTags('companies')
 @Controller('companies')
 export class CompaniesController {
-  constructor(readonly companiesService: CompaniesService) {}
+  constructor(readonly companiesService: CompaniesService) { }
 
   @Get('mine')
   @UseGuards(JwtAuthGuard)
@@ -48,11 +48,23 @@ export class CompaniesController {
     return { message: 'List companies endpoint', page, limit };
   }
 
-  @Get(':slug')
-  async findOne(@Param('slug') slug: string) {
-    // TODO: Implement get company by slug
-    return { message: `Company detail: ${slug}` };
-  }
+@Get('top-by-package')
+async getTopCompanies() {
+  return this.companiesService.getTopCompanies();
+}
+
+  
+@Get(':slug/jobs')
+@ApiOperation({ summary: 'ดึงรายการงานทั้งหมดของบริษัทจาก slug' })
+async findCompanyJobs(@Param('slug') slug: string) {
+  return this.companiesService.findJobsByCompanySlug(slug);
+}
+
+@Get(':slug')
+@ApiOperation({ summary: 'ดึงข้อมูลบริษัทจาก slug' })
+async findOne(@Param('slug') slug: string) {
+  return this.companiesService.findBySlug(slug);
+}
 
   @Patch(':id')
   @UseGuards(JwtAuthGuard)
