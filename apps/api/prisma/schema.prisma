@@ -80,7 +80,7 @@ model Company {
   createdAt          DateTime           @default(now()) @map("created_at")
   owner              User               @relation(fields: [ownerId], references: [id], onDelete: Cascade)
   jobs               Job[]
-
+  bgUrl              String?            @map("bg_url")
   @@map("companies")
 }
 

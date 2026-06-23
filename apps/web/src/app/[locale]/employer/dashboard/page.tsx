@@ -162,7 +162,6 @@ interface Company {
   province?: string;
   companyType?: string;
   logoUrl?: string;
-  bgUrl?: string;
   verificationStatus?: 'UNVERIFIED' | 'PENDING_REVIEW' | 'VERIFIED' | 'REJECTED';
   rejectionReason?: string;
 }
@@ -379,19 +378,18 @@ function CompanyEditModal({
       const token = localStorage.getItem('accessToken');
 
       const payload = {
-  name: form.name,
-  description: form.description,
-  website: form.website,
-  industry: form.industry,
-  size: form.size,
-  phone: form.phone,
-  address: form.address,
-  district: form.district,
-  province: form.province,
-  companyType: form.companyType,
-  logoUrl: form.logoUrl,
-  bgUrl: form.bgUrl,
-};
+        name: form.name,
+        description: form.description,
+        website: form.website,
+        industry: form.industry,
+        size: form.size,
+        phone: form.phone,
+        address: form.address,
+        district: form.district,
+        province: form.province,
+        companyType: form.companyType,
+        logoUrl: form.logoUrl,
+      };
 
       const res = await fetch(`${API_URL}/companies/${company.id}`, {
         method: 'PATCH',
@@ -500,73 +498,6 @@ function CompanyEditModal({
               </p>
             </div>
           </div>
-          {/* Background Upload */}
-<div className="border-t border-gray-100 pt-6">
-  <h3 className="text-sm font-semibold text-gray-800 mb-3">
-    รูปพื้นหลังบริษัท
-  </h3>
-
-  <div className="relative rounded-2xl overflow-hidden border border-gray-200">
-    <div className="w-full h-48 bg-gray-100">
-      {form.bgUrl ? (
-        <img
-          src={form.bgUrl}
-          alt="Company Background"
-          className="w-full h-full object-cover"
-        />
-      ) : (
-        <div className="w-full h-full flex items-center justify-center text-gray-400 text-sm">
-          ยังไม่มีรูปพื้นหลัง
-        </div>
-      )}
-    </div>
-
-    <label className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity cursor-pointer">
-      <span className="px-4 py-2 bg-white rounded-xl text-sm font-medium">
-        เปลี่ยนรูปพื้นหลัง
-      </span>
-
-      <input
-        type="file"
-        accept="image/jpeg,image/png,image/webp"
-        className="hidden"
-        onChange={async (e) => {
-          const file = e.target.files?.[0];
-          if (!file) return;
-
-          try {
-            const formData = new FormData();
-            formData.append('file', file);
-
-            const token = localStorage.getItem('accessToken');
-
-            const uploadRes = await fetch(`${API_URL}/upload`, {
-              method: 'POST',
-              headers: {
-                Authorization: `Bearer ${token}`,
-              },
-              body: formData,
-            });
-
-            if (!uploadRes.ok) {
-              throw new Error();
-            }
-
-            const data = await uploadRes.json();
-
-            set('bgUrl', data.url);
-          } catch {
-            setError('อัปโหลดรูปพื้นหลังไม่สำเร็จ');
-          }
-        }}
-      />
-    </label>
-  </div>
-
-  <p className="text-xs text-gray-400 mt-2">
-    รูปนี้จะแสดงบนหน้า Company Profile ของบริษัท
-  </p>
-</div>
 
           {/* ชื่อบริษัท */}
           <div>
