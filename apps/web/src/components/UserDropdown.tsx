@@ -4,15 +4,18 @@ import { useState, useRef, useEffect } from 'react';
 import { Link } from '@/i18n/routing';
 import { useTranslations } from 'next-intl';
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
+
 interface UserDropdownProps {
   user: {
     firstName: string;
     lastName: string;
     email: string;
     avatarUrl?: string;
-    role?: string;
+    role: string;
     companyName?: string;
     companyLogo?: string;
+    companySlug?: string;
   };
   logout: () => void;
 }
@@ -20,34 +23,58 @@ interface UserDropdownProps {
 export function UserDropdown({ user, logout }: UserDropdownProps) {
   const t = useTranslations('Navbar');
   const [isOpen, setIsOpen] = useState(false);
+  const [companySlug, setCompanySlug] = useState(user.companySlug || '');
   const dropdownRef = useRef<HTMLDivElement>(null);
+
   const isEmployer = user.role === 'EMPLOYER';
   const displayImageUrl = isEmployer && user.companyLogo ? user.companyLogo : user.avatarUrl;
-  const initialChar = isEmployer && user.companyName ? user.companyName.charAt(0) : user.firstName.charAt(0);
+  const initialChar =
+    isEmployer && user.companyName ? user.companyName.charAt(0) : user.firstName.charAt(0);
 
-  // Close dropdown when clicking outside
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setIsOpen(false);
       }
     }
+
     document.addEventListener('mousedown', handleClickOutside);
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, []);
 
+  useEffect(() => {
+    if (!isEmployer || companySlug) return;
+
+    const token = localStorage.getItem('accessToken');
+    if (!token) return;
+
+    fetch(`${API_URL}/companies/mine`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data?.slug) {
+          setCompanySlug(data.slug);
+        }
+      })
+      .catch(() => {});
+  }, [isEmployer, companySlug]);
+
   return (
     <div className="relative" ref={dropdownRef}>
-      {/* Trigger: User Info */}
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="flex items-center gap-3 hover:bg-gray-50 p-2 rounded-lg transition-colors focus:outline-none"
       >
         <span className="text-gray-700 font-medium hidden md:block">
-          {t('hello')} <span className="text-(--color-primary)">{isEmployer && user.companyName ? user.companyName : user.firstName}</span>
+          {t('hello')}{' '}
+          <span className="text-(--color-primary)">
+            {isEmployer && user.companyName ? user.companyName : user.firstName}
+          </span>
         </span>
+
         {displayImageUrl ? (
           <img
             src={displayImageUrl}
@@ -61,10 +88,8 @@ export function UserDropdown({ user, logout }: UserDropdownProps) {
         )}
       </button>
 
-      {/* Dropdown Menu */}
       {isOpen && (
         <div className="absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-xl border border-gray-100 py-2 z-50 animate-in fade-in zoom-in-95 duration-200">
-          {/* User Header in Dropdown (Mobile friendly) */}
           <div className="px-4 py-3 border-b border-gray-100 md:hidden">
             <p className="text-sm font-semibold text-gray-900">
               {user.firstName} {user.lastName}
@@ -72,7 +97,6 @@ export function UserDropdown({ user, logout }: UserDropdownProps) {
             <p className="text-xs text-gray-500 truncate">{user.email}</p>
           </div>
 
-          {/* Jobseeker-only menu items */}
           {!isEmployer && (
             <>
               <div className="py-1">
@@ -83,6 +107,7 @@ export function UserDropdown({ user, logout }: UserDropdownProps) {
                 >
                   {t('profile')}
                 </Link>
+
                 <Link
                   href="/profile"
                   className="block px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-(--color-primary) transition-colors"
@@ -98,12 +123,29 @@ export function UserDropdown({ user, logout }: UserDropdownProps) {
                 >
                   {t('savedJobs')}
                 </Link>
+
                 <Link
                   href="/applications"
                   className="block px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-(--color-primary) transition-colors"
                   onClick={() => setIsOpen(false)}
                 >
                   {t('applications')}
+                </Link>
+              </div>
+
+              <div className="border-t border-gray-100 my-1"></div>
+            </>
+          )}
+
+          {isEmployer && (
+            <>
+              <div className="py-1">
+                <Link
+                  href={`/Companyprofile?slug=${companySlug}`}
+                  className="block px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-(--color-primary) transition-colors"
+                  onClick={() => setIsOpen(false)}
+                >
+                  ดูโปรไฟล์บริษัท
                 </Link>
               </div>
 
@@ -127,3 +169,4 @@ export function UserDropdown({ user, logout }: UserDropdownProps) {
     </div>
   );
 }
+
