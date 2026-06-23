@@ -12,6 +12,7 @@ export function Navbar() {
   const { user, logout } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [logoError, setLogoError] = useState(false);
+  const [isProfileSubmenuOpen, setIsProfileSubmenuOpen] = useState(false);
 
   const t = useTranslations('Navbar');
   const tSub = useTranslations('NavbarSub');
@@ -187,7 +188,7 @@ export function Navbar() {
                     {t('employerBackend')}
                   </Link>
                 )}
-{/* Admin button removed from here, will be moved to Employer Dashboard */}
+                {/* Admin button removed from here, will be moved to Employer Dashboard */}
                 <UserDropdown user={{ ...user, role: user.role }} logout={logout} />
               </>
             ) : (
@@ -311,17 +312,16 @@ export function Navbar() {
           <div className="py-2 space-y-1">
 
             {/* ส่วนนี้ดึง Logic มาจาก SubNavbar */}
-{/* Admin button removed from here */}
-	          {user?.role === 'EMPLOYER' ? (
-	              /* --- เมนูสำหรับนายจ้าง (EMPLOYER) --- */
-	              <>
-	                <Link
-	                  href="/"
-	                  className="block px-4 py-2 text-gray-700 hover:bg-gray-50 rounded-lg font-medium"
-	                  onClick={() => setIsMenuOpen(false)}
-	                >
-	                  {tSub('home')}
-	                </Link>
+            {user?.role === 'EMPLOYER' ? (
+              /* --- เมนูสำหรับนายจ้าง (EMPLOYER) --- */
+              <>
+                <Link
+                  href="/"
+                  className="block px-4 py-2 text-gray-700 hover:bg-gray-50 rounded-lg font-medium"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  {tSub('home')}
+                </Link>
                 <Link
                   href="/resumes"
                   className="block px-4 py-2 text-gray-700 hover:bg-gray-50 rounded-lg font-medium"
@@ -410,17 +410,86 @@ export function Navbar() {
                   {t('employerBackend')}
                 </Link>
               )}
+
+              {/* ส่วนจัดการ Profile และเมนูย่อยสำหรับ JOBSEEKER ใน Mobile Menu */}
               {user.role === 'JOBSEEKER' && (
-                <Link
-                  href="/applications"
-                  className="block px-4 py-2 text-gray-700 hover:bg-gray-50 rounded-lg"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  {t('applications')}
-                </Link>
+                <div className="space-y-1">
+                  {/* เปลี่ยนจากแบบเดิมที่ใช้ {t('myProfile')} โดดๆ */}
+                  <button
+                    type="button"
+                    onClick={() => setIsProfileSubmenuOpen(!isProfileSubmenuOpen)}
+                    className="w-full flex items-center justify-between px-4 py-2.5 text-gray-700 hover:bg-gray-50 rounded-lg font-medium transition-colors"
+                  >
+                    {/* ใช้ฟังก์ชัน t() เพื่อแปลคำว่า "โปรไฟล์ของฉัน" หรือ "My Profile" ตามคีย์ที่มีในระบบ */}
+                    <span>{t('profile')}</span>
+                    <svg
+                      className={`w-4 h-4 text-gray-500 transition-transform duration-200 ${isProfileSubmenuOpen ? 'rotate-180' : ''}`}
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+
+                  {/* เมนูย่อยที่ถูกเปิดขึ้นมา */}
+                  {isProfileSubmenuOpen && (
+                    <div className="pl-6 pr-2 py-1 space-y-1 bg-gray-50/60 rounded-lg border-l-2 border-[#A80010]/30">
+                      <Link
+                        href="/profile"
+                        className="block px-4 py-2 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-md"
+                        onClick={() => {
+                          setIsMenuOpen(false);
+                          setIsProfileSubmenuOpen(false);
+                        }}
+                      >
+                        {/* ดึงคีย์แปลภาษา profile */}
+                        {t('profile')}
+                      </Link>
+                      <Link
+                        href="/profile/edit"
+                        className="block px-4 py-2 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-md"
+                        onClick={() => {
+                          setIsMenuOpen(false);
+                          setIsProfileSubmenuOpen(false);
+                        }}
+                      >
+                        {/* ดึงคีย์แปลภาษา editProfile */}
+                        {t('editProfile')}
+                      </Link>
+                      <Link
+                        href="/saved-jobs"
+                        className="block px-4 py-2 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-md"
+                        onClick={() => {
+                          setIsMenuOpen(false);
+                          setIsProfileSubmenuOpen(false);
+                        }}
+                      >
+                        {/* ดึงคีย์แปลภาษา savedJobs */}
+                        {t('savedJobs')}
+                      </Link>
+                      <Link
+                        href="/applications"
+                        className="block px-4 py-2 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-md"
+                        onClick={() => {
+                          setIsMenuOpen(false);
+                          setIsProfileSubmenuOpen(false);
+                        }}
+                      >
+                        {/* ดึงคีย์แปลภาษา applications ที่ระบบคุณมีอยู่แล้ว */}
+                        {t('applications')}
+                      </Link>
+                    </div>
+                  )}
+                </div>
               )}
+
               <button
-                onClick={logout}
+                onClick={() => {
+                  logout();
+                  setIsMenuOpen(false);
+                  setIsProfileSubmenuOpen(false);
+                }}
                 className="block w-full text-left px-4 py-2 text-red-500 hover:bg-red-50 rounded-lg"
               >
                 {t('logout')}
@@ -431,10 +500,15 @@ export function Navbar() {
               <Link
                 href="/login"
                 className="block px-4 py-2 text-gray-700 hover:bg-gray-50 rounded-lg"
+                onClick={() => setIsMenuOpen(false)}
               >
                 {t('login')}
               </Link>
-              <Link href="/register" className="block px-4 py-2 text-(--color-primary) font-medium">
+              <Link
+                href="/register"
+                className="block px-4 py-2 text-(--color-primary) font-medium"
+                onClick={() => setIsMenuOpen(false)}
+              >
                 {t('register')}
               </Link>
             </>

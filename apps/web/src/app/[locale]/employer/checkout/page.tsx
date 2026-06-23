@@ -842,4 +842,3 @@ function PaymentOption({ icon, title, description, isVip, isPremium, onClick }: 
         </button>
     );
 }
-
