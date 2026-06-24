@@ -21,7 +21,7 @@ export class ApplicationsController {
 
     @Get('applications/employer/recent')
     async getRecentApplications(@CurrentUser() user: JwtPayload) {
-        if (user.role !== 'EMPLOYER') {
+        if (user.role !== 'EMPLOYER' && user.role !== 'ADMIN') {
             throw new ForbiddenException('Only employers can view recent applications');
         }
         return this.applicationsService.findRecentForEmployer(user.sub);
@@ -37,7 +37,7 @@ export class ApplicationsController {
 
     @Get('applications/employer/interviews')
     async getEmployerInterviews(@CurrentUser() user: JwtPayload) {
-        if (user.role !== 'EMPLOYER') {
+        if (user.role !== 'EMPLOYER' && user.role !== 'ADMIN') {
             throw new ForbiddenException('Only employers can view interviews');
         }
         return this.applicationsService.findInterviewsForEmployer(user.sub);
@@ -45,7 +45,7 @@ export class ApplicationsController {
 
     @Get('applications/employer/all')
     async getAllApplications(@Query('jobId') jobId: string, @CurrentUser() user: JwtPayload) {
-        if (user.role !== 'EMPLOYER') {
+        if (user.role !== 'EMPLOYER' && user.role !== 'ADMIN') {
             throw new ForbiddenException('Only employers can view applications');
         }
         return this.applicationsService.findAllForEmployer(user.sub, jobId || undefined);
@@ -53,7 +53,7 @@ export class ApplicationsController {
 
     @Get('applications/:id')
     async getApplication(@Param('id') id: string, @CurrentUser() user: JwtPayload) {
-        if (user.role !== 'EMPLOYER') {
+        if (user.role !== 'EMPLOYER' && user.role !== 'ADMIN') {
             throw new ForbiddenException('Only employers can view application details');
         }
 
@@ -67,7 +67,7 @@ export class ApplicationsController {
 
     @Get('jobs/:jobId/applications')
     async getJobApplications(@Param('jobId') jobId: string, @CurrentUser() user: JwtPayload) {
-        if (user.role !== 'EMPLOYER') {
+        if (user.role !== 'EMPLOYER' && user.role !== 'ADMIN') {
             throw new ForbiddenException('Only employers can view applications');
         }
 
@@ -88,7 +88,7 @@ export class ApplicationsController {
         @Body() updateApplicationStatusDto: UpdateApplicationStatusDto,
         @CurrentUser() user: JwtPayload
     ) {
-        if (user.role !== 'EMPLOYER') {
+        if (user.role !== 'EMPLOYER' && user.role !== 'ADMIN') {
             throw new ForbiddenException('Only employers can update applications');
         }
 
@@ -109,7 +109,7 @@ export class ApplicationsController {
         @Body() body: { interviewDate: string },
         @CurrentUser() user: JwtPayload
     ) {
-        if (user.role !== 'EMPLOYER') {
+        if (user.role !== 'EMPLOYER' && user.role !== 'ADMIN') {
             throw new ForbiddenException('Only employers can schedule interviews');
         }
 
@@ -126,7 +126,7 @@ export class ApplicationsController {
         @Param('id') id: string,
         @CurrentUser() user: JwtPayload
     ) {
-        if (user.role !== 'EMPLOYER') {
+        if (user.role !== 'EMPLOYER' && user.role !== 'ADMIN') {
             throw new ForbiddenException('Only employers can cancel interviews');
         }
 

@@ -327,14 +327,14 @@ export default function EmployerJobsPage() {
       router.push('/employer/login');
       return;
     }
-    if (!authLoading && user && user.role !== 'EMPLOYER') {
+    if (!authLoading && user && user.role !== 'EMPLOYER' && user.role !== 'ADMIN') {
       router.push('/');
       return;
     }
   }, [user, authLoading, router]);
 
   const fetchJobs = () => {
-    if (!user || user.role !== 'EMPLOYER') return;
+    if (!user || (user.role !== 'EMPLOYER' && user.role !== 'ADMIN')) return;
     const token = localStorage.getItem('accessToken');
     if (!token) return;
     fetch(`${API_URL}/companies/mine/jobs`, { headers: { Authorization: `Bearer ${token}` } })
