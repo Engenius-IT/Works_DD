@@ -3,7 +3,11 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from '@/i18n/routing'; // This will be used by the original component
 import { useAuth } from '@/context/AuthContext';
+<<<<<<< Updated upstream
 import { NotificationModal } from './NotificationModal';
+=======
+import { useLocale } from 'next-intl'; // 🌐 นำเข้า useLocale สำหรับระบบแปลภาษา
+>>>>>>> Stashed changes
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
 
@@ -17,21 +21,60 @@ interface Notification {
   createdAt: string;
 }
 
-function timeAgo(dateStr: string) {
+// ─── Translations Dictionary ────────────────
+const translations = {
+  th: {
+    bellLabel: 'แจ้งเตือน',
+    headerTitle: 'การแจ้งเตือน',
+    readAll: 'อ่านทั้งหมด',
+    deleteAll: 'ลบทั้งหมด',
+    emptyNotifications: 'ไม่มีการแจ้งเตือน',
+    deleteSingleLabel: 'ลบการแจ้งเตือน',
+    btnDeleteTitle: 'ลบ',
+    viewAll: 'ดูทั้งหมด',
+    timeJustNow: 'เมื่อสักครู่',
+    timeMinutesAgo: (m: number) => `${m} นาทีที่แล้ว`,
+    timeHoursAgo: (h: number) => `${h} ชั่วโมงที่แล้ว`,
+    timeDaysAgo: (d: number) => `${d} วันที่แล้ว`,
+    timeWeeksAgo: (w: number) => `${w} สัปดาห์ที่แล้ว`,
+  },
+  en: {
+    bellLabel: 'Notifications',
+    headerTitle: 'Notifications',
+    readAll: 'Mark all as read',
+    deleteAll: 'Clear all',
+    emptyNotifications: 'No notifications',
+    deleteSingleLabel: 'Delete notification',
+    btnDeleteTitle: 'Delete',
+    viewAll: 'View All',
+    timeJustNow: 'Just now',
+    timeMinutesAgo: (m: number) => `${m}m ago`,
+    timeHoursAgo: (h: number) => `${h}h ago`,
+    timeDaysAgo: (d: number) => `${d}d ago`,
+    timeWeeksAgo: (w: number) => `${w}w ago`,
+  }
+};
+
+// ปรับ Helper timeAgo ให้รับ Object คำแปลเข้ามาประมวลผลดิกชันนารีตาม Locale
+function timeAgo(dateStr: string, t: any) {
   const diff = Date.now() - new Date(dateStr).getTime();
   const mins = Math.floor(diff / 60000);
-  if (mins < 1) return 'เมื่อสักครู่';
-  if (mins < 60) return `${mins} นาทีที่แล้ว`;
+  if (mins < 1) return t.timeJustNow;
+  if (mins < 60) return t.timeMinutesAgo(mins);
   const hrs = Math.floor(mins / 60);
-  if (hrs < 24) return `${hrs} ชั่วโมงที่แล้ว`;
+  if (hrs < 24) return t.timeHoursAgo(hrs);
   const days = Math.floor(hrs / 24);
-  if (days < 7) return `${days} วันที่แล้ว`;
-  return `${Math.floor(days / 7)} สัปดาห์ที่แล้ว`;
+  if (days < 7) return t.timeDaysAgo(days);
+  return t.timeWeeksAgo(Math.floor(days / 7));
 }
 
 export function NotificationBell() {
   const { user } = useAuth();
   const router = useRouter();
+  
+  const locale = useLocale() as 'th' | 'en'; // 🌐 ดึง Locale ปัจจุบันของระบบ
+  const t = translations[locale] || translations.th;
+
   const [isOpen, setIsOpen] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -209,7 +252,7 @@ export function NotificationBell() {
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="relative p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full transition-colors"
-        aria-label="แจ้งเตือน"
+        aria-label={t.bellLabel}
       >
         <svg
           className="w-6 h-6"
@@ -238,7 +281,7 @@ export function NotificationBell() {
         <div className="absolute right-0 top-full mt-2 w-80 sm:w-96 bg-white rounded-2xl shadow-2xl border border-gray-100 z-50 overflow-hidden">
           {/* Header */}
           <div className="flex items-center justify-between px-5 py-3.5 border-b border-gray-100 bg-gray-50/50">
-            <h3 className="font-bold text-gray-800 text-sm">การแจ้งเตือน</h3>
+            <h3 className="font-bold text-gray-800 text-sm">{t.headerTitle}</h3>
             {notifications.length > 0 && (
               <div className="flex items-center gap-3">
                 {unreadCount > 0 && (
@@ -246,14 +289,14 @@ export function NotificationBell() {
                     onClick={markAllAsRead}
                     className="text-xs text-blue-600 hover:text-blue-700 font-medium hover:underline"
                   >
-                    อ่านทั้งหมด
+                    {t.readAll}
                   </button>
                 )}
                 <button
                   onClick={handleClearAll}
                   className="text-xs text-red-500 hover:text-red-700 font-medium hover:underline"
                 >
-                  ลบทั้งหมด
+                  {t.deleteAll}
                 </button>
               </div>
             )}
@@ -270,7 +313,7 @@ export function NotificationBell() {
             {!loading && notifications.length === 0 && (
               <div className="text-center py-10 px-6">
                 <div className="text-3xl mb-2">🔔</div>
-                <p className="text-sm text-gray-400">ไม่มีการแจ้งเตือน</p>
+                <p className="text-sm text-gray-400">{t.emptyNotifications}</p>
               </div>
             )}
 
@@ -304,7 +347,7 @@ export function NotificationBell() {
                     {notification.message}
                   </p>
                   <p className="text-[11px] text-gray-400 mt-1">
-                    {timeAgo(notification.createdAt)}
+                    {timeAgo(notification.createdAt, t)}
                   </p>
                 </div>
 
@@ -314,8 +357,8 @@ export function NotificationBell() {
                   <button
                     onClick={(e) => handleClearSingle(e, notification)}
                     className="p-1.5 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-md transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100"
-                    aria-label="ลบการแจ้งเตือน"
-                    title="ลบ"
+                    aria-label={t.deleteSingleLabel}
+                    title={t.btnDeleteTitle}
                   >
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
@@ -345,9 +388,9 @@ export function NotificationBell() {
                   setIsModalOpen(true);  // เปิดหน้าจอ Premium Modal ตัวเต็ม
                 }}
                 className="w-full py-2 text-center text-sm font-medium text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors"
-                aria-label="ดูทั้งหมด"
+                aria-label={t.viewAll}
               >
-                ดูทั้งหมด
+                {t.viewAll}
               </button>
             </div>
           )}

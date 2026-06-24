@@ -700,12 +700,13 @@ export default function LanguagesPage() {
               {/* File Upload for Test Entry */}
               <div className="mt-4">
                 <label className="block text-sm font-bold text-gray-700 mb-2">
-                  {t.attachDoc}
+                  เอกสารแนบผลสอบ (PDF)
                 </label>
-                <div className="flex items-center gap-4">
-                  <label className="cursor-pointer inline-flex items-center justify-center gap-2 px-4 py-2 bg-blue-50 text-blue-700 border border-blue-200 rounded-lg hover:bg-blue-100 transition-colors font-medium text-sm">
-                    <Upload className="w-4 h-4" />
-                    <span>{t.selectFile}</span>
+                {/* เพิ่ม min-w-0 และใช้ flex-col บนมือถือ / ขยับเป็น sm:flex-row เพื่อจัดพื้นที่ให้พอดีกรอบ */}
+                <div className="flex flex-col sm:flex-row sm:items-center gap-3 min-w-0 w-full">
+                  <label className="cursor-pointer inline-flex items-center justify-center gap-2 px-4 py-2 bg-blue-50 text-blue-700 border border-blue-200 rounded-lg hover:bg-blue-100 transition-colors font-medium text-sm shrink-0 w-full sm:w-auto">
+                    <Upload className="w-4 h-4 shrink-0" />
+                    <span>เลือกไฟล์</span>
                     <input
                       type="file"
                       accept="application/pdf"
@@ -715,45 +716,47 @@ export default function LanguagesPage() {
                   </label>
 
                   {entry.fileName ? (
-                    <div className="flex items-center gap-2 text-sm text-gray-600 bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-200 flex-1">
-                      <FileText className="w-4 h-4 text-gray-400" />
-                      <span className="truncate flex-1">{entry.fileName}</span>
+                    /* เพิ่ม min-w-0 เพื่อบังคับให้ลูกข้างในทำการย่อคำและแสดงเป็น ... ได้ */
+                    <div className="flex items-center gap-2 text-sm text-gray-600 bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-200 flex-1 min-w-0 w-full">
+                      <FileText className="w-4 h-4 text-gray-400 shrink-0" />
+                      {/* ใช้ truncate และ block ในการตัดคำหนีบจุดไข่ปลา ... */}
+                      <span className="truncate block flex-1 font-medium text-gray-700">{entry.fileName}</span>
                       <button
                         onClick={() => {
                           updateTest(entry.id, 'file', undefined);
                           updateTest(entry.id, 'fileName', '');
                           updateTest(entry.id, 'fileUrl', undefined);
                         }}
-                        className="text-gray-400 hover:text-red-500 transition-colors ml-2"
-                        title={t.deleteAttachment}
+                        className="text-gray-400 hover:text-red-500 transition-colors ml-2 shrink-0"
+                        title="ลบเอกสารแนบ"
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
                     </div>
                   ) : entry.fileUrl ? (
-                    <div className="flex items-center gap-2 text-sm text-gray-600 bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-200 flex-1">
-                      <FileText className="w-4 h-4 text-gray-400" />
+                    <div className="flex items-center gap-2 text-sm text-gray-600 bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-200 flex-1 min-w-0 w-full">
+                      <FileText className="w-4 h-4 text-gray-400 shrink-0" />
                       <a
                         href={entry.fileUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="truncate flex-1 text-blue-600 hover:underline"
+                        className="truncate block flex-1 text-blue-600 hover:underline"
                       >
-                        {t.viewOldFile}
+                        ดูไฟล์เอกสารแนบเดิม
                       </a>
                       <button
                         onClick={() => {
                           updateTest(entry.id, 'fileUrl', undefined);
                           updateTest(entry.id, 'fileName', '');
                         }}
-                        className="text-gray-400 hover:text-red-500 transition-colors ml-2"
-                        title={t.deleteAttachment}
+                        className="text-gray-400 hover:text-red-500 transition-colors ml-2 shrink-0"
+                        title="ลบเอกสารแนบ"
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
                     </div>
                   ) : (
-                    <span className="text-sm text-gray-500">{t.fileNotSelected}</span>
+                    <span className="text-sm text-gray-500 pl-1 shrink-0">ยังไม่ได้เลือกไฟล์ใหม่</span>
                   )}
                 </div>
               </div>

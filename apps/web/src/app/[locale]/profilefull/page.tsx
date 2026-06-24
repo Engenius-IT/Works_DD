@@ -144,10 +144,10 @@ const getLanguageLabel = (key: 'language' | 'level', value: string | undefined, 
 
   // ตรวจสอบสถานะค่าว่าง หรือ ไม่ระบุ หรือ ไม่ได้ ทั้งภาษาไทยและอังกฤษ
   if (
-    lowercaseValue === 'ไม่ได้' || 
-    lowercaseValue === 'ไม่ได้ระบุ' || 
-    lowercaseValue === 'none' || 
-    lowercaseValue === 'not specified' || 
+    lowercaseValue === 'ไม่ได้' ||
+    lowercaseValue === 'ไม่ได้ระบุ' ||
+    lowercaseValue === 'none' ||
+    lowercaseValue === 'not specified' ||
     lowercaseValue === '-' ||
     lowercaseValue === ''
   ) {
@@ -179,7 +179,7 @@ const getLanguageLabel = (key: 'language' | 'level', value: string | undefined, 
       'เจ้าของภาษา': 'Native Speaker',
     }
   };
-  
+
   if (isEn) {
     if (translations[key] && translations[key][cleanedValue]) {
       return translations[key][cleanedValue];
@@ -208,8 +208,8 @@ const getLanguageLabel = (key: 'language' | 'level', value: string | undefined, 
       if (cleanedValue.includes('ดี') || cleanedValue.toLowerCase().includes('good')) return 'ดี';
       if (cleanedValue.includes('เจ้าของภาษา') || cleanedValue.toLowerCase().includes('native')) return 'เจ้าของภาษา';
       if (cleanedValue.includes('ไม่ได้') || cleanedValue.toLowerCase().includes('none')) return 'ไม่ได้';
-    } 
-  } 
+    }
+  }
 
   return value;
 };
@@ -787,7 +787,8 @@ export default function ProfileFullPage() {
 
             {/* 2. Profile Main Info */}
             <div className="flex-none text-center xl:text-left min-w-fit">
-              <div className="flex flex-col xl:flex-row xl:items-center gap-3">
+              {/* ปรับแต่งคลาสตรงนี้เพื่อให้ชื่อและไอคอนประกบอยู่บรรทัดเดียวกันเสมอ */}
+              <div className="flex items-center justify-center xl:justify-start gap-2 flex-wrap">
                 <h1 className="text-2xl sm:text-3xl font-bold text-slate-800 tracking-tight">
                   {user?.firstName} {user?.lastName}
                 </h1>
@@ -809,12 +810,14 @@ export default function ProfileFullPage() {
             <div className="flex flex-col lg:flex-row gap-4 w-full xl:flex-1 xl:ml-auto justify-end">
 
               <div className="w-full xl:flex-1 xl:max-w-[380px] bg-[#f8faff] rounded-3xl p-5 border border-indigo-50 shadow-xs flex flex-col justify-center">
-                <div className="flex justify-between items-end mb-3 gap-2">
-                  <div className="min-w-0">
-                    <h3 className="text-xl font-bold text-slate-700 truncate">{t.profileCompletion}</h3>
-                    <p className="text-[14px] text-slate-500 mt-1 whitespace-nowrap">{t.moreChance} {Math.round(completionPercentage)}%</p>
+                {/* เปลี่ยนจาก items-end เป็น items-start เพื่อให้โครงสร้างบนมือถือดูบาลานซ์ หรือใช้ items-center */}
+                <div className="flex justify-between items-center mb-3 gap-3">
+                  <div className="min-w-0 flex-1">
+                    <h3 className="text-lg sm:text-xl font-bold text-slate-700 truncate">{t.profileCompletion}</h3>
+                    {/* แก้ไข: เอา whitespace-nowrap ออกเพื่อให้บนจอมือถือเล็กๆ ข้อความสามารถตัดลงมาได้ ไม่ไปเบียดเลข % */}
+                    <p className="text-[13px] sm:text-[14px] text-slate-500 mt-0.5 leading-tight">{t.moreChance} {Math.round(completionPercentage)}%</p>
                   </div>
-                  <span className={`text-xl font-bold shrink-0 ${getCompletionTextColor(completionPercentage)}`}>
+                  <span className={`text-xl sm:text-2xl font-black shrink-0 pl-1 ${getCompletionTextColor(completionPercentage)}`}>
                     {Math.round(completionPercentage)}%
                   </span>
                 </div>
@@ -1105,9 +1108,11 @@ export default function ProfileFullPage() {
               </p>
             </div>
             <div className="mt-auto">
-              {languages.length > 0 ? (
+              {((languages && languages.length > 0) || (languageTests && languageTests.length > 0)) ? (
                 <div className="pt-4 border-t border-slate-100 space-y-4">
-                  {languages.map((l) => (
+                  
+                  {/* 1. ส่วนแสดงทักษะภาษาหลัก */}
+                  {languages && languages.map((l: any) => (
                     <div key={l.id} className="p-3 bg-slate-50 rounded-2xl border border-slate-100/70">
                       {/* ส่วนหัวย่อย: ชื่อภาษา และ ระดับความเข้าใจหลัก */}
                       <div className="flex items-center justify-between mb-2">
@@ -1129,7 +1134,6 @@ export default function ProfileFullPage() {
 
                       {/* บล็อกแสดงผลแยกทักษะย่อย Speaking, Reading, Writing ใต้ Progress Bar */}
                       <div className="grid grid-cols-3 gap-2 pt-2 border-t border-slate-200/60 text-center">
-                        {/* 1. สกิลการพูด (Speaking) */}
                         <div className="flex flex-col bg-white rounded-xl p-1.5 border border-slate-100">
                           <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">
                             {isEn ? 'Speaking' : 'การพูด'}
@@ -1139,7 +1143,6 @@ export default function ProfileFullPage() {
                           </span>
                         </div>
 
-                        {/* 2. สกิลการอ่าน (Reading) */}
                         <div className="flex flex-col bg-white rounded-xl p-1.5 border border-slate-100">
                           <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">
                             {isEn ? 'Reading' : 'การอ่าน'}
@@ -1149,7 +1152,6 @@ export default function ProfileFullPage() {
                           </span>
                         </div>
 
-                        {/* 3. สกิลการเขียน (Writing) */}
                         <div className="flex flex-col bg-white rounded-xl p-1.5 border border-slate-100">
                           <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">
                             {isEn ? 'Writing' : 'การเขียน'}
@@ -1161,6 +1163,49 @@ export default function ProfileFullPage() {
                       </div>
                     </div>
                   ))}
+
+                  {/* 2. ส่วนแสดงเอกสารแนบผลการทดสอบภาษา (TOEIC, IELTS ฯลฯ) ดึงจาก languageTests */}
+                  {languageTests && languageTests.map((tEntry: any) => (tEntry.testName || tEntry.score || tEntry.fileUrl) && (
+                    <div key={tEntry.id} className="p-3 bg-blue-50/40 rounded-2xl border border-blue-100/60 text-xs text-slate-600 space-y-2">
+                      <div className="flex justify-between items-center pb-1 border-b border-blue-100/40">
+                        <span className="font-bold text-blue-800">{isEn ? 'Language Test Result' : 'ผลการทดสอบทางภาษา'}</span>
+                      </div>
+                      
+                      {tEntry.testName && (
+                        <div className="flex justify-between">
+                          <span className="text-slate-400">{isEn ? 'Test:' : 'การทดสอบ:'}</span>
+                          <span className="font-medium text-slate-700">{tEntry.testName}</span>
+                        </div>
+                      )}
+                      
+                      {tEntry.score && (
+                        <div className="flex justify-between items-center">
+                          <span className="text-slate-400">{isEn ? 'Score:' : 'คะแนนที่ได้:'}</span>
+                          <span className="font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-md">{tEntry.score}</span>
+                        </div>
+                      )}
+                      
+                      {tEntry.fileUrl && (
+                        <div className="flex items-center justify-between pt-1 min-w-0 w-full">
+                          <span className="text-slate-400 shrink-0">{isEn ? 'Attachment:' : 'เอกสารแนบ:'}</span>
+                          <a
+                            href={tEntry.fileUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1 text-blue-600 hover:text-blue-700 hover:underline font-medium min-w-0 max-w-[70%]"
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-3.5 h-3.5 shrink-0 text-red-500">
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
+                            </svg>
+                            <span className="truncate block flex-1">
+                              {tEntry.fileName || (isEn ? 'View Certificate PDF' : 'ดูไฟล์ผลสอบ PDF')}
+                            </span>
+                          </a>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+
                 </div>
               ) : (
                 <button
