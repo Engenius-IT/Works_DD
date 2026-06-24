@@ -415,18 +415,18 @@ export function Navbar() {
               /* --- เมนูสำหรับผู้สมัคร (JOBSEEKER) และ Guest --- */
               <>
                 <Link
-                  href="/"
-                  className="block px-4 py-2 text-gray-700 hover:bg-gray-50 rounded-lg font-medium"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  {tSub('home')}
-                </Link>
-                <Link
                   href="/jobs"
                   className="block px-4 py-2 text-gray-700 hover:bg-gray-50 rounded-lg font-medium"
                   onClick={() => setIsMenuOpen(false)}
                 >
                   {tSub('quickSearch')}
+                </Link>
+                <Link
+                  href="/coming-soon/jobseeker"
+                  className="block px-4 py-2 text-gray-700 hover:bg-gray-50 rounded-lg font-medium"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  {tSub('findJobs')}
                 </Link>
                 <Link
                   href="/jobs"

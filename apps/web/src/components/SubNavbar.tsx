@@ -68,31 +68,32 @@ export function SubNavbar({ userRole }: SubNavbarProps) {
             </Link>
 
             {/* Find Jobs Dropdown */}
-            <div className="group relative">
-              <Link
-                href="/jobs"
-                className="flex items-center gap-1 py-2.5 hover:text-blue-200 transition-colors border-b-2 border-transparent hover:border-blue-200 whitespace-nowrap cursor-pointer"
-              >
-                {t('findJobs')}
-                <svg className="w-4 h-4 ml-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
-              </Link>
-              <div className="absolute top-full left-0 hidden group-hover:block bg-white text-gray-800 shadow-xl rounded-b-lg min-w-56 py-2 z-50 border border-t-0 border-gray-100">
-                <Link href="/jobs?keyword=โรงแรม" className="block px-4 py-2 hover:bg-blue-50 hover:text-(--color-primary) text-sm">
-                  {t('findJobsSub.hotel')}
-                </Link>
-                <Link href="/jobs?jobType=INTERNSHIP" className="block px-4 py-2 hover:bg-blue-50 hover:text-(--color-primary) text-sm">
-                  {t('findJobsSub.internship')}
-                </Link>
-                <Link href="/jobs?keyword=สหกิจศึกษา" className="block px-4 py-2 hover:bg-blue-50 hover:text-(--color-primary) text-sm">
-                  {t('findJobsSub.coop')}
-                </Link>
-                <Link href="/jobs?category=งานไอที งานเทคโนโลยีสื่อสาร" className="block px-4 py-2 hover:bg-blue-50 hover:text-(--color-primary) text-sm">
-                  {t('findJobsSub.disabled')}
-                </Link>
-              </div>
-            </div>
+<div className="group relative">
+  <Link
+    href="/coming-soon/jobseeker" // 👈 1. แก้ไขปุ่มหลักตรงนี้ จาก "/jobs"
+    className="flex items-center gap-1 py-2.5 hover:text-blue-200 transition-colors border-b-2 border-transparent hover:border-blue-200 whitespace-nowrap cursor-pointer"
+  >
+    {t('findJobs')}
+    <svg className="w-4 h-4 ml-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+    </svg>
+  </Link>
+  <div className="absolute top-full left-0 hidden group-hover:block bg-white text-gray-800 shadow-xl rounded-b-lg min-w-56 py-2 z-50 border border-t-0 border-gray-100">
+    {/* 👈 2. ส่วนเมนูย่อยข้างล่างนี้ แนะนำให้เปลี่ยนให้ชี้ไปที่หน้าเดียวกันทั้งหมดเพื่อป้องกันไม่ให้ผู้ใช้กดเข้าไปเจอหน้าค้นหาแบบเดิมครับ */}
+    <Link href="/coming-soon/jobseeker" className="block px-4 py-2 hover:bg-blue-50 hover:text-(--color-primary) text-sm">
+      {t('findJobsSub.hotel')}
+    </Link>
+    <Link href="/coming-soon/jobseeker" className="block px-4 py-2 hover:bg-blue-50 hover:text-(--color-primary) text-sm">
+      {t('findJobsSub.internship')}
+    </Link>
+    <Link href="/coming-soon/jobseeker" className="block px-4 py-2 hover:bg-blue-50 hover:text-(--color-primary) text-sm">
+      {t('findJobsSub.coop')}
+    </Link>
+    <Link href="/coming-soon/jobseeker" className="block px-4 py-2 hover:bg-blue-50 hover:text-(--color-primary) text-sm">
+      {t('findJobsSub.disabled')}
+    </Link>
+  </div>
+</div>
 
             {/* Regional Jobs Dropdown */}
             <div className="group relative">
@@ -122,24 +123,32 @@ export function SubNavbar({ userRole }: SubNavbarProps) {
 
         <div className="flex-1"></div>
 
-        {/* User Guide Dropdown */}
-        <div className="group relative">
-          <button className="flex items-center gap-1 py-2.5 hover:text-blue-200 transition-colors border-b-2 border-transparent hover:border-blue-200 whitespace-nowrap cursor-default">
-            {t('userGuide')}
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-            </svg>
-          </button>
-          <div className="absolute top-full right-0 hidden group-hover:block bg-white text-gray-800 shadow-xl rounded-b-lg min-w-48 py-2 z-50 border border-t-0 border-gray-100">
-            <Link href="/coming-soon" className="block px-4 py-2 hover:bg-blue-50 hover:text-(--color-primary) text-sm">
-              {t('userGuideSub.employer')}
-            </Link>
-            <Link href="/coming-soon" className="block px-4 py-2 hover:bg-blue-50 hover:text-(--color-primary) text-sm">
-              {t('userGuideSub.jobseeker')}
-            </Link>
-          </div>
-        </div>
+       {/* User Guide Dropdown */}
+<div className="group relative">
+  <button className="flex items-center gap-1 py-2.5 hover:text-blue-200 transition-colors border-b-2 border-transparent hover:border-blue-200 whitespace-nowrap cursor-default">
+    {t('userGuide')}
+    {/* ... svg ... */}
+  </button>
+  <div className="absolute top-full right-0 hidden group-hover:block bg-white text-gray-800 shadow-xl rounded-b-lg min-w-48 py-2 z-50 border border-t-0 border-gray-100">
+    
+    {/* 1. สำหรับผู้ประกอบการ (Employer) */}
+    <Link 
+      href="/coming-soon/employer" // 👈 แยกไปหน้าสำหรับนายจ้าง/ผู้ประกอบการ
+      className="block px-4 py-2 hover:bg-blue-50 hover:text-(--color-primary) text-sm"
+    >
+      {t('userGuideSub.employer')}
+    </Link>
+    
+    {/* 2. สำหรับผู้สมัครงาน (Jobseeker) */}
+    <Link 
+      href="/coming-soon/jobseeker" // 👈 แยกไปหน้าสำหรับผู้สมัครงาน
+      className="block px-4 py-2 hover:bg-blue-50 hover:text-(--color-primary) text-sm"
+    >
+      {t('userGuideSub.jobseeker')}
+    </Link>
 
+  </div>
+</div>
         {/* Contact Us Link */}
         <Link
           href="/contact-us"
