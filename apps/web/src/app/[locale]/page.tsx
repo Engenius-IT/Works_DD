@@ -14,7 +14,7 @@ import { useAuth } from '@/context/AuthContext';
 
 export default function HomePage() {
   const { user } = useAuth();
-  const isEmployer = user?.role === 'EMPLOYER';
+  const isEmployer = user?.role === 'EMPLOYER' || user?.role === 'ADMIN';
   const isLoggedIn = !!user;
 
   return (
