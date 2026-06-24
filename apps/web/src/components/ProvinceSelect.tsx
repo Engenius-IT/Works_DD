@@ -21,7 +21,7 @@ const PROVINCE_EN_MAP: Record<string, string> = {
     'พิษณุโลก': 'Phitsanulok', 'เพชรบุรี': 'Phetchaburi', 'เพชรบูรณ์': 'Phetchabun', 'แพร่': 'Phrae',
     'ภูเก็ต': 'Phuket', 'มหาสารคาม': 'Maha Sarakham', 'มุกดาหาร': 'Mukdahan', 'แม่ฮ่องสอน': 'Mae Hong Son',
     'ยโสธร': 'Yasothon', 'ยะลา': 'Yala', 'ร้อยเอ็ด': 'Roi Et', 'ระนอง': 'Ranong',
-    'ระยอง': 'Rayong','ราชบุรี': 'Ratchaburi', 'ลพบุรี': 'Lopburi', 'ลำปาง': 'Lampang', 'ลำพูน': 'Lamphun', 'เลย': 'Loei',
+    'ระยอง': 'Rayong', 'ราชบุรี': 'Ratchaburi', 'ลพบุรี': 'Lopburi', 'ลำปาง': 'Lampang', 'ลำพูน': 'Lamphun', 'เลย': 'Loei',
     'ศรีสะเกษ': 'Si Sa Ket', 'สกลนคร': 'Sakon Nakhon', 'สงขลา': 'Songkhla', 'สตูล': 'Satun',
     'สมุทรปราการ': 'Samut Prakan', 'สมุทรสงคราม': 'Samut Songkhram', 'สมุทรสาคร': 'Samut Sakhon',
     'สระแก้ว': 'Sa Kaeo', 'สระบุรี': 'Saraburi', 'สิงห์บุรี': 'Sing Buri', 'สุโขทัย': 'Sukhothai',
@@ -86,13 +86,14 @@ export function ProvinceSelect({ selectedProvinces = [], onChange, locale }: Pro
     return (
         <div className="space-y-3">
             <SearchableSelect
-                locale={locale} // <-- ส่ง locale เข้าไปที่นี่
+                locale={locale}
                 placeholder={loading ? t.loading : t.search}
                 value=""
                 onChange={handleSelect}
+                isMulti={true} //สั่งให้ระบบห้ามบันทึกตอนกำลังพิมพ์ตัวอักษร
                 options={provinces
                     .filter(p => !selectedProvinces.includes(p))
-                    .map((p) => ({ value: p, label: getLabel(p) })) // ✔️ ใช้ getLabel เพื่อแปลงชื่อจังหวัดตาม locale
+                    .map((p) => ({ value: p, label: getLabel(p) }))
                 }
             />
 

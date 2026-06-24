@@ -13,4 +13,5 @@ export class UpdateCompanyDto {
     @ApiPropertyOptional() @IsOptional() @IsString() district?: string;
     @ApiPropertyOptional() @IsOptional() @IsString() province?: string;
     @ApiPropertyOptional() @IsOptional() @IsString() companyType?: string;
+    @ApiPropertyOptional() @IsOptional() @IsString() bgUrl?: string;
 }

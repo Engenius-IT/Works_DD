@@ -1,8 +1,9 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { useRouter } from '@/i18n/routing';
+import { useRouter } from '@/i18n/routing'; // This will be used by the original component
 import { useAuth } from '@/context/AuthContext';
+import { NotificationModal } from './NotificationModal';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
 
@@ -32,6 +33,7 @@ export function NotificationBell() {
   const { user } = useAuth();
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(false);
@@ -201,7 +203,8 @@ export function NotificationBell() {
   if (!user) return null;
 
   return (
-    <div className="relative" ref={dropdownRef}>
+    <>
+      <div className="relative" ref={dropdownRef}>
       {/* Bell Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
@@ -338,8 +341,8 @@ export function NotificationBell() {
             <div className="border-t border-gray-100 bg-gray-50 py-2 px-3">
               <button
                 onClick={() => {
-                  setIsOpen(false);
-                  router.push('/applications');
+                  setIsOpen(false);      // ปิด Dropdown เล็ก
+                  setIsModalOpen(true);  // เปิดหน้าจอ Premium Modal ตัวเต็ม
                 }}
                 className="w-full py-2 text-center text-sm font-medium text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors"
                 aria-label="ดูทั้งหมด"
@@ -350,6 +353,12 @@ export function NotificationBell() {
           )}
         </div>
       )}
-    </div>
+      </div>
+      <NotificationModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onRefreshBellCount={fetchUnreadCount}
+      />
+    </>
   );
 }

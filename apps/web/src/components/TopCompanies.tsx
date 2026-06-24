@@ -1,58 +1,58 @@
 'use client';
 
 import Image from 'next/image';
-import { useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { useRouter } from '@/i18n/routing';
 
-const mockCompanies = [
-  {
-    id: 1,
-    name: 'บริษัท Hondy',
-    desc: 'รับสมัครงาน ตำแหน่ง : ผู้จัดการขาย',
-    phone: '02-564-9999',
-    image: '/images/JobDD_PicSell.jpg',
-  },
-  {
-    id: 2,
-    name: 'บริษัท Faceback',
-    desc: 'รับสมัครงาน ตำแหน่ง : ผู้จัดการไอที',
-    phone: '02-123-4567',
-    image: '/images/JobDD_PicIT.jpg',
-  },
-  {
-    id: 3,
-    name: 'บริษัท Saven',
-    desc: 'รับสมัครงาน ตำแหน่ง : พนักงานขาย',
-    phone: '02-987-6543',
-    image: '/images/JobDD_Seven.jpg',
-  },
-  {
-    id: 4,
-    name: 'NextGen Solutions',
-    desc: 'ที่ปรึกษาธุรกิจ',
-    phone: '02-333-4444',
-    image: '/images/JobDD_PicSell.jpg',
-  },
-  {
-    id: 5,
-    name: 'Green Energy Co.',
-    desc: 'พลังงานสะอาด',
-    phone: '02-555-8888',
-    image: '/images/JobDD_PicIT.jpg',
-  },
-  {
-    id: 6,
-    name: 'Creative Media',
-    desc: 'สื่อโฆษณาครบวงจร',
-    phone: '02-111-2222',
-    image: '/images/JobDD_Seven.jpg',
-  },
-];
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
+
+interface TopCompany {
+  id: string;
+  name: string;
+  slug: string;
+  desc?: string;
+  phone?: string;
+  image?: string;
+  logoUrl?: string;
+  packageScore?: number;
+}
 
 export function TopCompanies() {
   const t = useTranslations('TopCompanies');
+  const router = useRouter();
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  const [companies, setCompanies] = useState<TopCompany[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchTopCompanies = async () => {
+      try {
+        setLoading(true);
+
+        const res = await fetch(`${API_URL}/companies/top-by-package`, {
+          cache: 'no-store',
+        });
+
+        if (!res.ok) {
+          setCompanies([]);
+          return;
+        }
+
+        const data = await res.json();
+        setCompanies(Array.isArray(data) ? data : []);
+      } catch (error) {
+        console.error('Fetch top companies error:', error);
+        setCompanies([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchTopCompanies();
+  }, []);
 
   const scrollLeft = () => {
     if (!scrollContainerRef.current) return;
@@ -84,6 +84,23 @@ export function TopCompanies() {
     }
   };
 
+  if (loading) {
+    return (
+      <section className="py-12 bg-gray-50 overflow-hidden font-sans">
+        <div className="max-w-6xl mx-auto px-4 relative">
+          <h2 className="text-3xl font-bold text-gray-900 tracking-tight uppercase relative">
+            {t('title')}
+            <span className="absolute -bottom-2 left-0 w-1/2 h-1 bg-red-600 rounded-full" />
+          </h2>
+        </div>
+      </section>
+    );
+  }
+
+  if (companies.length === 0) {
+    return null;
+  }
+
   return (
     <section className="py-12 bg-gray-50 overflow-hidden font-sans">
       <div className="max-w-6xl mx-auto px-4 relative">
@@ -112,7 +129,6 @@ export function TopCompanies() {
         </div>
 
         <div className="relative flex items-center group/slider">
-          {/* Mobile Left Arrow */}
           <button
             onClick={scrollLeft}
             className="md:hidden absolute -left-4 z-10 p-2 bg-white/80 backdrop-blur rounded-full shadow-md text-gray-500 hover:text-red-600 focus:outline-none opacity-0 group-hover/slider:opacity-100 transition-opacity"
@@ -121,27 +137,28 @@ export function TopCompanies() {
             <ChevronLeft className="w-6 h-6" />
           </button>
 
-          {/* Cards Container */}
           <div
             ref={scrollContainerRef}
             className="flex gap-6 overflow-x-auto pb-4 scrollbar-hide snap-x pt-2 w-full scroll-smooth"
             style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
           >
-            {mockCompanies.map((company) => (
+            {companies.map((company, index) => (
               <div
                 key={company.id}
+                onClick={() => router.push(`/Companyprofile?slug=${company.slug}`)}
                 className="min-w-[280px] md:min-w-[320px] h-[400px] bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden snap-center flex flex-col relative group cursor-pointer hover:shadow-xl hover:-translate-y-1 transition-all duration-300 shrink-0"
               >
                 <div className="relative w-full h-3/5 overflow-hidden">
                   <Image
-                    src={company.image}
+                    src={company.image || company.logoUrl || '/images/JobDD_PicSell.jpg'}
                     alt={company.name}
                     fill
                     sizes="(max-width: 768px) 280px, 320px"
                     className="object-cover group-hover:scale-105 transition-transform duration-500"
                   />
                   <div className="absolute inset-0 bg-linear-to-t from-black/60 via-black/20 to-transparent" />
-                  {company.id === 1 && (
+
+                  {index === 0 && (
                     <div className="absolute top-4 right-4 bg-red-600 text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-lg">
                       {t('recommended')}
                     </div>
@@ -150,10 +167,12 @@ export function TopCompanies() {
 
                 <div className="flex-1 p-6 flex flex-col justify-between bg-white relative">
                   <div>
-                    <h3 className="text-xl font-bold text-gray-900 mb-1 group-hover:text-red-600 transition-colors">
+                    <h3 className="text-xl font-bold text-gray-900 mb-1 group-hover:text-red-600 transition-colors line-clamp-2">
                       {company.name}
                     </h3>
-                    <p className="text-sm text-gray-500 font-medium">{company.desc}</p>
+                    <p className="text-sm text-gray-500 font-medium line-clamp-2">
+                      {company.desc || '-'}
+                    </p>
                   </div>
 
                   <div className="mt-4 pt-4 border-t border-gray-50 flex items-center justify-between">
@@ -170,7 +189,7 @@ export function TopCompanies() {
                           clipRule="evenodd"
                         />
                       </svg>
-                      {company.phone}
+                      {company.phone || '-'}
                     </span>
                     <div className="w-8 h-8 rounded-full bg-red-50 flex items-center justify-center group-hover:bg-red-600 transition-colors">
                       <ChevronRight className="w-4 h-4 text-red-600 group-hover:text-white transition-colors" />
@@ -181,7 +200,6 @@ export function TopCompanies() {
             ))}
           </div>
 
-          {/* Mobile Right Arrow */}
           <button
             onClick={scrollRight}
             className="md:hidden absolute -right-4 z-10 p-2 bg-white/80 backdrop-blur rounded-full shadow-md text-gray-500 hover:text-red-600 focus:outline-none opacity-0 group-hover/slider:opacity-100 transition-opacity"
@@ -191,14 +209,13 @@ export function TopCompanies() {
           </button>
         </div>
 
-        {/* Style to hide scrollbar but keep functionality */}
         <style
           dangerouslySetInnerHTML={{
             __html: `
-          .scrollbar-hide::-webkit-scrollbar {
-              display: none;
-          }
-        `,
+              .scrollbar-hide::-webkit-scrollbar {
+                display: none;
+              }
+            `,
           }}
         />
       </div>
