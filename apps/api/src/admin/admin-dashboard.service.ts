@@ -34,7 +34,7 @@ export class AdminDashboardService {
         where: { createdAt: { gte: firstDayOfMonth } },
       }),
       this.prisma.application.count({
-        where: { createdAt: { gte: firstDayOfMonth } },
+        where: { appliedAt: { gte: firstDayOfMonth } },
       }),
     ]);
 
