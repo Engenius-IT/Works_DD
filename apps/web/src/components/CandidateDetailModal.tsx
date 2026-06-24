@@ -285,7 +285,7 @@ export function CandidateDetailModal({ candidateId, onClose, isBookmarked, onBoo
       return;
     }
 
-    if (user.role !== 'EMPLOYER') {
+    if (user.role !== 'EMPLOYER' && user.role !== 'ADMIN') {
       setContactError(t('detailModal.employerOnlyError'));
       return;
     }
@@ -403,7 +403,7 @@ export function CandidateDetailModal({ candidateId, onClose, isBookmarked, onBoo
 
           {/* ส่วนของปุ่ม ปรับให้ชิดขวาในจอใหญ่ และจัดวางให้เหมาะสมในมือถือ */}
           <div className="flex items-center gap-3 shrink-0 self-end sm:self-center">
-            {user?.role === 'EMPLOYER' && (
+            {(user?.role === 'EMPLOYER' || user?.role === 'ADMIN') && (
               <button
                 type="button"
                 onClick={async (e) => {

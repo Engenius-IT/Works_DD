@@ -21,7 +21,7 @@ export function UserDropdown({ user, logout }: UserDropdownProps) {
   const t = useTranslations('Navbar');
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const isEmployer = user.role === 'EMPLOYER';
+  const isEmployer = user.role === 'EMPLOYER' || user.role === 'ADMIN';
   const displayImageUrl = isEmployer && user.companyLogo ? user.companyLogo : user.avatarUrl;
   const initialChar = isEmployer && user.companyName ? user.companyName.charAt(0) : user.firstName.charAt(0);
 

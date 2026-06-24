@@ -147,7 +147,7 @@ export function Navbar() {
         {/* Right Side: Auth & Language */}
         <div className="flex items-center gap-4">
           <div className="hidden md:flex items-center gap-3">
-            {user?.role !== 'EMPLOYER' && (
+            {user?.role !== 'EMPLOYER' && user?.role !== 'ADMIN' && (
               <Link
                 href="/ai-job-matcher"
                 className="inline-flex items-center gap-2 rounded-full bg-linear-to-r from-violet-600 to-fuchsia-600 px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-violet-500/30 transition-all hover:-translate-y-0.5 hover:shadow-xl hover:shadow-violet-500/40 hover:from-violet-500 hover:to-fuchsia-500 active:scale-95"
@@ -287,7 +287,7 @@ export function Navbar() {
               </button>
             </div>
           </div>
-          {user?.role !== 'EMPLOYER' && (
+          {user?.role !== 'EMPLOYER' && user?.role !== 'ADMIN' && (
             <Link
               href="/ai-job-matcher"
               className="flex items-center justify-center gap-2 mx-4 py-3 bg-linear-to-r from-violet-600 to-fuchsia-600 text-white rounded-xl font-bold shadow-lg shadow-violet-500/30 active:scale-95 transition-all"
@@ -414,9 +414,9 @@ export function Navbar() {
             <>
               <div className="px-4 py-2 text-gray-500 text-sm">
                 {t('hello')}{' '}
-                {user.role === 'EMPLOYER' && user.companyName ? user.companyName : user.firstName}
-              </div>
-              {user.role === 'EMPLOYER' && (
+              {(user.role === 'EMPLOYER' || user.role === 'ADMIN') && user.companyName ? user.companyName : user.firstName}
+            </div>
+            {(user.role === 'EMPLOYER' || user.role === 'ADMIN') && (
                 <Link
                   href="/employer/dashboard"
                   className="flex items-center gap-2 mx-2 px-4 py-2 bg-amber-400 text-gray-900 font-bold text-sm rounded-xl"

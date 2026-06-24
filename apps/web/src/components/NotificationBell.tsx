@@ -337,7 +337,7 @@ export function NotificationBell() {
           </div>
 
           {/* Footer View All */}
-          {user.role !== 'EMPLOYER' && (
+          {user.role !== 'EMPLOYER' && user.role !== 'ADMIN' && (
             <div className="border-t border-gray-100 bg-gray-50 py-2 px-3">
               <button
                 onClick={() => {

@@ -23,7 +23,7 @@ export function SubNavbar({ userRole }: SubNavbarProps) {
         </Link>
 
         {/* ---  Separate Role --- */}
-        {userRole === 'EMPLOYER' ? (
+        {userRole === 'EMPLOYER' || userRole === 'ADMIN' ? (
           /* EMPLOYER) */
           <>
             <Link
