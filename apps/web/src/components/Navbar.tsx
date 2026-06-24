@@ -187,7 +187,22 @@ export function Navbar() {
                     {t('employerBackend')}
                   </Link>
                 )}
-{/* Admin button removed from here, will be moved to Employer Dashboard */}
+                {user.role === 'ADMIN' && (
+                  <Link
+                    href="/admin"
+                    className="flex items-center gap-2 bg-red-600 hover:bg-red-500 text-white font-bold text-sm px-4 py-2 rounded-xl shadow shadow-red-500/40 transition-all hover:scale-105 active:scale-95"
+                  >
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
+                      />
+                    </svg>
+                    จัดการหลังบ้าน (Admin)
+                  </Link>
+                )}
                 <UserDropdown user={{ ...user, role: user.role }} logout={logout} />
               </>
             ) : (
@@ -311,8 +326,24 @@ export function Navbar() {
           <div className="py-2 space-y-1">
 
             {/* ส่วนนี้ดึง Logic มาจาก SubNavbar */}
-{/* Admin button removed from here */}
-	          {user?.role === 'EMPLOYER' ? (
+{user?.role === 'ADMIN' && (
+	            <Link
+	              href="/admin"
+	              className="flex items-center justify-center gap-2 mx-4 py-3 bg-red-600 text-white rounded-xl font-bold shadow-lg shadow-red-500/30 active:scale-95 transition-all mb-2"
+	              onClick={() => setIsMenuOpen(false)}
+	            >
+	              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+	                <path
+	                  strokeLinecap="round"
+	                  strokeLinejoin="round"
+	                  strokeWidth={2}
+	                  d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
+	                />
+	              </svg>
+	              จัดการหลังบ้าน (Admin)
+	            </Link>
+	          )}
+		          {user?.role === 'EMPLOYER' ? (
 	              /* --- เมนูสำหรับนายจ้าง (EMPLOYER) --- */
 	              <>
 	                <Link
