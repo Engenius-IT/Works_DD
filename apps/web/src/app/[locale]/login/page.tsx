@@ -128,7 +128,7 @@ function LoginForm() {
       login(data.accessToken, data.user);
 
       // 🟢 ฟอร์มธรรมดาก็ให้เช็คทางเดินไปหน้าที่มีอยู่จริงเช่นกันครับ
-      if (data.user.role === 'EMPLOYER') {
+      if (data.user.role === 'EMPLOYER' || data.user.role === 'ADMIN') {
         router.replace('/th/employer/dashboard');
       } else {
         // 🟢 [เปลี่ยนจุดนี้] เปลี่ยนให้เหมือนกันกับจุดแรกเพื่อความปลอดภัยครับ
