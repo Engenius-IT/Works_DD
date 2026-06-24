@@ -32,7 +32,7 @@ export default function AdminDashboardPage() {
       setLoading(true);
       setError(null);
       
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('accessToken');
       const response = await fetch(`${API_URL}/admin/dashboard/stats`, {
         headers: {
           'Authorization': `Bearer ${token}`,

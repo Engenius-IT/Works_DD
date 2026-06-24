@@ -48,7 +48,7 @@ export default function JobManagementPage() {
   const fetchJobs = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('accessToken');
       const response = await fetch(
         `${API_URL}/admin/jobs?page=${page}&limit=${limit}&search=${encodeURIComponent(searchTerm)}`,
         {
@@ -91,7 +91,7 @@ export default function JobManagementPage() {
     if (!confirm('คุณแน่ใจหรือว่าต้องการลบงานนี้?')) return;
 
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('accessToken');
       const response = await fetch(`${API_URL}/admin/jobs/${jobId}`, {
         method: 'DELETE',
         headers: {

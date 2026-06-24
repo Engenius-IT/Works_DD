@@ -43,7 +43,7 @@ export default function UserManagementPage() {
   const fetchUsers = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('accessToken');
       const roleParam = filterRole !== 'all' ? `&role=${filterRole}` : '';
       const response = await fetch(
         `${API_URL}/admin/users?page=${page}&limit=${limit}&search=${encodeURIComponent(searchTerm)}${roleParam}`,
@@ -87,7 +87,7 @@ export default function UserManagementPage() {
     if (!confirm('คุณแน่ใจหรือว่าต้องการลบผู้ใช้นี้?')) return;
 
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('accessToken');
       const response = await fetch(`${API_URL}/admin/users/${userId}`, {
         method: 'DELETE',
         headers: {
