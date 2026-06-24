@@ -30,24 +30,22 @@ export default function AdminDashboardPage() {
       setLoading(true);
       setError(null);
       
-      // Mock data for demo if API fails
-      const mockStats = {
-        totalUsers: 1250,
-        totalCompanies: 85,
-        totalJobs: 430,
-        totalApplications: 2100,
-        pendingCompanies: 12,
-        newUsersThisMonth: 150,
-        newJobsThisMonth: 45,
-        newApplicationsThisMonth: 320,
-      };
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_URL}/admin/dashboard/stats`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
 
-      // In a real scenario, we would fetch from API
-      // But for preview, we use mock if connection fails
-      setStats(mockStats);
+      if (!response.ok) {
+        throw new Error('Failed to fetch dashboard stats');
+      }
+
+      const data = await response.json();
+      setStats(data);
     } catch (err) {
       console.error('Error fetching dashboard stats:', err);
-      setError('ไม่สามารถโหลดข้อมูลจริงได้ กำลังแสดงข้อมูลจำลอง');
+      setError('ไม่สามารถโหลดข้อมูลได้');
     } finally {
       setLoading(false);
     }
@@ -66,7 +64,7 @@ export default function AdminDashboardPage() {
       {/* Header */}
       <div className="bg-white rounded-2xl shadow-sm border border-gray-200 px-6 py-5">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Admin Dashboard (Preview)</h1>
+          <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Admin Dashboard</h1>
           <p className="text-sm text-gray-500 mt-1">
             ยินดีต้อนรับเข้าสู่ระบบจัดการ JobDD
           </p>
