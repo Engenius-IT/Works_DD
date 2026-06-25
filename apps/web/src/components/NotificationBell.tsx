@@ -1,13 +1,10 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { useRouter } from '@/i18n/routing'; // This will be used by the original component
+import { useRouter } from '@/i18n/routing';
 import { useAuth } from '@/context/AuthContext';
-<<<<<<< Updated upstream
 import { NotificationModal } from './NotificationModal';
-=======
 import { useLocale } from 'next-intl'; // 🌐 นำเข้า useLocale สำหรับระบบแปลภาษา
->>>>>>> Stashed changes
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
 
@@ -248,154 +245,154 @@ export function NotificationBell() {
   return (
     <>
       <div className="relative" ref={dropdownRef}>
-      {/* Bell Button */}
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="relative p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full transition-colors"
-        aria-label={t.bellLabel}
-      >
-        <svg
-          className="w-6 h-6"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-          strokeWidth={1.5}
+        {/* Bell Button */}
+        <button
+          onClick={() => setIsOpen(!isOpen)}
+          className="relative p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full transition-colors"
+          aria-label={t.bellLabel}
         >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0"
-          />
-        </svg>
+          <svg
+            className="w-6 h-6"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            strokeWidth={1.5}
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0"
+            />
+          </svg>
 
-        {/* Badge */}
-        {unreadCount > 0 && (
-          <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] flex items-center justify-center bg-red-500 text-white text-[10px] font-bold rounded-full px-1 leading-none animate-pulse shadow-sm">
-            {unreadCount > 99 ? '99+' : unreadCount}
-          </span>
-        )}
-      </button>
+          {/* Badge */}
+          {unreadCount > 0 && (
+            <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] flex items-center justify-center bg-red-500 text-white text-[10px] font-bold rounded-full px-1 leading-none animate-pulse shadow-sm">
+              {unreadCount > 99 ? '99+' : unreadCount}
+            </span>
+          )}
+        </button>
 
-      {/* Dropdown */}
-      {isOpen && (
-        <div className="absolute right-0 top-full mt-2 w-80 sm:w-96 bg-white rounded-2xl shadow-2xl border border-gray-100 z-50 overflow-hidden">
-          {/* Header */}
-          <div className="flex items-center justify-between px-5 py-3.5 border-b border-gray-100 bg-gray-50/50">
-            <h3 className="font-bold text-gray-800 text-sm">{t.headerTitle}</h3>
-            {notifications.length > 0 && (
-              <div className="flex items-center gap-3">
-                {unreadCount > 0 && (
+        {/* Dropdown */}
+        {isOpen && (
+          <div className="absolute right-0 top-full mt-2 w-80 sm:w-96 bg-white rounded-2xl shadow-2xl border border-gray-100 z-50 overflow-hidden">
+            {/* Header */}
+            <div className="flex items-center justify-between px-5 py-3.5 border-b border-gray-100 bg-gray-50/50">
+              <h3 className="font-bold text-gray-800 text-sm">{t.headerTitle}</h3>
+              {notifications.length > 0 && (
+                <div className="flex items-center gap-3">
+                  {unreadCount > 0 && (
+                    <button
+                      onClick={markAllAsRead}
+                      className="text-xs text-blue-600 hover:text-blue-700 font-medium hover:underline"
+                    >
+                      {t.readAll}
+                    </button>
+                  )}
                   <button
-                    onClick={markAllAsRead}
-                    className="text-xs text-blue-600 hover:text-blue-700 font-medium hover:underline"
+                    onClick={handleClearAll}
+                    className="text-xs text-red-500 hover:text-red-700 font-medium hover:underline"
                   >
-                    {t.readAll}
+                    {t.deleteAll}
                   </button>
-                )}
-                <button
-                  onClick={handleClearAll}
-                  className="text-xs text-red-500 hover:text-red-700 font-medium hover:underline"
+                </div>
+              )}
+            </div>
+
+            {/* List */}
+            <div className="max-h-80 overflow-y-auto">
+              {loading && notifications.length === 0 && (
+                <div className="flex items-center justify-center py-10">
+                  <div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                </div>
+              )}
+
+              {!loading && notifications.length === 0 && (
+                <div className="text-center py-10 px-6">
+                  <div className="text-3xl mb-2">🔔</div>
+                  <p className="text-sm text-gray-400">{t.emptyNotifications}</p>
+                </div>
+              )}
+
+              {notifications.map((notification) => (
+                <div
+                  key={notification.id}
+                  onClick={() => markAsRead(notification)}
+                  className={`group w-full text-left px-5 py-3.5 border-b border-gray-50 last:border-0 transition-colors hover:bg-blue-50/50 flex gap-3 items-start cursor-pointer ${
+                    !notification.isRead ? 'bg-blue-50/30' : ''
+                  }`}
                 >
-                  {t.deleteAll}
+                  {/* Icon */}
+                  <div
+                    className={`w-9 h-9 rounded-full flex items-center justify-center text-base shrink-0 mt-0.5 ${
+                      notification.type === 'INTERVIEW_SCHEDULED'
+                        ? 'bg-purple-100 text-purple-600'
+                        : 'bg-blue-100 text-blue-600'
+                    }`}
+                  >
+                    {notification.title.charAt(0)}
+                  </div>
+
+                  {/* Content */}
+                  <div className="flex-1 min-w-0">
+                    <p
+                      className={`text-sm leading-snug ${!notification.isRead ? 'font-semibold text-gray-900' : 'font-medium text-gray-700'}`}
+                    >
+                      {notification.title}
+                    </p>
+                    <p className="text-xs text-gray-500 mt-0.5 line-clamp-2">
+                      {notification.message}
+                    </p>
+                    <p className="text-[11px] text-gray-400 mt-1">
+                      {timeAgo(notification.createdAt, t)}
+                    </p>
+                  </div>
+
+                  {/* Unread indicator & Delete button wrapper */}
+                  <div className="flex flex-col items-end gap-1 shrink-0 ml-2 mt-1">
+                    {/* Delete Button */}
+                    <button
+                      onClick={(e) => handleClearSingle(e, notification)}
+                      className="p-1.5 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-md transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100"
+                      aria-label={t.deleteSingleLabel}
+                      title={t.btnDeleteTitle}
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                        className="w-4 h-4"
+                      >
+                        <path d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z" />
+                      </svg>
+                    </button>
+
+                    {/* Unread indicator */}
+                    {!notification.isRead && (
+                      <div className="w-2 h-2 rounded-full bg-blue-500 mr-1.5"></div>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Footer View All */}
+            {user.role !== 'EMPLOYER' && user.role !== 'ADMIN' && (
+              <div className="border-t border-gray-100 bg-gray-50 py-2 px-3">
+                <button
+                  onClick={() => {
+                    setIsOpen(false);      // ปิด Dropdown เล็ก
+                    setIsModalOpen(true);  // เปิดหน้าจอ Premium Modal ตัวเต็ม
+                  }}
+                  className="w-full py-2 text-center text-sm font-medium text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors"
+                  aria-label={t.viewAll}
+                >
+                  {t.viewAll}
                 </button>
               </div>
             )}
           </div>
-
-          {/* List */}
-          <div className="max-h-80 overflow-y-auto">
-            {loading && notifications.length === 0 && (
-              <div className="flex items-center justify-center py-10">
-                <div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-              </div>
-            )}
-
-            {!loading && notifications.length === 0 && (
-              <div className="text-center py-10 px-6">
-                <div className="text-3xl mb-2">🔔</div>
-                <p className="text-sm text-gray-400">{t.emptyNotifications}</p>
-              </div>
-            )}
-
-            {notifications.map((notification) => (
-              <div
-                key={notification.id}
-                onClick={() => markAsRead(notification)}
-                className={`group w-full text-left px-5 py-3.5 border-b border-gray-50 last:border-0 transition-colors hover:bg-blue-50/50 flex gap-3 items-start cursor-pointer ${
-                  !notification.isRead ? 'bg-blue-50/30' : ''
-                }`}
-              >
-                {/* Icon */}
-                <div
-                  className={`w-9 h-9 rounded-full flex items-center justify-center text-base shrink-0 mt-0.5 ${
-                    notification.type === 'INTERVIEW_SCHEDULED'
-                      ? 'bg-purple-100 text-purple-600'
-                      : 'bg-blue-100 text-blue-600'
-                  }`}
-                >
-                  {notification.title.charAt(0)}
-                </div>
-
-                {/* Content */}
-                <div className="flex-1 min-w-0">
-                  <p
-                    className={`text-sm leading-snug ${!notification.isRead ? 'font-semibold text-gray-900' : 'font-medium text-gray-700'}`}
-                  >
-                    {notification.title}
-                  </p>
-                  <p className="text-xs text-gray-500 mt-0.5 line-clamp-2">
-                    {notification.message}
-                  </p>
-                  <p className="text-[11px] text-gray-400 mt-1">
-                    {timeAgo(notification.createdAt, t)}
-                  </p>
-                </div>
-
-                {/* Unread indicator & Delete button wrapper */}
-                <div className="flex flex-col items-end gap-1 shrink-0 ml-2 mt-1">
-                  {/* Delete Button */}
-                  <button
-                    onClick={(e) => handleClearSingle(e, notification)}
-                    className="p-1.5 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-md transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100"
-                    aria-label={t.deleteSingleLabel}
-                    title={t.btnDeleteTitle}
-                  >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      viewBox="0 0 20 20"
-                      fill="currentColor"
-                      className="w-4 h-4"
-                    >
-                      <path d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z" />
-                    </svg>
-                  </button>
-
-                  {/* Unread indicator */}
-                  {!notification.isRead && (
-                    <div className="w-2 h-2 rounded-full bg-blue-500 mr-1.5"></div>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {/* Footer View All */}
-          {user.role !== 'EMPLOYER' && user.role !== 'ADMIN' && (
-            <div className="border-t border-gray-100 bg-gray-50 py-2 px-3">
-              <button
-                onClick={() => {
-                  setIsOpen(false);      // ปิด Dropdown เล็ก
-                  setIsModalOpen(true);  // เปิดหน้าจอ Premium Modal ตัวเต็ม
-                }}
-                className="w-full py-2 text-center text-sm font-medium text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors"
-                aria-label={t.viewAll}
-              >
-                {t.viewAll}
-              </button>
-            </div>
-          )}
-        </div>
-      )}
+        )}
       </div>
       <NotificationModal
         isOpen={isModalOpen}
