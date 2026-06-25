@@ -56,10 +56,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Redirect based on role
     if (userData.role === 'JOBSEEKER') {
       router.push('/profilefull');
-    } else if (userData.role === 'EMPLOYER') {
+    } else if (userData.role === 'EMPLOYER' || userData.role === 'ADMIN') {
+      // ADMIN should also go to employer dashboard as requested to see employer view
       router.push('/employer/dashboard');
-    } else if (userData.role === 'ADMIN') {
-      router.push('/admin/companies/verify');
     } else {
       router.push('/'); // Fallback
     }

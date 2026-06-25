@@ -77,7 +77,7 @@ export const Footer: React.FC<FooterProps> = ({ role }) => {
                 </div>
 
                 {/* กรณีที่ 1: เป็นผู้ประกอบการ (EMPLOYER) */}
-                {role === 'EMPLOYER' ? (
+                {role === 'EMPLOYER' || role === 'ADMIN' ? (
                     <>
                         <div>
                             <h3 className="text-white font-semibold text-base mb-6">จัดการงาน & ค้นหา</h3>

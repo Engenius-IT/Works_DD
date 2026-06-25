@@ -16,7 +16,7 @@ export function FAQ() {
   const pathname = usePathname();
 
   // เช็คว่าเป็นผู้ประกอบการหรือไม่ (ถ้าไม่ใช่ หรือยังไม่ Login จะถือว่าเป็นคนหางาน/Guest)
-  const isEmployer = user?.role === 'EMPLOYER';
+  const isEmployer = user?.role === 'EMPLOYER' || user?.role === 'ADMIN';
 
   // ดึงข้อมูล 6 ข้อสลับกันตามบทบาท (ถ้าเป็น EMPLOYER ใช้ข้อมูลชุด employer ถ้าไม่ใช่ใช้ชุด candidate)
   const faqs = [0, 1, 2, 3, 4, 5].map((i) => ({

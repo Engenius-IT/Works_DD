@@ -1,59 +1,122 @@
 'use client';
 
-import { useState } from 'react';
-import { Search, Filter, MoreVertical, Edit2, Trash2, Eye } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Search, Filter, MoreVertical, Edit2, Trash2, Eye, Loader2 } from 'lucide-react';
+import { ToastContainer } from '@/components/admin/Toast';
 
 interface User {
   id: string;
-  name: string;
   email: string;
+  firstName?: string;
+  lastName?: string;
   role: 'JOBSEEKER' | 'EMPLOYER' | 'ADMIN';
-  status: 'active' | 'inactive' | 'suspended';
-  joinDate: string;
-  applications?: number;
+  createdAt: string;
+  _count: {
+    applications: number;
+  };
 }
 
-const mockUsers: User[] = [
-  {
-    id: '1',
-    name: 'สมชาย ใจดี',
-    email: 'somchai@example.com',
-    role: 'JOBSEEKER',
-    status: 'active',
-    joinDate: '2024-01-15',
-    applications: 5,
-  },
-  {
-    id: '2',
-    name: 'บริษัท ABC จำกัด',
-    email: 'contact@abc.co.th',
-    role: 'EMPLOYER',
-    status: 'active',
-    joinDate: '2024-02-10',
-  },
-  {
-    id: '3',
-    name: 'นางสาว ดวงใจ',
-    email: 'duangjai@example.com',
-    role: 'JOBSEEKER',
-    status: 'active',
-    joinDate: '2024-03-05',
-    applications: 3,
-  },
-];
+interface Toast {
+  id: string;
+  type: 'success' | 'error' | 'warning' | 'info';
+  title: string;
+  message?: string;
+  duration?: number;
+}
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
 
 export default function UserManagementPage() {
-  const [users, setUsers] = useState<User[]>(mockUsers);
+  const [users, setUsers] = useState<User[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterRole, setFilterRole] = useState<string>('all');
+  const [toasts, setToasts] = useState<Toast[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const [total, setTotal] = useState(0);
+  const limit = 20;
 
-  const filteredUsers = users.filter((user) => {
-    const matchesSearch =
-      user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesRole = filterRole === 'all' || user.role === filterRole;
-    return matchesSearch && matchesRole;
-  });
+  useEffect(() => {
+    fetchUsers();
+  }, [page, searchTerm, filterRole]);
+
+  const fetchUsers = async () => {
+    try {
+      setLoading(true);
+      const token = localStorage.getItem('accessToken');
+      const roleParam = filterRole !== 'all' ? `&role=${filterRole}` : '';
+      const response = await fetch(
+        `${API_URL}/admin/users?page=${page}&limit=${limit}&search=${encodeURIComponent(searchTerm)}${roleParam}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch users');
+      }
+
+      const data = await response.json();
+      setUsers(data.data);
+      setTotal(data.meta.total);
+    } catch (err) {
+      console.error('Error fetching users:', err);
+      addToast({
+        type: 'error',
+        title: 'ข้อผิดพลาด',
+        message: 'ไม่สามารถโหลดข้อมูลผู้ใช้ได้',
+        duration: 3000,
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const addToast = (toast: Omit<Toast, 'id'>) => {
+    const id = Date.now().toString();
+    setToasts(prev => [...prev, { ...toast, id }]);
+  };
+
+  const removeToast = (id: string) => {
+    setToasts(prev => prev.filter(t => t.id !== id));
+  };
+
+  const handleDelete = async (userId: string) => {
+    if (!confirm('คุณแน่ใจหรือว่าต้องการลบผู้ใช้นี้?')) return;
+
+    try {
+      const token = localStorage.getItem('accessToken');
+      const response = await fetch(`${API_URL}/admin/users/${userId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to delete user');
+      }
+
+      addToast({
+        type: 'success',
+        title: 'ลบสำเร็จ',
+        message: 'ลบผู้ใช้เรียบร้อยแล้ว',
+        duration: 3000,
+      });
+
+      fetchUsers();
+    } catch (err) {
+      console.error('Error deleting user:', err);
+      addToast({
+        type: 'error',
+        title: 'ข้อผิดพลาด',
+        message: 'ไม่สามารถลบผู้ใช้ได้',
+        duration: 3000,
+      });
+    }
+  };
 
   const getRoleColor = (role: string) => {
     switch (role) {
@@ -65,19 +128,6 @@ export default function UserManagementPage() {
         return 'bg-green-100 text-green-800';
       default:
         return 'bg-gray-100 text-gray-800';
-    }
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'active':
-        return 'text-green-600';
-      case 'inactive':
-        return 'text-gray-600';
-      case 'suspended':
-        return 'text-red-600';
-      default:
-        return 'text-gray-600';
     }
   };
 
@@ -94,12 +144,21 @@ export default function UserManagementPage() {
     }
   };
 
+  const getUserName = (user: User) => {
+    if (user.firstName || user.lastName) {
+      return `${user.firstName || ''} ${user.lastName || ''}`.trim();
+    }
+    return user.email;
+  };
+
   return (
     <div className="space-y-6">
+      <ToastContainer toasts={toasts} onClose={removeToast} />
+
       {/* Header */}
       <div>
         <h1 className="text-3xl font-bold text-gray-900">จัดการผู้ใช้</h1>
-        <p className="text-gray-500 mt-1">จำนวนผู้ใช้ทั้งหมด: {users.length} คน</p>
+        <p className="text-gray-500 mt-1">จำนวนผู้ใช้ทั้งหมด: {total} คน</p>
       </div>
 
       {/* Search and Filter */}
@@ -111,14 +170,20 @@ export default function UserManagementPage() {
               type="text"
               placeholder="ค้นหาชื่อหรืออีเมล..."
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={(e) => {
+                setSearchTerm(e.target.value);
+                setPage(1);
+              }}
               className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
             />
           </div>
           <div className="flex gap-2">
             <select
               value={filterRole}
-              onChange={(e) => setFilterRole(e.target.value)}
+              onChange={(e) => {
+                setFilterRole(e.target.value);
+                setPage(1);
+              }}
               className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
             >
               <option value="all">ทุกบทบาท</option>
@@ -132,59 +197,93 @@ export default function UserManagementPage() {
 
       {/* Users Table */}
       <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-gray-50 border-b border-gray-200">
-              <tr>
-                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">ชื่อ</th>
-                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">อีเมล</th>
-                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">บทบาท</th>
-                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">สถานะ</th>
-                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">วันที่เข้าร่วม</th>
-                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">การดำเนินการ</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-200">
-              {filteredUsers.map((user) => (
-                <tr key={user.id} className="hover:bg-gray-50 transition-colors">
-                  <td className="px-6 py-4 text-sm font-medium text-gray-900">{user.name}</td>
-                  <td className="px-6 py-4 text-sm text-gray-600">{user.email}</td>
-                  <td className="px-6 py-4 text-sm">
-                    <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getRoleColor(user.role)}`}>
-                      {getRoleLabel(user.role)}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 text-sm">
-                    <span className={`font-medium ${getStatusColor(user.status)}`}>
-                      {user.status === 'active' && '✓ ใช้งาน'}
-                      {user.status === 'inactive' && '○ ไม่ใช้งาน'}
-                      {user.status === 'suspended' && '✕ ถูกระงับ'}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 text-sm text-gray-600">{user.joinDate}</td>
-                  <td className="px-6 py-4 text-sm">
-                    <div className="flex items-center gap-2">
-                      <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-                        <Eye className="w-4 h-4 text-gray-600" />
-                      </button>
-                      <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-                        <Edit2 className="w-4 h-4 text-gray-600" />
-                      </button>
-                      <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-                        <Trash2 className="w-4 h-4 text-red-600" />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-
-        {filteredUsers.length === 0 && (
-          <div className="p-12 text-center">
-            <p className="text-gray-500">ไม่พบผู้ใช้ที่ตรงกับเงื่อนไข</p>
+        {loading ? (
+          <div className="flex items-center justify-center p-12">
+            <Loader2 className="w-8 h-8 text-purple-600 animate-spin" />
           </div>
+        ) : (
+          <>
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-gray-50 border-b border-gray-200">
+                  <tr>
+                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">ชื่อ</th>
+                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">อีเมล</th>
+                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">บทบาท</th>
+                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">จำนวนสมัคร</th>
+                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">วันที่เข้าร่วม</th>
+                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">การดำเนินการ</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200">
+                  {users.map((user) => (
+                    <tr key={user.id} className="hover:bg-gray-50 transition-colors">
+                      <td className="px-6 py-4 text-sm font-medium text-gray-900">{getUserName(user)}</td>
+                      <td className="px-6 py-4 text-sm text-gray-600">{user.email}</td>
+                      <td className="px-6 py-4 text-sm">
+                        <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getRoleColor(user.role)}`}>
+                          {getRoleLabel(user.role)}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-600">
+                        {user.role === 'JOBSEEKER' ? user._count.applications : '-'}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-600">
+                        {new Date(user.createdAt).toLocaleDateString('th-TH')}
+                      </td>
+                      <td className="px-6 py-4 text-sm">
+                        <div className="flex items-center gap-2">
+                          <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+                            <Eye className="w-4 h-4 text-gray-600" />
+                          </button>
+                          <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+                            <Edit2 className="w-4 h-4 text-gray-600" />
+                          </button>
+                          <button
+                            onClick={() => handleDelete(user.id)}
+                            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                          >
+                            <Trash2 className="w-4 h-4 text-red-600" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {users.length === 0 && (
+              <div className="p-12 text-center">
+                <p className="text-gray-500">ไม่พบผู้ใช้ที่ตรงกับเงื่อนไข</p>
+              </div>
+            )}
+
+            {/* Pagination */}
+            {total > limit && (
+              <div className="bg-gray-50 px-6 py-4 border-t border-gray-200 flex items-center justify-between">
+                <p className="text-sm text-gray-600">
+                  หน้า {page} จาก {Math.ceil(total / limit)}
+                </p>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setPage(p => Math.max(1, p - 1))}
+                    disabled={page === 1}
+                    className="px-3 py-1 border border-gray-300 rounded-lg text-sm disabled:opacity-50"
+                  >
+                    ก่อนหน้า
+                  </button>
+                  <button
+                    onClick={() => setPage(p => p + 1)}
+                    disabled={page >= Math.ceil(total / limit)}
+                    className="px-3 py-1 border border-gray-300 rounded-lg text-sm disabled:opacity-50"
+                  >
+                    ถัดไป
+                  </button>
+                </div>
+              </div>
+            )}
+          </>
         )}
       </div>
     </div>

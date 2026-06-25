@@ -147,7 +147,7 @@ export function Navbar() {
         {/* Right Side: Auth & Language */}
         <div className="flex items-center gap-4">
           <div className="hidden md:flex items-center gap-3">
-            {user?.role !== 'EMPLOYER' && (
+            {user?.role !== 'EMPLOYER' && user?.role !== 'ADMIN' && (
               <Link
                 href="/ai-job-matcher"
                 className="inline-flex items-center gap-2 rounded-full bg-linear-to-r from-violet-600 to-fuchsia-600 px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-violet-500/30 transition-all hover:-translate-y-0.5 hover:shadow-xl hover:shadow-violet-500/40 hover:from-violet-500 hover:to-fuchsia-500 active:scale-95"
@@ -188,20 +188,36 @@ export function Navbar() {
                   </Link>
                 )}
                 {user.role === 'ADMIN' && (
-                  <Link
-                    href="/admin"
-                    className="flex items-center gap-2 bg-red-600 hover:bg-red-500 text-white font-bold text-sm px-4 py-2 rounded-xl shadow shadow-red-500/40 transition-all hover:scale-105 active:scale-95"
-                  >
-                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
-                      />
-                    </svg>
-                    จัดการหลังบ้าน (Admin)
-                  </Link>
+                  <>
+                    <Link
+                      href="/employer/dashboard"
+                      className="flex items-center gap-2 bg-amber-400 hover:bg-amber-300 text-gray-900 font-bold text-sm px-4 py-2 rounded-xl shadow shadow-amber-300/40 transition-all hover:scale-105 active:scale-95"
+                    >
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-2 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+                        />
+                      </svg>
+                      {t('employerBackend')}
+                    </Link>
+                    <Link
+                      href="/admin"
+                      className="flex items-center gap-2 bg-red-600 hover:bg-red-500 text-white font-bold text-sm px-4 py-2 rounded-xl shadow shadow-red-500/40 transition-all hover:scale-105 active:scale-95"
+                    >
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
+                        />
+                      </svg>
+                      จัดการหลังบ้าน (Admin)
+                    </Link>
+                  </>
                 )}
                 <UserDropdown user={{ ...user, role: user.role }} logout={logout} />
               </>
@@ -299,7 +315,7 @@ export function Navbar() {
               </button>
             </div>
           </div>
-          {user?.role !== 'EMPLOYER' && (
+          {user?.role !== 'EMPLOYER' && user?.role !== 'ADMIN' && (
             <Link
               href="/ai-job-matcher"
               className="flex items-center justify-center gap-2 mx-4 py-3 bg-linear-to-r from-violet-600 to-fuchsia-600 text-white rounded-xl font-bold shadow-lg shadow-violet-500/30 active:scale-95 transition-all"
@@ -326,10 +342,10 @@ export function Navbar() {
           <div className="py-2 space-y-1">
 
             {/* ส่วนนี้ดึง Logic มาจาก SubNavbar */}
-{user?.role === 'ADMIN' && (
+{user?.role === 'EMPLOYER' && (
 	            <Link
-	              href="/admin"
-	              className="flex items-center justify-center gap-2 mx-4 py-3 bg-red-600 text-white rounded-xl font-bold shadow-lg shadow-red-500/30 active:scale-95 transition-all mb-2"
+	              href="/employer/dashboard"
+	              className="flex items-center justify-center gap-2 mx-4 py-3 bg-amber-400 text-gray-900 rounded-xl font-bold shadow-lg shadow-amber-300/30 active:scale-95 transition-all mb-2"
 	              onClick={() => setIsMenuOpen(false)}
 	            >
 	              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -337,13 +353,47 @@ export function Navbar() {
 	                  strokeLinecap="round"
 	                  strokeLinejoin="round"
 	                  strokeWidth={2}
-	                  d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
+	                  d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-2 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
 	                />
 	              </svg>
-	              จัดการหลังบ้าน (Admin)
+	              {t('employerBackend')}
 	            </Link>
 	          )}
-		          {user?.role === 'EMPLOYER' ? (
+	          {user?.role === 'ADMIN' && (
+	            <>
+	              <Link
+	                href="/employer/dashboard"
+	                className="flex items-center justify-center gap-2 mx-4 py-3 bg-amber-400 text-gray-900 rounded-xl font-bold shadow-lg shadow-amber-300/30 active:scale-95 transition-all mb-2"
+	                onClick={() => setIsMenuOpen(false)}
+	              >
+	                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+	                  <path
+	                    strokeLinecap="round"
+	                    strokeLinejoin="round"
+	                    strokeWidth={2}
+	                    d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-2 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+	                  />
+	                </svg>
+	                {t('employerBackend')}
+	              </Link>
+	              <Link
+	                href="/admin"
+	                className="flex items-center justify-center gap-2 mx-4 py-3 bg-red-600 text-white rounded-xl font-bold shadow-lg shadow-red-500/30 active:scale-95 transition-all mb-2"
+	                onClick={() => setIsMenuOpen(false)}
+	              >
+	                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+	                  <path
+	                    strokeLinecap="round"
+	                    strokeLinejoin="round"
+	                    strokeWidth={2}
+	                    d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
+	                  />
+	                </svg>
+	                จัดการหลังบ้าน (Admin)
+	              </Link>
+	            </>
+	          )}
+	          {(user?.role === 'EMPLOYER' || user?.role === 'ADMIN') ? (
 	              /* --- เมนูสำหรับนายจ้าง (EMPLOYER) --- */
 	              <>
 	                <Link
@@ -365,18 +415,18 @@ export function Navbar() {
               /* --- เมนูสำหรับผู้สมัคร (JOBSEEKER) และ Guest --- */
               <>
                 <Link
-                  href="/"
-                  className="block px-4 py-2 text-gray-700 hover:bg-gray-50 rounded-lg font-medium"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  {tSub('home')}
-                </Link>
-                <Link
                   href="/jobs"
                   className="block px-4 py-2 text-gray-700 hover:bg-gray-50 rounded-lg font-medium"
                   onClick={() => setIsMenuOpen(false)}
                 >
                   {tSub('quickSearch')}
+                </Link>
+                <Link
+                  href="/coming-soon/jobseeker"
+                  className="block px-4 py-2 text-gray-700 hover:bg-gray-50 rounded-lg font-medium"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  {tSub('findJobs')}
                 </Link>
                 <Link
                   href="/jobs"
@@ -422,9 +472,9 @@ export function Navbar() {
             <>
               <div className="px-4 py-2 text-gray-500 text-sm">
                 {t('hello')}{' '}
-                {user.role === 'EMPLOYER' && user.companyName ? user.companyName : user.firstName}
-              </div>
-              {user.role === 'EMPLOYER' && (
+              {(user.role === 'EMPLOYER' || user.role === 'ADMIN') && user.companyName ? user.companyName : user.firstName}
+            </div>
+            {(user.role === 'EMPLOYER' || user.role === 'ADMIN') && (
                 <Link
                   href="/employer/dashboard"
                   className="flex items-center gap-2 mx-2 px-4 py-2 bg-amber-400 text-gray-900 font-bold text-sm rounded-xl"
