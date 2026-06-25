@@ -55,7 +55,7 @@ function LoginForm() {
         const currentLocale = typeof window !== 'undefined' ? window.location.pathname.split('/')[1] || 'th' : 'th';
 
         // 🟢 เปลี่ยนมาใช้ window.location.href ตัดปัญหาระบบเร้าเตอร์ Next.js นิ่งค้าง
-        if (userData.role === 'EMPLOYER') {
+        if (userData.role === 'EMPLOYER' || userData.role === 'ADMIN') {
           window.location.href = `/${currentLocale}/employer/dashboard`;
         } else {
           // พี่สามารถเปลี่ยนจาก '/th' เป็น '/th/profilefull' หรือหน้าไหนก็ได้ที่พี่อยากให้ผู้สมัครไปได้เลยครับ!
@@ -128,7 +128,7 @@ function LoginForm() {
       login(data.accessToken, data.user);
 
       // 🟢 ฟอร์มธรรมดาก็ให้เช็คทางเดินไปหน้าที่มีอยู่จริงเช่นกันครับ
-      if (data.user.role === 'EMPLOYER') {
+      if (data.user.role === 'EMPLOYER' || data.user.role === 'ADMIN') {
         router.replace('/th/employer/dashboard');
       } else {
         // 🟢 [เปลี่ยนจุดนี้] เปลี่ยนให้เหมือนกันกับจุดแรกเพื่อความปลอดภัยครับ
