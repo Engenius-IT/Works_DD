@@ -119,8 +119,8 @@ export function Navbar() {
   }, [pathname]);
 
   return (
-    <header className=" bg-[#ffffff] sticky top-0 z-50 drop-shadow-xl">
-      <div className="max-w-(--container-max) mx-auto px-4 py-0 flex items-center justify-between">
+    <header className="sticky top-0 z-50 bg-white border-b border-gray-100 shadow-sm transition-all duration-300">
+      <div className="max-w-(--container-max) mx-auto px-4 py-2 flex items-center justify-between">
         {/* Left Side: Logo & Main Nav */}
         <div className="flex items-center gap-8">
           {/* Logo */}
@@ -129,16 +129,16 @@ export function Navbar() {
               <img
                 src="/images/logo_jobdd_main.png"
                 alt="JobDD Logo"
-                className="h-20 w-auto object-contain"
+                className="h-16 md:h-18 w-auto object-contain transition-transform duration-300 group-hover:scale-[1.02]"
                 onError={() => setLogoError(true)}
               />
             ) : (
               <div className="flex items-center gap-2">
-                <div className="w-10 h-10 rounded-xl bg-linear-to-br from-(--color-primary) to-(--color-secondary) flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-blue-500/20 group-hover:shadow-blue-500/30 transition-all">
+                <div className="w-10 h-10 rounded-xl bg-[#A80010] flex items-center justify-center text-white font-bold text-xl shadow-sm">
                   J
                 </div>
-                <h1 className="text-2xl font-bold text-(--color-primary) tracking-tight">
-                  Job<span className="text-(--color-secondary)">Sabuy</span>
+                <h1 className="text-2xl font-bold text-gray-900 tracking-tight">
+                  Job<span className="text-[#A80010]">Sabuy</span>
                 </h1>
               </div>
             )}
@@ -146,15 +146,15 @@ export function Navbar() {
         </div>
 
         {/* Right Side: Auth & Language */}
-        <div className="flex items-center gap-4">
-          <div className="hidden md:flex items-center gap-3">
+        <div className="flex items-center gap-6">
+          <div className="hidden md:flex items-center gap-6">
             {user?.role !== 'EMPLOYER' && (
               <Link
                 href="/ai-job-matcher"
-                className="inline-flex items-center gap-2 rounded-full bg-linear-to-r from-violet-600 to-fuchsia-600 px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-violet-500/30 transition-all hover:-translate-y-0.5 hover:shadow-xl hover:shadow-violet-500/40 hover:from-violet-500 hover:to-fuchsia-500 active:scale-95"
+                className="group inline-flex items-center gap-2 rounded-full bg-purple-50 px-5 py-2.5 text-sm font-semibold text-purple-600 transition-all hover:-translate-y-0.5 hover:bg-purple-100 active:scale-95"
               >
                 <svg
-                  className="w-4 h-4 animate-pulse"
+                  className="w-4 h-4"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -175,14 +175,14 @@ export function Navbar() {
                 {user.role === 'EMPLOYER' && (
                   <Link
                     href="/employer/dashboard"
-                    className="flex items-center gap-2 bg-amber-400 hover:bg-amber-300 text-gray-900 font-bold text-sm px-4 py-2 rounded-xl shadow shadow-amber-300/40 transition-all hover:scale-105 active:scale-95"
+                    className="flex items-center gap-2 bg-amber-400 hover:bg-amber-500 text-gray-900 font-semibold text-sm px-5 py-2.5 rounded-full shadow-sm transition-all hover:-translate-y-0.5 active:scale-95"
                   >
                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-2 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+                         strokeLinecap="round"
+                         strokeLinejoin="round"
+                         strokeWidth={2}
+                         d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-2 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
                       />
                     </svg>
                     {t('employerBackend')}
@@ -192,25 +192,25 @@ export function Navbar() {
               </>
             ) : (
               // Guest State
-              <>
+              <div className="flex items-center gap-4">
                 <Link
                   href="/login"
-                  className="px-5 py-2.5 rounded-lg text-[#000000] font-medium hover:text-[#E00016] transition-all"
+                  className="text-gray-600 font-medium hover:text-gray-900 transition-colors"
                 >
                   {t('login')}
                 </Link>
+                <div className="w-px h-5 bg-gray-200"></div>
                 <Link
                   href="/register"
-                  className="px-5 py-2.5 rounded-lg bg-[#A80010] text-white font-medium shadow-lg hover:-translate-y-0.5 transition-all"
+                  className="px-6 py-2 rounded-full bg-red-50 hover:bg-red-100 text-[#A80010] font-medium transition-all hover:-translate-y-0.5"
                 >
                   {t('register')}
                 </Link>
-                <div className="h-6 w-px bg-gray-200 mx-1"></div>
-              </>
+              </div>
             )}
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-4">
             {/* Notification Bell */}
             {user && (
               <div className="flex items-center">
@@ -219,18 +219,19 @@ export function Navbar() {
             )}
 
             {/* Desktop Language Switcher */}
-            <div className="hidden md:flex items-center gap-1 bg-gray-50 p-1 rounded-lg border border-gray-200">
+            <div className="hidden md:flex items-center gap-1">
               <button
                 onClick={() => switchLanguage('th')}
                 disabled={isPending}
-                className={`px-2.5 py-1 text-xs font-bold rounded-md transition-all ${locale === 'th' ? 'bg-white text-(--color-primary) shadow-sm ring-1 ring-gray-200/50' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'} ${isPending ? 'opacity-50 cursor-not-allowed' : ''}`}
+                className={`text-xs font-bold transition-colors ${locale === 'th' ? 'text-[#A80010]' : 'text-gray-400 hover:text-gray-700'} ${isPending ? 'opacity-50 cursor-not-allowed' : ''}`}
               >
                 TH
               </button>
+              <span className="text-gray-300 text-xs mx-1">|</span>
               <button
                 onClick={() => switchLanguage('en')}
                 disabled={isPending}
-                className={`px-2.5 py-1 text-xs font-bold rounded-md transition-all ${locale === 'en' ? 'bg-white text-(--color-primary) shadow-sm ring-1 ring-gray-200/50' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'} ${isPending ? 'opacity-50 cursor-not-allowed' : ''}`}
+                className={`text-xs font-bold transition-colors ${locale === 'en' ? 'text-[#A80010]' : 'text-gray-400 hover:text-gray-700'} ${isPending ? 'opacity-50 cursor-not-allowed' : ''}`}
               >
                 EN
               </button>
@@ -238,7 +239,7 @@ export function Navbar() {
 
             {/* Mobile Menu Button */}
             <button
-              className="md:hidden p-2 text-gray-600 focus:outline-none"
+              className="md:hidden p-2 text-gray-500 hover:text-gray-900 focus:outline-none transition-colors"
               onClick={() => setIsMenuOpen(!isMenuOpen)}
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -255,36 +256,40 @@ export function Navbar() {
       </div>
 
       {/* Mobile Menu Dropdown */}
-      {isMenuOpen && (
-        <div className="md:hidden border-t border-gray-100 p-4 space-y-2 bg-white shadow-lg max-h-[80vh] overflow-y-auto">
+      <div 
+        className={`md:hidden overflow-hidden transition-all duration-300 ease-in-out ${isMenuOpen ? 'max-h-[85vh] border-t border-gray-100 bg-white shadow-xl' : 'max-h-0'}`}
+      >
+        <div className="p-6 space-y-6 overflow-y-auto">
           {/* Mobile Language Switcher */}
-          <div className="px-4 py-2 flex items-center justify-between">
+          <div className="flex items-center justify-between">
             <span className="text-sm font-medium text-gray-500">{t('languageSwitcher')}</span>
-            <div className="flex items-center gap-1 bg-gray-50 p-1 rounded-lg border border-gray-100">
+            <div className="flex items-center gap-3">
               <button
                 onClick={() => switchLanguage('th')}
                 disabled={isPending}
-                className={`px-3 py-1 text-xs font-semibold rounded-md transition-all ${locale === 'th' ? 'bg-white text-(--color-primary) shadow-sm ring-1 ring-gray-200/50' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'} ${isPending ? 'opacity-50 cursor-not-allowed' : ''}`}
+                className={`text-sm font-bold transition-colors ${locale === 'th' ? 'text-[#A80010]' : 'text-gray-400'} ${isPending ? 'opacity-50 cursor-not-allowed' : ''}`}
               >
                 TH
               </button>
+              <span className="text-gray-300">|</span>
               <button
                 onClick={() => switchLanguage('en')}
                 disabled={isPending}
-                className={`px-3 py-1 text-xs font-semibold rounded-md transition-all ${locale === 'en' ? 'bg-white text-(--color-primary) shadow-sm ring-1 ring-gray-200/50' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'} ${isPending ? 'opacity-50 cursor-not-allowed' : ''}`}
+                className={`text-sm font-bold transition-colors ${locale === 'en' ? 'text-[#A80010]' : 'text-gray-400'} ${isPending ? 'opacity-50 cursor-not-allowed' : ''}`}
               >
                 EN
               </button>
             </div>
           </div>
+
           {user?.role !== 'EMPLOYER' && (
             <Link
               href="/ai-job-matcher"
-              className="flex items-center justify-center gap-2 mx-4 py-3 bg-linear-to-r from-violet-600 to-fuchsia-600 text-white rounded-xl font-bold shadow-lg shadow-violet-500/30 active:scale-95 transition-all"
+              className="flex items-center justify-center gap-2 w-full py-3 bg-purple-50 text-purple-600 rounded-full font-semibold active:scale-95 transition-all hover:bg-purple-100"
               onClick={() => setIsMenuOpen(false)}
             >
               <svg
-                className="w-5 h-5 animate-pulse"
+                className="w-5 h-5"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -301,19 +306,19 @@ export function Navbar() {
           )}
 
           {/* Mobile Main Navigation Links */}
-          <div className="py-2 space-y-1">
+          <div className="space-y-1">
             {user?.role === 'EMPLOYER' ? (
               <>
                 <Link
                   href="/"
-                  className="block px-4 py-2 text-gray-700 hover:bg-gray-50 rounded-lg font-medium"
+                  className="block py-2 text-gray-700 hover:text-gray-900 font-medium transition-colors"
                   onClick={() => setIsMenuOpen(false)}
                 >
                   {tSub('home')}
                 </Link>
                 <Link
                   href="/resumes"
-                  className="block px-4 py-2 text-gray-700 hover:bg-gray-50 rounded-lg font-medium"
+                  className="block py-2 text-gray-700 hover:text-gray-900 font-medium transition-colors"
                   onClick={() => setIsMenuOpen(false)}
                 >
                   {tSub('searchResumes')}
@@ -323,48 +328,50 @@ export function Navbar() {
               <>
                 <Link
                   href="/"
-                  className="block px-4 py-2 text-gray-700 hover:bg-gray-50 rounded-lg font-medium"
+                  className="block py-2 text-gray-700 hover:text-gray-900 font-medium transition-colors"
                   onClick={() => setIsMenuOpen(false)}
                 >
                   {tSub('home')}
                 </Link>
                 <Link
                   href="/jobs"
-                  className="block px-4 py-2 text-gray-700 hover:bg-gray-50 rounded-lg font-medium"
+                  className="block py-2 text-gray-700 hover:text-gray-900 font-medium transition-colors"
                   onClick={() => setIsMenuOpen(false)}
                 >
                   {tSub('quickSearch')}
                 </Link>
                 <Link
                   href="/jobs"
-                  className="block px-4 py-2 text-gray-700 hover:bg-gray-50 rounded-lg font-medium"
+                  className="block py-2 text-gray-700 hover:text-gray-900 font-medium transition-colors"
                   onClick={() => setIsMenuOpen(false)}
                 >
                   {tSub('findJobs')}
                 </Link>
 
-                <div className="px-4 py-2 text-xs font-bold text-gray-400 uppercase tracking-wider">
-                  {tSub('regionalJobs')}
-                </div>
-                <div className="grid grid-cols-2 gap-1 px-2">
-                  {['central', 'east', 'north', 'northeast', 'south', 'west'].map((region) => (
-                    <Link
-                      key={region}
-                      href={`/all_group_job/${region}`}
-                      className="px-3 py-2 text-sm text-gray-600 hover:bg-gray-50 rounded-lg"
-                      onClick={() => setIsMenuOpen(false)}
-                    >
-                      {tSub(`regionalJobsSub.${region}`)}
-                    </Link>
-                  ))}
+                <div className="pt-4 pb-2">
+                  <div className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">
+                    {tSub('regionalJobs')}
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    {['central', 'east', 'north', 'northeast', 'south', 'west'].map((region) => (
+                      <Link
+                        key={region}
+                        href={`/all_group_job/${region}`}
+                        className="py-2 text-sm text-gray-600 bg-gray-50 rounded-lg text-center font-medium transition-colors"
+                        onClick={() => setIsMenuOpen(false)}
+                      >
+                        {tSub(`regionalJobsSub.${region}`)}
+                      </Link>
+                    ))}
+                  </div>
                 </div>
               </>
             )}
 
-            <div className="px-2 pt-2 border-t border-gray-50 mt-2">
+            <div className="pt-4 border-t border-gray-100">
               <Link
                 href="/contact-us"
-                className="block px-3 py-2 text-sm text-gray-600 hover:bg-gray-50 rounded-lg"
+                className="block py-2 text-sm text-gray-600 hover:text-gray-900 font-medium transition-colors"
                 onClick={() => setIsMenuOpen(false)}
               >
                 {tSub('aboutSub.contact')}
@@ -372,20 +379,25 @@ export function Navbar() {
             </div>
           </div>
 
-          <hr className="border-gray-100 my-2" />
           {user ? (
-            <>
-              <div className="px-4 py-2 text-gray-500 text-sm">
-                {t('hello')}{' '}
-                {user.role === 'EMPLOYER' && user.companyName ? user.companyName : user.firstName}
+            <div className="pt-4 border-t border-gray-100 space-y-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-gray-100 text-gray-600 flex items-center justify-center font-bold">
+                  {(user.role === 'EMPLOYER' && user.companyName ? user.companyName : user.firstName).charAt(0).toUpperCase()}
+                </div>
+                <div>
+                  <div className="text-xs text-gray-500 font-medium">{t('hello')}</div>
+                  <div className="font-medium text-gray-900">{user.role === 'EMPLOYER' && user.companyName ? user.companyName : user.firstName}</div>
+                </div>
               </div>
+              
               {user.role === 'EMPLOYER' && (
                 <Link
                   href="/employer/dashboard"
-                  className="flex items-center gap-2 mx-2 px-4 py-2 bg-amber-400 text-gray-900 font-bold text-sm rounded-xl"
+                  className="flex items-center justify-center gap-2 w-full py-3 bg-amber-400 text-gray-900 font-bold rounded-full shadow-sm active:scale-95 transition-all"
                   onClick={() => setIsMenuOpen(false)}
                 >
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path
                       strokeLinecap="round"
                       strokeLinejoin="round"
@@ -398,15 +410,15 @@ export function Navbar() {
               )}
 
               {user.role === 'JOBSEEKER' && (
-                <div className="space-y-1">
+                <div className="space-y-2">
                   <button
                     type="button"
                     onClick={() => setIsProfileSubmenuOpen(!isProfileSubmenuOpen)}
-                    className="w-full flex items-center justify-between px-4 py-2.5 text-gray-700 hover:bg-gray-50 rounded-lg font-medium transition-colors"
+                    className="w-full flex items-center justify-between py-2 text-gray-700 font-medium transition-colors"
                   >
                     <span>{t('profile')}</span>
                     <svg
-                      className={`w-4 h-4 text-gray-500 transition-transform duration-200 ${isProfileSubmenuOpen ? 'rotate-180' : ''}`}
+                      className={`w-5 h-5 text-gray-400 transition-transform duration-300 ${isProfileSubmenuOpen ? 'rotate-180' : ''}`}
                       fill="none"
                       viewBox="0 0 24 24"
                       stroke="currentColor"
@@ -415,50 +427,38 @@ export function Navbar() {
                     </svg>
                   </button>
 
-                  {isProfileSubmenuOpen && (
-                    <div className="pl-6 pr-2 py-1 space-y-1 bg-gray-50/60 rounded-lg border-l-2 border-[#A80010]/30">
+                  <div className={`overflow-hidden transition-all duration-300 ${isProfileSubmenuOpen ? 'max-h-64 opacity-100' : 'max-h-0 opacity-0'}`}>
+                    <div className="pl-4 space-y-3 py-2 border-l-2 border-gray-100 ml-2">
                       <Link
                         href="/profilefull"
-                        className="block px-4 py-2 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-md"
-                        onClick={() => {
-                          setIsMenuOpen(false);
-                          setIsProfileSubmenuOpen(false);
-                        }}
+                        className="block text-sm text-gray-600 hover:text-[#A80010] font-medium"
+                        onClick={() => { setIsMenuOpen(false); setIsProfileSubmenuOpen(false); }}
                       >
                         {t('profile')}
                       </Link>
                       <Link
                         href="/profile"
-                        className="block px-4 py-2 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-md"
-                        onClick={() => {
-                          setIsMenuOpen(false);
-                          setIsProfileSubmenuOpen(false);
-                        }}
+                        className="block text-sm text-gray-600 hover:text-[#A80010] font-medium"
+                        onClick={() => { setIsMenuOpen(false); setIsProfileSubmenuOpen(false); }}
                       >
                         {t('editProfile')}
                       </Link>
                       <Link
                         href="/saved-jobs"
-                        className="block px-4 py-2 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-md"
-                        onClick={() => {
-                          setIsMenuOpen(false);
-                          setIsProfileSubmenuOpen(false);
-                        }}
+                        className="block text-sm text-gray-600 hover:text-[#A80010] font-medium"
+                        onClick={() => { setIsMenuOpen(false); setIsProfileSubmenuOpen(false); }}
                       >
                         {t('savedJobs')}
                       </Link>
                       <Link
                         href="/applications"
-                        className="block px-4 py-2 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-md"
-                        onClick={() => {
-                          setIsMenuOpen(false);
-                          setIsProfileSubmenuOpen(false);
-                        }}
+                        className="block text-sm text-gray-600 hover:text-[#A80010] font-medium"
+                        onClick={() => { setIsMenuOpen(false); setIsProfileSubmenuOpen(false); }}
                       >
                         {t('applications')}
                       </Link>
                     </div>
-                  )}
+                  </div>
                 </div>
               )}
 
@@ -468,31 +468,31 @@ export function Navbar() {
                   setIsMenuOpen(false);
                   setIsProfileSubmenuOpen(false);
                 }}
-                className="block w-full text-left px-4 py-2 text-red-500 hover:bg-red-50 rounded-lg"
+                className="w-full py-3 text-red-600 bg-red-50 hover:bg-red-100 rounded-full font-semibold transition-colors mt-4"
               >
                 {t('logout')}
               </button>
-            </>
+            </div>
           ) : (
-            <>
+            <div className="pt-4 border-t border-gray-100 space-y-3">
               <Link
                 href="/login"
-                className="block px-4 py-2 text-gray-700 hover:bg-gray-50 rounded-lg"
+                className="flex items-center justify-center py-3 text-gray-700 bg-gray-50 hover:bg-gray-100 rounded-full font-semibold transition-colors"
                 onClick={() => setIsMenuOpen(false)}
               >
                 {t('login')}
               </Link>
               <Link
                 href="/register"
-                className="block px-4 py-2 text-(--color-primary) font-medium"
+                className="flex items-center justify-center py-3 bg-red-50 text-[#A80010] hover:bg-red-100 rounded-full font-semibold transition-all active:scale-95"
                 onClick={() => setIsMenuOpen(false)}
               >
                 {t('register')}
               </Link>
-            </>
+            </div>
           )}
         </div>
-      )}
+      </div>
 
       {/* Sub Navigation Bar */}
       <SubNavbar userRole={user?.role} />
