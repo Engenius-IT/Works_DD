@@ -7,6 +7,7 @@ import { useEffect, useState, useTransition } from 'react';
 import { UserDropdown } from './UserDropdown';
 import { NotificationBell } from './NotificationBell';
 import { SubNavbar } from './SubNavbar';
+import { useSearchParams } from 'next/navigation';
 
 export function Navbar() {
   const { user, logout } = useAuth();
@@ -19,6 +20,13 @@ export function Navbar() {
   const locale = useLocale();
   const router = useRouter();
   const pathname = usePathname();
+const searchParams = useSearchParams();
+
+const currentUrl =
+  searchParams.toString()
+    ? `${pathname}?${searchParams.toString()}`
+    : pathname;
+  
   const [isPending, startTransition] = useTransition();
 
   const LOCALE_COOKIE = 'NEXT_LOCALE';
@@ -56,7 +64,7 @@ export function Navbar() {
     persistLocale(nextLocale);
 
     startTransition(() => {
-      router.replace(pathname, { locale: nextLocale });
+      window.location.href = `/${nextLocale}${currentUrl}`;
     });
 
     setIsMenuOpen(false);
@@ -83,7 +91,7 @@ export function Navbar() {
     if (preferred && isSupportedLocale(preferred) && preferred !== locale) {
       persistLocale(preferred);
       startTransition(() => {
-        router.replace(pathname, { locale: preferred });
+        window.location.href = `/${preferred}${currentUrl}`;
       });
     }
   }, [locale, pathname, router, startTransition]);
