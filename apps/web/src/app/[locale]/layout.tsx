@@ -28,29 +28,41 @@ export async function generateMetadata({
     : 'เว็บหางานอันดับ 1 ของไทย ค้นหางานจากบริษัทชั้นนำ สมัครง่าย ได้งานไว Full-time, Part-time, Remote, Freelance';
 
   return {
-    metadataBase: new URL('https://worksdd.com'),
-    title: {
-      default: titleDefault,
-      template: '%s | WorksDD',
-    },
-    description,
-    keywords: ['หางาน', 'สมัครงาน', 'งาน', 'job', 'career', 'ประกาศงาน', 'WorksDD'],
-    authors: [{ name: 'WorksDD Team' }],
-    openGraph: {
-      type: 'website',
-      locale: isEn ? 'en_US' : 'th_TH',
-      url: 'https://worksdd.com',
-      siteName: 'WorksDD',
-      title: titleDefault,
-      description: isEn
-        ? 'Thailand\'s leading job platform. Find jobs from top companies, apply easily, get hired faster.'
-        : 'เว็บหางานอันดับ 1 ของไทย ค้นหางานจากบริษัทชั้นนำ สมัครง่าย ได้งานไว',
-    },
-    robots: {
-      index: true,
-      follow: true,
-    },
-  };
+  metadataBase: new URL('https://worksdd.com'),
+  title: {
+    default: titleDefault,
+    template: '%s | WorksDD',
+  },
+  description,
+  keywords: ['หางาน', 'สมัครงาน', 'งาน', 'job', 'career', 'ประกาศงาน', 'WorksDD'],
+  authors: [{ name: 'WorksDD Team' }],
+
+  icons: {
+    icon: [
+      {
+        url: '/images/logo_jobdd_main.png',
+        type: 'image/png',
+      },
+    ],
+    shortcut: '/images/logo_jobdd_main.png',
+    apple: '/images/logo_jobdd_main.png',
+  },
+
+  openGraph: {
+    type: 'website',
+    locale: isEn ? 'en_US' : 'th_TH',
+    url: 'https://worksdd.com',
+    siteName: 'WorksDD',
+    title: titleDefault,
+    description: isEn
+      ? 'Thailand\'s leading job platform. Find jobs from top companies, apply easily, get hired faster.'
+      : 'เว็บหางานอันดับ 1 ของไทย ค้นหางานจากบริษัทชั้นนำ สมัครง่าย ได้งานไว',
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
+};
 }
 
 import { AuthProvider } from '@/context/AuthContext';
