@@ -1,152 +1,424 @@
 'use client';
 
+import { useState } from 'react';
 import { Navbar } from '@/components/Navbar';
 import { Footer } from '@/components/Footer';
+import { Link } from '@/i18n/routing';
 import { useTranslations } from 'next-intl';
 import {
-  ArrowLeft,
-  Briefcase,
+  Building2,
   FileText,
-  Search,
+  Users,
   CheckCircle2,
   HelpCircle,
-  BookOpen,
+  Layers,
+  Briefcase,
+  ChevronDown,
 } from 'lucide-react';
-import { Link } from '@/i18n/routing';
 
-export default function EmployerGuidePage() {
+export default function EmployerSystemGuidePage() {
+  const [activeStep, setActiveStep] = useState<number>(1);
   const t = useTranslations('employerGuide');
 
-  // ─── ขั้นตอนสำหรับผู้ประกอบการ ───
-  const steps = [
+  // 📋 ข้อมูลคู่มือเรียงลำดับ 1-4 ตามขั้นตอนจริงที่ผู้ประกอบการใช้งาน
+  const uiSteps = [
     {
-      icon: <Briefcase className="w-5 h-5 text-red-300" />,
-      title: t('steps.companySetup.title'),
-      desc: t('steps.companySetup.desc'),
-      badgeColor: 'bg-red-500/10 text-red-300 border-red-500/20',
+      id: 1,
+      icon: Building2,
+      title: '1. ตั้งค่าข้อมูลบริษัท (Company Setup)',
+      desc: 'กรอกข้อมูลบริษัท โลโก้ และยืนยันตัวตนนิติบุคคล เพื่อให้ประกาศงานของคุณเผยแพร่ได้และดูน่าเชื่อถือกับผู้สมัคร',
+      badge: 'ขั้นตอนเริ่มต้น',
+      tips: 'ยืนยันตัวตนบริษัทให้เสร็จก่อน เพราะหากยังไม่ผ่านการอนุมัติ คุณจะบันทึกประกาศงานเป็น Draft ได้เท่านั้น ยังเผยแพร่ทันทีไม่ได้',
     },
     {
-      icon: <FileText className="w-5 h-5 text-orange-300" />,
-      title: t('steps.postJob.title'),
-      desc: t('steps.postJob.desc'),
-      badgeColor: 'bg-orange-500/10 text-orange-300 border-orange-500/20',
+      id: 2,
+      icon: FileText,
+      title: '2. สร้างและเผยแพร่ประกาศงาน (Post a Job)',
+      desc: 'กรอกรายละเอียดตำแหน่งงาน เงินเดือน คุณสมบัติ และสวัสดิการ แล้วเลือกบันทึกเป็น Draft หรือเผยแพร่ทันที',
+      badge: 'ฟีเจอร์หลัก',
+      tips: 'ใส่ทักษะที่ต้องการเป็นคีย์เวิร์ดให้ครบ ระบบ AI จะใช้ข้อมูลนี้ช่วยคัดกรองผู้สมัครที่ตรงเงื่อนไขให้คุณโดยอัตโนมัติ',
     },
     {
-      icon: <Search className="w-5 h-5 text-yellow-300" />,
-      title: t('steps.manageApplicants.title'),
-      desc: t('steps.manageApplicants.desc'),
-      badgeColor: 'bg-yellow-500/10 text-yellow-300 border-yellow-500/20',
+      id: 3,
+      icon: Users,
+      title: '3. จัดการผู้สมัคร (Manage Applicants)',
+      desc: 'ดูรายชื่อผู้สมัครที่ส่งใบสมัครเข้ามา พร้อมเรซูเม่และข้อมูลติดต่อ สามารถกรองและจัดเรียงตามความเหมาะสมได้',
+      badge: 'การคัดกรอง',
+      tips: 'เปิดดูเรซูเม่และข้อมูลติดต่อของผู้สมัครได้ทันทีที่มีคนกดสมัคร ไม่ต้องรอให้ผู้สมัครส่งไฟล์มาทางอื่นเพิ่ม',
     },
     {
-      icon: <CheckCircle2 className="w-5 h-5 text-green-300" />,
-      title: t('steps.hiring.title'),
-      desc: t('steps.hiring.desc'),
-      badgeColor: 'bg-green-500/10 text-green-300 border-green-500/20',
+      id: 4,
+      icon: CheckCircle2,
+      title: '4. อัปเดตสถานะและปิดรับสมัคร (Hiring)',
+      desc: 'เปลี่ยนสถานะใบสมัครแต่ละราย เช่น นัดสัมภาษณ์ ผ่าน หรือไม่ผ่าน และปิดรับสมัครเมื่อได้พนักงานที่ต้องการแล้ว',
+      badge: 'ปิดงาน',
+      tips: 'เมื่อปิดรับสมัครแล้ว ประกาศงานจะไม่แสดงผลการค้นหาฝั่งผู้สมัครอีก แต่ข้อมูลผู้สมัครเดิมยังดูย้อนหลังได้เสมอ',
     },
-  ];
-
-  const faqs = [
-    { q: t('faqs.q1'), a: t('faqs.a1') },
-    { q: t('faqs.q2'), a: t('faqs.a2') },
   ];
 
   return (
-    <div className="min-h-screen bg-[#020263] text-white flex flex-col justify-between relative overflow-hidden">
-
-      {/* Background Grid */}
-      <div className="absolute inset-0 pointer-events-none opacity-[0.04]">
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff_1px,transparent_1px),linear-gradient(to_bottom,#ffffff_1px,transparent_1px)] bg-[size:32px_32px]" />
-      </div>
-
+    <div className="min-h-screen bg-[#F5F7FA] font-sans flex flex-col justify-between">
       <div>
         <Navbar />
 
-        {/* Hero */}
-        <div className="pt-24 pb-16 relative z-10">
-          <div className="max-w-4xl mx-auto px-4 text-center space-y-3">
-            <h1 className="text-3xl md:text-5xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white via-red-100 to-red-300">
-              {t('title')}
+        {/* 🌌 Hero Section */}
+        <div className="bg-[#020263] pt-16 pb-20 relative overflow-hidden">
+          <div className="absolute inset-0 pointer-events-none overflow-hidden">
+            <div className="absolute top-0 right-0 w-96 h-96 rounded-full bg-[#00003D] mix-blend-multiply opacity-60 blur-3xl transform translate-x-1/2 -translate-y-1/2" />
+            <div className="absolute bottom-0 left-0 w-80 h-80 rounded-full bg-blue-600 mix-blend-multiply opacity-15 blur-3xl transform -translate-x-1/3 translate-y-1/2" />
+          </div>
+
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 relative z-10 text-center">
+            <span className="px-3 py-1 text-xs font-semibold bg-[#00E5FF] text-[#020263] rounded-full uppercase tracking-wider mb-3 inline-block">
+              คู่มือแนะนำผู้ประกอบการ WORKSDD
+            </span>
+            <h1 className="text-3xl md:text-5xl font-extrabold text-white mb-4 tracking-tight">
+              แนะนำหน้าตาและการใช้งานระบบ
             </h1>
-            <p className="text-red-200/70 text-sm md:text-base max-w-xl mx-auto">
-              {t('description')}
+            <p className="text-[#A5CBE5] text-sm md:text-base max-w-2xl mx-auto">
+              ทำความเข้าใจขั้นตอนตั้งค่าบริษัท โพสต์ประกาศงาน และจัดการผู้สมัคร เพื่อให้คุณเริ่มรับสมัครพนักงานได้อย่างมั่นใจ
             </p>
           </div>
         </div>
 
-        {/* Content */}
-        <div className="max-w-4xl mx-auto px-4 pb-20 relative z-10 space-y-8">
+        {/* 🗂️ Main Content Layout */}
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 -mt-10 relative z-20">
 
-          {/* Steps */}
-          <div className="space-y-4">
-            <h2 className="text-lg font-bold flex items-center gap-2 text-red-200 px-1">
-              <BookOpen className="w-4 h-4 text-red-400" />
-              {t('sections.stepsTitle')}
-            </h2>
+          {/* กล่องข้อมูลภาพรวมระดับสูง */}
+          <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-xl bg-blue-50 text-[#020263] flex items-center justify-center shrink-0">
+                <Building2 className="w-6 h-6" />
+              </div>
+              <div>
+                <h4 className="text-sm font-bold text-gray-900">ยืนยันตัวตนบริษัทง่าย</h4>
+                <p className="text-xs text-gray-400 mt-0.5">กรอกข้อมูลครั้งเดียว ใช้ได้กับทุกประกาศงาน</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-4 border-t md:border-t-0 md:border-x border-gray-100 pt-4 md:pt-0 md:px-6">
+              <div className="w-12 h-12 rounded-xl bg-blue-50 text-[#020263] flex items-center justify-center shrink-0">
+                <FileText className="w-6 h-6" />
+              </div>
+              <div>
+                <h4 className="text-sm font-bold text-gray-900">โพสต์งานได้ไม่จำกัด</h4>
+                <p className="text-xs text-gray-400 mt-0.5">บันทึก Draft ไว้ก่อน หรือเผยแพร่ทันทีก็ได้</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-4 border-t md:border-t-0 pt-4 md:pt-0">
+              <div className="w-12 h-12 rounded-xl bg-cyan-50 text-cyan-600 flex items-center justify-center shrink-0">
+                <Users className="w-6 h-6" />
+              </div>
+              <div>
+                <h4 className="text-sm font-bold text-gray-900">ดูผู้สมัครได้ทันที</h4>
+                <p className="text-xs text-gray-400 mt-0.5">เรซูเม่และข้อมูลติดต่อพร้อมให้คุณตรวจสอบ</p>
+              </div>
+            </div>
+          </div>
 
-            <div className="space-y-4">
-              {steps.map((step, idx) => (
-                <div
-                  key={idx}
-                  className="bg-white/5 border border-white/10 hover:border-red-400/30 backdrop-blur-md rounded-2xl p-5 md:p-6 transition-all shadow-md group flex gap-5 items-start"
-                >
-                  <div className="w-14 h-14 shrink-0 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center">
-                    {step.icon}
-                  </div>
+          {/* ส่วนแสดงผลแบบ Interactive */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
 
-                  <div className="flex-1 space-y-1.5">
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                      <h3 className="font-bold text-white group-hover:text-red-300">
-                        {step.title}
-                      </h3>
+            {/* 💻 ฝั่งซ้าย: หน้าต่างเบราว์เซอร์จำลอง */}
+            <div className="lg:col-span-5 space-y-4">
+              <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+                <h3 className="text-sm font-bold text-gray-800 mb-3 flex items-center gap-2">
+                  <Layers className="w-4 h-4 text-[#020263]" />
+                  จำลองหน้าหลังบ้านผู้ประกอบการ (UI Interactive)
+                </h3>
 
-                      <span className={`px-2.5 py-0.5 rounded-full border text-[11px] font-bold ${step.badgeColor}`}>
-                        Step 0{idx + 1}
-                      </span>
+                {/* กรอบหน้าต่าง Browser */}
+                <div className="relative border border-gray-200 bg-white rounded-2xl overflow-hidden flex flex-col shadow-md select-none">
+
+                  {/* Header ของ Browser */}
+                  <div className="bg-white border-b border-gray-100 px-3 py-2 flex flex-col gap-2 shrink-0">
+                    <div className="flex items-center gap-2">
+                      <div className="flex gap-1">
+                        <span className="w-2 h-2 rounded-full bg-gray-300" />
+                        <span className="w-2 h-2 rounded-full bg-gray-300" />
+                        <span className="w-2 h-2 rounded-full bg-gray-300" />
+                      </div>
+                      <div className="mx-auto bg-gray-50 text-[9px] text-gray-400 px-4 py-0.5 rounded border border-gray-100 font-mono w-36 text-center truncate">
+                        worksdd.com/employer
+                      </div>
+                      <div className="w-4 h-4 rounded-full bg-blue-100 flex items-center justify-center">
+                        <Briefcase className="w-2 h-2 text-[#020263]" />
+                      </div>
                     </div>
 
-                    <p className="text-sm text-red-100/60">
-                      {step.desc}
-                    </p>
+                    {/* บล็อกตั้งค่าบริษัทด้านบนสุด -> เป็นเลข 1 */}
+                    <div className="relative">
+                      <div
+                        onClick={() => setActiveStep(1)}
+                        className={`flex items-center justify-between px-2 py-1.5 bg-[#020263] rounded-md text-[9px] text-white/80 cursor-pointer border transition-all ${
+                          activeStep === 1 ? 'ring-2 ring-red-500 border-transparent scale-[1.01]' : 'border-transparent'
+                        }`}
+                      >
+                        <div className="flex items-center gap-1.5 font-medium scale-90 origin-left">
+                          <span className="w-3 h-3 rounded-full bg-white/20 flex items-center justify-center">
+                            <Building2 className="w-2 h-2 text-white" />
+                          </span>
+                          <span className="text-white font-bold">บริษัท จำกัด</span>
+                          <span className="flex items-center gap-0.5 text-[8px] bg-emerald-400/20 text-emerald-300 px-1 rounded">
+                            ยืนยันแล้ว
+                          </span>
+                        </div>
+                        <div className="text-[8px] bg-white/20 px-1.5 py-0.5 rounded text-white font-mono scale-90">EMPLOYER</div>
+                      </div>
+
+                      {/* 🔴 วงกลม Hotspot เลข 1 */}
+                      <button
+                        onClick={(e) => { e.stopPropagation(); setActiveStep(1); }}
+                        className={`absolute -bottom-3.5 left-1/2 -translate-x-1/2 w-7 h-7 rounded-full flex items-center justify-center font-bold text-xs transition-all z-20 ${
+                          activeStep === 1
+                            ? 'bg-red-600 text-white shadow-lg ring-4 ring-red-100 scale-105'
+                            : 'bg-white text-[#020263] shadow-md border border-blue-100'
+                        }`}
+                      >
+                        1
+                      </button>
+                    </div>
                   </div>
+
+                  {/* ส่วนเนื้อหาภายในเว็บแอป */}
+                  <div className="bg-gray-50 flex flex-col">
+
+                    {/* บล็อกปุ่มสร้างประกาศงาน -> เป็นเลข 2 */}
+                    <div className="bg-[#020263] p-4 pt-6 pb-10 flex flex-col items-center relative shrink-0 border-t border-blue-950">
+                      <div
+                        onClick={() => setActiveStep(2)}
+                        className={`w-full bg-white rounded-xl p-2.5 shadow-md flex items-center justify-between gap-1 cursor-pointer border transition-all ${
+                          activeStep === 2 ? 'ring-2 ring-red-500 border-transparent scale-[1.02]' : 'border-gray-100'
+                        }`}
+                      >
+                        <div className="flex items-center gap-1.5 px-1">
+                          <FileText className="w-3 h-3 text-gray-400" />
+                          <div className="h-2 w-20 bg-gray-100 rounded-xs" />
+                        </div>
+                        <div className="bg-red-700 text-white text-[8px] font-bold px-3 py-1 rounded-lg shrink-0">
+                          + สร้างประกาศงาน
+                        </div>
+                      </div>
+
+                      {/* 🔴 วงกลม Hotspot เลข 2 */}
+                      <button
+                        onClick={(e) => { e.stopPropagation(); setActiveStep(2); }}
+                        className={`absolute -bottom-3.5 left-1/2 -translate-x-1/2 w-7 h-7 rounded-full flex items-center justify-center font-bold text-xs transition-all z-20 ${
+                          activeStep === 2
+                            ? 'bg-red-600 text-white shadow-lg ring-4 ring-red-100 scale-105'
+                            : 'bg-white text-[#020263] shadow-md border border-blue-100'
+                        }`}
+                      >
+                        2
+                      </button>
+                    </div>
+
+                    {/* พื้นหลังขาวด้านล่าง */}
+                    <div className="p-3 pt-6 pb-5 space-y-6 bg-white flex flex-col justify-start">
+
+                      {/* แถบหัวข้อรายชื่อผู้สมัคร -> เป็นเลข 3 */}
+                      <div className="relative">
+                        <div
+                          onClick={() => setActiveStep(3)}
+                          className={`w-full bg-gradient-to-r from-[#020263] to-red-600 rounded-lg p-2.5 flex items-center justify-between text-white cursor-pointer border transition-all ${
+                            activeStep === 3 ? 'ring-2 ring-red-500 border-transparent scale-[1.01]' : 'border-transparent'
+                          }`}
+                        >
+                          <div className="flex items-center gap-1.5">
+                            <Users className="w-3 h-3" />
+                            <div className="h-2.5 w-20 bg-white/30 rounded-xs" />
+                          </div>
+                          <div className="flex items-center gap-0.5 text-[8px]">
+                            12 คน <ChevronDown className="w-2 h-2" />
+                          </div>
+                        </div>
+
+                        {/* 🔴 วงกลม Hotspot เลข 3 */}
+                        <button
+                          onClick={(e) => { e.stopPropagation(); setActiveStep(3); }}
+                          className={`absolute -bottom-3.5 left-1/2 -translate-x-1/2 w-7 h-7 rounded-full flex items-center justify-center font-bold text-xs transition-all z-20 ${
+                            activeStep === 3
+                              ? 'bg-red-600 text-white shadow-lg ring-4 ring-red-100 scale-105'
+                              : 'bg-white text-[#020263] shadow-md border border-blue-100'
+                          }`}
+                        >
+                          3
+                        </button>
+                      </div>
+
+                      {/* การ์ดสถานะผู้สมัครล่างสุด -> เป็นเลข 4 */}
+                      <div className="relative pt-1">
+                        <div
+                          onClick={() => setActiveStep(4)}
+                          className={`grid grid-cols-2 gap-2 p-1.5 cursor-pointer border rounded-xl transition-all ${
+                            activeStep === 4 ? 'ring-2 ring-red-500 border-transparent scale-[1.01] bg-gray-50/50' : 'border-transparent'
+                          }`}
+                        >
+                          <div className="bg-white border border-gray-100 p-2 rounded-lg shadow-2xs space-y-2">
+                            <div className="flex justify-between items-start">
+                              <div className="h-2.5 w-10 bg-gray-700 rounded-xs" />
+                              <div className="w-3 h-3 bg-amber-100 rounded-xs" />
+                            </div>
+                            <div className="h-4 w-16 bg-emerald-50 text-emerald-600 rounded-xs font-bold text-[9px] flex items-center justify-center">นัดสัมภาษณ์</div>
+                          </div>
+                          <div className="bg-white border border-gray-100 p-2 rounded-lg shadow-2xs space-y-2">
+                            <div className="flex justify-between items-start">
+                              <div className="h-2.5 w-10 bg-gray-700 rounded-xs" />
+                              <div className="w-3 h-3 bg-amber-100 rounded-xs" />
+                            </div>
+                            <div className="h-4 w-16 bg-red-50 text-red-600 rounded-xs font-bold text-[9px] flex items-center justify-center">รอพิจารณา</div>
+                          </div>
+                        </div>
+
+                        {/* 🔴 วงกลม Hotspot เลข 4 */}
+                        <button
+                          onClick={(e) => { e.stopPropagation(); setActiveStep(4); }}
+                          className={`absolute -bottom-3.5 left-1/2 -translate-x-1/2 w-7 h-7 rounded-full flex items-center justify-center font-bold text-xs transition-all z-20 ${
+                            activeStep === 4
+                              ? 'bg-red-600 text-white shadow-lg ring-4 ring-red-100 scale-105'
+                              : 'bg-white text-[#020263] shadow-md border border-blue-100'
+                          }`}
+                        >
+                          4
+                        </button>
+                      </div>
+
+                    </div>
+                  </div>
+
                 </div>
-              ))}
+
+                <p className="text-[11px] text-center text-gray-400 italic mt-3 flex items-center justify-center gap-1">
+                  💡 คลิกเลือกกล่องจำลอง หรือกดปุ่มตัวเลขเพื่อดูรายละเอียดแต่ละส่วน
+                </p>
+              </div>
+            </div>
+
+            {/* 📋 ฝั่งขวา: รายละเอียดเนื้อหาข้อมูลสำคัญ */}
+            <div className="lg:col-span-7 space-y-4">
+              <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2 mb-1">
+                <span className="w-1.5 h-4 bg-[#020263] rounded-xs"></span>
+                อธิบายขั้นตอนการใช้งานสำหรับผู้ประกอบการ
+              </h2>
+
+              <div className="space-y-3">
+                {uiSteps.map((step) => {
+                  const isCurrent = activeStep === step.id;
+                  const Icon = step.icon;
+                  return (
+                    <div
+                      key={step.id}
+                      onClick={() => setActiveStep(step.id)}
+                      className={`p-4 rounded-xl border transition-all duration-150 cursor-pointer ${
+                        isCurrent
+                          ? 'bg-white border-2 border-[#020263] shadow-sm'
+                          : 'bg-white border-gray-100 hover:border-gray-200'
+                      }`}
+                    >
+                      <div className="flex gap-4 items-start">
+                        {/* เลขลำดับหัวข้อ */}
+                        <div className={`w-6 h-6 rounded-md flex items-center justify-center font-bold text-xs shrink-0 transition-colors ${
+                          isCurrent ? 'bg-[#020263] text-white' : 'bg-gray-100 text-gray-400 border border-gray-200'
+                        }`}>
+                          {step.id}
+                        </div>
+
+                        {/* ข้อมูลเนื้อหา */}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between gap-2 flex-wrap">
+                            <h3 className="font-bold text-gray-900 text-sm md:text-base flex items-center gap-1.5">
+                              <Icon className="w-4 h-4 text-[#020263] shrink-0" />
+                              {step.title}
+                            </h3>
+                            <span className="text-[10px] px-2 py-0.5 rounded-sm font-semibold border border-gray-100 bg-gray-50 text-gray-500">
+                              {step.badge}
+                            </span>
+                          </div>
+
+                          <p className="text-gray-600 text-xs md:text-sm mt-1.5 leading-relaxed">
+                            {step.desc}
+                          </p>
+
+                          {/* กล่องคำแนะนำเพิ่มเติม */}
+                          {isCurrent && (
+                            <div className="mt-3 p-3 bg-gray-50 border-l-2 border-red-600 rounded-r-lg text-xs text-gray-500 animate-fadeIn">
+                              <p className="font-bold text-[#020263] flex items-center gap-1 mb-0.5">
+                                <HelpCircle className="w-3.5 h-3.5 text-red-600" /> คำแนะนำเพิ่มเติม:
+                              </p>
+                              <span>{step.tips}</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           </div>
-
-          {/* FAQ */}
-          <div className="space-y-4 pt-4">
-            <h2 className="text-lg font-bold flex items-center gap-2 text-red-200 px-1">
-              <HelpCircle className="w-4 h-4 text-red-400" />
-              {t('sections.faqTitle')}
-            </h2>
-
-            <div className="grid md:grid-cols-2 gap-4">
-              {faqs.map((faq, idx) => (
-                <div
-                  key={idx}
-                  className="bg-white/5 border border-white/10 backdrop-blur-md rounded-2xl p-5 space-y-2.5"
-                >
-                  <h3 className="font-bold text-white">{faq.q}</h3>
-                  <p className="text-sm text-red-100/60">{faq.a}</p>
-                </div>
-              ))}
+        
+        {/* 💡 คำแนะนำเพิ่มเติมแสดงคำแนะนำสำหรับผู้ประกอบการในการใช้งานระบบ */}
+        <section
+            aria-label="System Guidelines for Employers"
+            className="rounded-2xl border border-blue-500/20 bg-[#020263] p-6 hover:bg-[#020263]/90 transition"
+        >
+            {/* Header */}
+            <div className="flex items-center gap-2 mb-4">
+                <span className="text-lg">💡</span>
+                <h2 className="font-bold text-blue-300 text-lg">
+                    คำแนะนำเพิ่มเติม (System Guidelines)
+                </h2>
             </div>
-          </div>
 
-          {/* Back */}
-          <div className="flex justify-center pt-6">
+            {/* List */}
+            <ul className="space-y-3 text-sm text-white/80 leading-relaxed">
+    
+                <li className="flex gap-2">
+                    <span className="text-blue-400 mt-1">•</span>
+                    <span>
+                        ตรวจสอบข้อมูลบริษัทและประกาศงานให้ถูกต้องก่อนเผยแพร่และให้เป็นปัจจุบันอยู่เสมอ
+                    </span>
+                </li>
+
+                <li className="flex gap-2">
+                    <span className="text-blue-400 mt-1">•</span>
+                    <span>
+                        ใช้ Dashboard เพื่อติดตามสถานะผู้สมัครอย่างสม่ำเสมอ
+                    </span>
+                </li>
+
+                <li className="flex gap-2">
+                    <span className="text-blue-400 mt-1">•</span>
+                    <span>
+                        ตอบกลับผู้สมัครให้รวดเร็วเพื่อเพิ่มโอกาสในการคัดเลือก
+                    </span>
+                </li>
+
+                <li className="flex gap-2">
+                    <span className="text-blue-400 mt-1">•</span>
+                    <span>
+                        ปิดประกาศงานเมื่อได้พนักงานแล้วเพื่อลดข้อมูลซ้ำซ้อน
+                    </span>
+                </li>
+
+            </ul>
+        </section>
+
+          {/* 🔘 ปุ่มนำทางย้ายมาอยู่ตรงนี้ (ล่างสุดของพื้นที่เนื้อหาหลัก ก่อนถึง Footer) */}
+          <div className="mt-12 mb-6 flex justify-center w-full">
             <Link
               href="/"
-              className="inline-flex items-center gap-2 px-6 h-11 text-xs font-bold bg-white text-red-900 rounded-xl hover:bg-red-100 transition-all shadow-md"
+              className="inline-flex items-center justify-center gap-2 px-8 py-3.5 bg-gradient-to-r from-[#020263] to-[#00003D] text-white font-bold rounded-xl text-sm shadow-md hover:shadow-lg transition-all hover:-translate-y-0.5 min-w-[200px]"
             >
-              <ArrowLeft size={16} />
-              {t('backHome')}
+              เข้าใจระบบแล้ว กลับไปหน้าหลัก
             </Link>
           </div>
 
         </div>
       </div>
 
+      
+
+      {/* 🧱 Footer จะอยู่ติดขอบล่างสุดเสมอ */}
       <Footer role="EMPLOYER" />
     </div>
   );
