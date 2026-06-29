@@ -27,6 +27,7 @@ import {
   Zap,
 } from 'lucide-react';
 import { EmployerVerificationModal } from '@/components/EmployerVerificationModal';
+import { BillingModal } from '@/components/BillingModal';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
 
@@ -778,6 +779,7 @@ export default function EmployerDashboard() {
   const [showEditModal, setShowEditModal] = useState(false);
   const [candidates, setCandidates] = useState<Candidate[]>([]);
   const [showVerifyModal, setShowVerifyModal] = useState(false);
+  const [showBillingModal, setShowBillingModal] = useState(false);
   const [recentApplicants, setRecentApplicants] = useState<RecentApplicantItem[]>([]);
   const [loadingBookmarks, setLoadingBookmarks] = useState(true);
   const [selectedCandidateId, setSelectedCandidateId] = useState<string | null>(null);
@@ -1547,7 +1549,7 @@ export default function EmployerDashboard() {
 
                   {/* ฝั่งขวา: ปุ่มประวัติการชำระเงิน (Billing History) ปรับสีให้แมทช์กับ Contrast พื้นหลัง */}
                   <button
-                    onClick={() => router.push('/employer/settings/billing')}
+                    onClick={() => setShowBillingModal(true)}
                     className={`w-[44px] h-[44px] flex items-center justify-center border-2 rounded-xl transition-all shadow-md active:scale-[0.98] shrink-0 ${packageInfo?.name === 'VIP' ? 'border-rose-400/30 bg-white/10 text-white hover:bg-white/20' :
                       packageInfo?.name === 'Premium' ? 'border-blue-400/30 bg-white/5 text-blue-200 hover:bg-white/10' :
                         packageInfo?.name === 'Pro' ? 'border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-100' :
@@ -1828,6 +1830,15 @@ export default function EmployerDashboard() {
         <ApplicantDetailModal
           applicationId={selectedApplicantId}
           onClose={() => setSelectedApplicantId(null)}
+        />
+      )}
+
+      {showBillingModal && company && (
+        <BillingModal
+          isOpen={showBillingModal}
+          onClose={() => setShowBillingModal(false)}
+          companyId={company.id}
+          packageInfo={packageInfo}
         />
       )}
     </div>

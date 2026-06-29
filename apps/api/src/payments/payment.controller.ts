@@ -1,5 +1,5 @@
 import {
-    Controller, Post, Body, HttpCode, HttpStatus, Get, Param,
+    Controller, Post, Body, HttpCode, HttpStatus, Get, Param, Query,
     NotFoundException, InternalServerErrorException
 } from '@nestjs/common';
 import { PaymentService } from './payment.service';
@@ -75,5 +75,20 @@ export class PaymentController {
                 message: error.message
             });
         }
+    }
+
+    /**
+     * 4. ดึงข้อมูลรายการชำระเงินของบริษัท
+     */
+    @Get('company/:companyId')
+    async getCompanyPayments(
+        @Param('companyId') companyId: string,
+        @Query('page') page?: string,
+        @Query('limit') limit?: string,
+        @Query('status') status?: string
+    ) {
+        const pageNum = page ? parseInt(page, 10) : 1;
+        const limitNum = limit ? parseInt(limit, 10) : 5;
+        return await this.paymentService.getCompanyPayments(companyId, pageNum, limitNum, status);
     }
 }

@@ -132,4 +132,47 @@ export class PaymentService {
         }
         return { success: false, message: 'Ignored event' };
     }
+
+    /**
+     * ดึงข้อมูลรายการชำระเงินของบริษัท พร้อมระบบแบ่งหน้าและฟิลเตอร์
+     */
+    async getCompanyPayments(companyId: string, page: number = 1, limit: number = 5, status?: string) {
+        if (!companyId) {
+            throw new BadRequestException('companyId is required');
+        }
+
+        const skip = (page - 1) * limit;
+        const take = limit;
+
+        const whereClause: any = { companyId };
+        if (status && status !== 'All') {
+            if (status === 'Paid') {
+                whereClause.status = 'SUCCESS';
+            } else if (status === 'Pending') {
+                whereClause.status = 'PENDING';
+            } else if (status === 'Failed') {
+                whereClause.status = 'FAILED';
+            }
+        }
+
+        const [items, total] = await Promise.all([
+            this.prisma.paymentTransaction.findMany({
+                where: whereClause,
+                orderBy: { createdAt: 'desc' },
+                skip,
+                take,
+            }),
+            this.prisma.paymentTransaction.count({
+                where: whereClause,
+            }),
+        ]);
+
+        return {
+            items,
+            total,
+            page,
+            limit,
+            totalPages: Math.ceil(total / limit),
+        };
+    }
 }

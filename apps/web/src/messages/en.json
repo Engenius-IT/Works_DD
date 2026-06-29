@@ -1208,5 +1208,36 @@
       "publish": "Publish Job Posting",
       "saving": "Saving"
     }
+  },
+  "Billing": {
+    "title": "Billing & Subscription",
+    "back": "Back",
+    "activePlan": "Active Plan",
+    "freePlan": "Free Plan",
+    "renewsOn": "Your subscription renews on {date}",
+    "expiresOn": "Your subscription expires on {date}",
+    "noExpiry": "Always Active",
+    "creditsRemaining": "{remaining} Credits Remaining",
+    "upgradePlan": "Upgrade Plan",
+    "cancelSubscription": "Cancel Subscription",
+    "billingHistory": "Invoices & Billing",
+    "filterAll": "All",
+    "filterPaid": "Paid",
+    "filterPending": "Awaiting Payment",
+    "filterFailed": "Failed",
+    "invoiceId": "Invoice ID",
+    "date": "Date",
+    "description": "Description",
+    "amount": "Amount",
+    "method": "Method",
+    "status": "Status",
+    "showing": "Showing {start}–{end} of {total} invoices",
+    "previous": "Previous",
+    "next": "Next",
+    "supportText": "Have billing questions? Talk to Support",
+    "noInvoices": "No billing transactions found.",
+    "emptyTitle": "No transaction history found",
+    "emptyDesc": "Once you upgrade your package, your invoices and billing receipts will appear here.",
+    "loading": "Loading..."
   }
 }
