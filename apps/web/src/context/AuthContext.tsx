@@ -65,12 +65,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const logout = () => {
-    localStorage.removeItem('accessToken');
-    localStorage.removeItem('user');
-    setUserState(null);
-    router.push('/'); // Redirect to home after logout
-    router.refresh(); // Refresh to clear any server-side protected state if any
-  };
+  localStorage.removeItem('accessToken');
+  localStorage.removeItem('user');
+  setUserState(null);
+  
+  // เปลี่ยนจาก '/' เป็นพาทของหน้าล็อกอินใหม่ตรงๆ
+  router.push('/th/login'); 
+  router.refresh(); 
+};
 
   const setUser = (userData: User | null) => {
     if (userData) {
