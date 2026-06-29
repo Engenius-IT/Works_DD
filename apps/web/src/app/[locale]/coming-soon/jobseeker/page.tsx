@@ -163,7 +163,7 @@ export default function JobseekerSystemGuidePage() {
                 <FileText className="w-6 h-6" />
               </div>
               <div>
-                <h4 className="text-sm font-bold text-gray-900">สร้างเรซูแม่ออนไลน์</h4>
+                <h4 className="text-sm font-bold text-gray-900">สร้างเรซูเม่ออนไลน์</h4>
                 <p className="text-xs text-gray-400 mt-0.5">กรอกประวัติย่อทิ้งไว้ในระบบเพื่อใช้กดสมัครงานได้ทันทีในคลิกเดียว</p>
               </div>
             </div>
