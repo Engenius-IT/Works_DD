@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useTranslations } from 'next-intl';
 import { Navbar } from '@/components/Navbar';
 import { Footer } from '@/components/Footer';
 import { Link } from '@/i18n/routing';
@@ -22,12 +23,12 @@ import {
 } from 'lucide-react';
 
 export default function JobseekerSystemGuidePage() {
+  const t = useTranslations('JobseekerGuide');
   const [activeStep, setActiveStep] = useState<number>(1);
   const [openFaq, setOpenFaq] = useState<number | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
 
-  // ⌨️ ตัวแปรสำหรับลูกเล่นพิมพ์อัตโนมัติ (Typewriter Effect)
-  const searchKeywords = ['พนักงานคลังสินค้า', 'เจ้าหน้าที่ธุรการ', 'พนักงานขายหน้าร้าน', 'ช่างเทคนิค'];
+  const searchKeywords = ['พนักงานคลังสินค้า', 'HR Manager', 'พนักงานขายหน้าร้าน', 'IT Support Specialist'];
 
   useEffect(() => {
     let wordIndex = 0;
@@ -70,56 +71,55 @@ export default function JobseekerSystemGuidePage() {
   const uiSteps = [
     {
       id: 1,
-      title: '1. แถบเมนูด้านบนและตัวกรองภูมิภาค (Navigation Bar)',
-      desc: 'เมนูหลักบนสุดสำหรับเลือกดูงานตามภูมิภาค เช่น ภาคกลาง ภาคเหนือ หรือเข้าถึงหน้าค้นหาด่วนอย่างรวดเร็ว',
-      badge: 'ส่วนนำทาง',
-      tips: 'คุณสามารถกดเลือกงานตามภูมิภาคเพื่อดูโอกาสเติบโตทางอาชีพในพื้นที่บ้านเกิดของคุณได้'
+      title: t('step1Title'),
+      desc: t('step1Desc'),
+      badge: t('step1Badge'),
+      tips: t('step1Tips')
     },
     {
       id: 2,
-      title: '2. แถบค้นหาอัจฉริยะ (Main Search Section)',
-      desc: 'ช่องค้นหาขนาดใหญ่กลางหน้าจอ ที่ช่วยให้ระบุตำแหน่งงาน ทักษะ หรือชื่อบริษัท พร้อมเลือกจังหวัดที่ต้องการค้นหาได้ทันที',
-      badge: 'ฟีเจอร์หลัก',
-      tips: 'พิมพ์คำค้นหาคู่กับการเลือกจังหวัด เพื่อผลลัพธ์ที่แม่นยำและประหยัดเวลาที่สุดในการเดินทางไปทำงาน'
+      title: t('step2Title'),
+      desc: t('step2Desc'),
+      badge: t('step2Badge'),
+      tips: t('step2Tips')
     },
     {
       id: 3,
-      title: '3. หมวดหมู่กลุ่มงานหลัก (Job Categories Panel)',
-      desc: 'แถบแยกกลุ่มประเภทงานหลักขนาดใหญ่ เช่น "งานสาขาหน้าร้าน" หรือ "งานออฟฟิศ" เพื่อแยกกลุ่มสายอาชีพให้ชัดเจน',
-      badge: 'การจัดหมวดหมู่',
-      tips: 'การคลิกดูตามกลุ่มงานจะช่วยคัดกรองสายงานที่ไม่เกี่ยวข้องออกไปในคลิกเดียว'
+      title: t('step3Title'),
+      desc: t('step3Desc'),
+      badge: t('step3Badge'),
+      tips: t('step3Tips')
     },
     {
       id: 4,
-      title: '4. การ์ดตำแหน่งงานย่อย (Job Sub-Category Cards)',
-      desc: 'การ์ดแสดงสายงานย่อยแยกตามหมวดหมู่ พร้อมตัวเลขระบุจำนวนตำแหน่งงานที่กำลังเปิดรับสมัครจริง ณ ปัจจุบัน',
-      badge: 'ข้อมูลสายงานย่อย',
-      tips: 'หากสายงานไหนแสดงตัวเลขตำแหน่งงานเยอะ หมายถึงโอกาสในการได้งานและเรียกสัมภาษณ์จะยิ่งสูงขึ้น'
+      title: t('step4Title'),
+      desc: t('step4Desc'),
+      badge: t('step4Badge'),
+      tips: t('step4Tips')
     }
   ];
 
   const faqs = [
     {
       id: 1,
-      q: "จำเป็นต้องสมัครสมาชิกก่อนค้นหางานหรือไม่?",
-      a: "ไม่จำเป็นครับ ผู้สมัครสามารถเข้าสู่เว็บไซต์และค้นหาตำแหน่งงานว่างรวมถึงเปิดดูรายละเอียดงานได้ทันที แต่หากต้องการกดสมัครงาน (Apply) แนะนำให้ลงทะเบียนเพื่อให้ระบบส่งโปรไฟล์ไปยังผู้ประกอบการได้สมบูรณ์"
+      q: t('faq1Q'),
+      a: t('faq1A')
     },
     {
       id: 2,
-      q: "ระบบสมัครงานด่วน (Express Apply) คืออะไร แตกต่างจากการสมัครปกติอย่างไร?",
-      a: "Express Apply เป็นระบบทางลัดที่ช่วยให้ผู้สมัครส่งประวัติย่อ (Resume) ไปยังบริษัทได้ทันทีในไม่กี่คลิก โดยไม่ต้องผ่านขั้นตอนการกรอกฟอร์มขนาดยาว เหมาะสำหรับงานเร่งด่วน"
+      q: t('faq2Q'),
+      a: t('faq2A')
     }
   ];
 
   const timelineSteps = [
-    { status: 'ส่งใบสมัครแล้ว', icon: CheckCircle2, color: 'text-blue-600 bg-blue-50', desc: 'ข้อมูลของคุณถูกส่งตรงไปยังระบบหลังบ้านของบริษัทผู้ว่าจ้างเรียกว่าเสร็จสิ้นกระบวนการฝั่งคุณ' },
-    { status: 'บริษัทเปิดอ่าน', icon: Clock, color: 'text-amber-600 bg-amber-50', desc: 'ฝ่ายบุคคล (HR) ทำการเปิดตรวจดูเรซูเม่และคุณสมบัติเบื้องต้นของคุณแล้ว' },
-    { status: 'นัดหมายสัมภาษณ์', icon: Calendar, color: 'text-purple-600 bg-purple-50', desc: 'หากคุณสมบัติผ่านเกณฑ์ ระบบจะแจ้งเตือนวัน-เวลาสำหรับการสัมภาษณ์งาน' }
+    { status: t('timelineStep1Status'), icon: CheckCircle2, color: 'text-blue-600 bg-blue-50', desc: t('timelineStep1Desc') },
+    { status: t('timelineStep2Status'), icon: Clock, color: 'text-amber-600 bg-amber-50', desc: t('timelineStep2Desc') },
+    { status: t('timelineStep3Status'), icon: Calendar, color: 'text-purple-600 bg-purple-50', desc: t('timelineStep3Desc') }
   ];
 
   return (
     <div className="min-h-screen bg-[#F5F7FA] font-sans flex flex-col justify-between">
-      {/* ใส่สไตล์ CSS Animation แบบ Custom เพื่อรองรับเอฟเฟกต์นุ่มนวลภายนอก Tailwind Config */}
       <style jsx global>{`
         @keyframes fadeSlideIn {
           from { opacity: 0; transform: translateY(10px); }
@@ -142,13 +142,13 @@ export default function JobseekerSystemGuidePage() {
 
           <div className="max-w-6xl mx-auto px-4 sm:px-6 relative z-10 text-center">
             <span className="px-3 py-1 text-xs font-semibold bg-[#00E5FF] text-[#020263] rounded-full uppercase tracking-wider mb-3 inline-block">
-              คู่มือแนะนำผู้สมัครงาน WORKSDD
+              {t('heroBadge')}
             </span>
             <h1 className="text-3xl md:text-5xl font-extrabold text-white mb-4 tracking-tight">
-              แนะนำหน้าตาและการใช้งานระบบ
+              {t('heroTitle')}
             </h1>
             <p className="text-[#A5CBE5] text-sm md:text-base max-w-2xl mx-auto">
-              ทำความเข้าใจตำแหน่งปุ่มสำคัญ การใช้งานระบบค้นหา และหมวดหมู่งานต่างๆ เพื่อให้คุณเริ่มต้นหางานที่ใช่ได้อย่างรวดเร็ว
+              {t('heroDesc')}
             </p>
           </div>
         </div>
@@ -163,8 +163,8 @@ export default function JobseekerSystemGuidePage() {
                 <FileText className="w-6 h-6" />
               </div>
               <div>
-                <h4 className="text-sm font-bold text-gray-900">สร้างเรซูเม่ออนไลน์</h4>
-                <p className="text-xs text-gray-400 mt-0.5">กรอกประวัติย่อทิ้งไว้ในระบบเพื่อใช้กดสมัครงานได้ทันทีในคลิกเดียว</p>
+                <h4 className="text-sm font-bold text-gray-900">{t('featureResumeTitle')}</h4>
+                <p className="text-xs text-gray-400 mt-0.5">{t('featureResumeDesc')}</p>
               </div>
             </div>
             
@@ -173,8 +173,8 @@ export default function JobseekerSystemGuidePage() {
                 <Bell className="w-6 h-6" />
               </div>
               <div>
-                <h4 className="text-sm font-bold text-gray-900">แจ้งเตือนสถานะงาน</h4>
-                <p className="text-xs text-gray-400 mt-0.5">รับข้อความแจ้งเตือนทันทีเมื่อบริษัทเปิดอ่านหรือนัดสัมภาษณ์งาน</p>
+                <h4 className="text-sm font-bold text-gray-900">{t('featureAlertTitle')}</h4>
+                <p className="text-xs text-gray-400 mt-0.5">{t('featureAlertDesc')}</p>
               </div>
             </div>
 
@@ -183,8 +183,8 @@ export default function JobseekerSystemGuidePage() {
                 <Sparkles className="w-6 h-6" />
               </div>
               <div>
-                <h4 className="text-sm font-bold text-gray-900">ระบบคัดกรองอัจฉริยะ</h4>
-                <p className="text-xs text-gray-400 mt-0.5">เลือกค้นหางานด่วนแยกตามพื้นที่ ฐานเงินเดือน หรือประเภทงานได้ละเอียด</p>
+                <h4 className="text-sm font-bold text-gray-900">{t('featureFilterTitle')}</h4>
+                <p className="text-xs text-gray-400 mt-0.5">{t('featureFilterDesc')}</p>
               </div>
             </div>
           </div>
@@ -197,7 +197,7 @@ export default function JobseekerSystemGuidePage() {
               <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
                 <h3 className="text-sm font-bold text-gray-800 mb-3 flex items-center gap-2">
                   <Layers className="w-4 h-4 text-[#020263]" />
-                  จำลองหน้าอินเตอร์เฟสระบบ (UI Interactive)
+                  {t('uiSectionTitle')}
                 </h3>
                 
                 <div className="relative border border-gray-200 bg-white rounded-2xl overflow-hidden flex flex-col shadow-md select-none">
@@ -224,9 +224,9 @@ export default function JobseekerSystemGuidePage() {
                         }`}
                       >
                         <div className="flex gap-2 font-medium scale-90 origin-left">
-                          <span className="text-white font-bold">หน้าแรก</span>
-                          <span>ค้นหาด่วน</span>
-                          <span className="flex items-center gap-0.5">งานภูมิภาค <ChevronDown className="w-2 h-2" /></span>
+                          <span className="text-white font-bold">{t('uiNavHome')}</span>
+                          <span>{t('uiNavSearch')}</span>
+                          <span className="flex items-center gap-0.5">{t('uiNavRegion')} <ChevronDown className="w-2 h-2" /></span>
                         </div>
                         <div className="text-[8px] bg-white/20 px-1.5 py-0.5 rounded text-white font-mono scale-90">WORKS DD</div>
                       </div>
@@ -253,7 +253,7 @@ export default function JobseekerSystemGuidePage() {
                         <div className="flex items-center gap-1 flex-1 px-1 border-r border-gray-100 min-w-0">
                           <Search className="w-3 h-3 text-gray-400 shrink-0" />
                           <span className="text-[10px] text-gray-800 truncate font-semibold">
-                            {searchTerm}
+                            {searchTerm || '...'}
                             <span className="animate-pulse font-light text-blue-500 ml-0.5">|</span>
                           </span>
                         </div>
@@ -262,7 +262,7 @@ export default function JobseekerSystemGuidePage() {
                           <div className="h-2 w-10 bg-gray-100 rounded-xs" />
                         </div>
                         <div className="bg-red-700 text-white text-[8px] font-bold px-3 py-1 rounded-lg shrink-0">
-                          ค้นหา
+                          {t('uiSearchBtn')}
                         </div>
                       </div>
 
@@ -309,14 +309,14 @@ export default function JobseekerSystemGuidePage() {
                               <div className="h-2.5 w-8 bg-gray-700 rounded-xs" />
                               <div className="w-3 h-3 bg-amber-100 rounded-xs" />
                             </div>
-                            <div className="h-4 w-12 bg-red-50 text-red-600 rounded-xs font-bold text-[9px] flex items-center justify-center">12 ตำแหน่ง</div>
+                            <div className="h-4 w-12 bg-red-50 text-red-600 rounded-xs font-bold text-[9px] flex items-center justify-center">12 P.</div>
                           </div>
                           <div className="bg-white border border-gray-100 p-2 rounded-lg shadow-2xs space-y-2">
                             <div className="flex justify-between items-start">
                               <div className="h-2.5 w-8 bg-gray-700 rounded-xs" />
                               <div className="w-3 h-3 bg-amber-100 rounded-xs" />
                             </div>
-                            <div className="h-4 w-12 bg-red-50 text-red-600 rounded-xs font-bold text-[9px] flex items-center justify-center">8 ตำแหน่ง</div>
+                            <div className="h-4 w-12 bg-red-50 text-red-600 rounded-xs font-bold text-[9px] flex items-center justify-center">8 P.</div>
                           </div>
                         </div>
 
@@ -335,16 +335,16 @@ export default function JobseekerSystemGuidePage() {
                 </div>
 
                 <p className="text-[11px] text-center text-gray-400 italic mt-3 flex items-center justify-center gap-1">
-                  💡 คลิกเลือกกล่องจำลอง หรือกดปุ่มตัวเลขเพื่อดูรายละเอียดแต่ละส่วน
+                  {t('uiSectionHint')}
                 </p>
               </div>
             </div>
 
-            {/* 📋 ฝั่งขวา: รายละเอียดเนื้อหาข้อมูลสำคัญ พร้อม Smooth Animation */}
+            {/* 📋 ฝั่งขวา: รายละเอียดเนื้อหาข้อมูลสำคัญ */}
             <div className="lg:col-span-7 space-y-4">
               <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2 mb-1">
                 <span className="w-1.5 h-4 bg-[#020263] rounded-xs"></span>
-                อธิบายรายละเอียดโครงสร้างหน้าเว็บหลัก
+                {t('detailsTitle')}
               </h2>
 
               <div className="space-y-3">
@@ -379,11 +379,10 @@ export default function JobseekerSystemGuidePage() {
                             {step.desc}
                           </p>
 
-                          {/* 🔄 จุดที่แสดงเอฟเฟกต์แอนิเมชันนุ่มนวลตอนเปลี่ยนขั้นตอน */}
                           {isCurrent && (
                             <div className="mt-3 p-3 bg-gray-50 border-l-2 border-red-600 rounded-r-lg text-xs text-gray-500 animate-fadeSlideIn">
                               <p className="font-bold text-[#020263] flex items-center gap-1 mb-0.5">
-                                <HelpCircle className="w-3.5 h-3.5 text-red-600" /> คำแนะนำเพิ่มเติม:
+                                <HelpCircle className="w-3.5 h-3.5 text-red-600" /> {t('detailsTipLabel')}
                               </p>
                               <span>{step.tips}</span>
                             </div>
@@ -401,10 +400,10 @@ export default function JobseekerSystemGuidePage() {
           <div className="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm mb-8 max-w-4xl mx-auto">
             <div className="text-center mb-6">
               <h2 className="text-lg md:text-xl font-bold text-[#020263] mb-1">
-                ไทม์ไลน์ระบบติดตามผลงานหลังกดสมัคร
+                {t('timelineTitle')}
               </h2>
               <p className="text-gray-400 text-xs">
-                ช่วยให้คุณทราบทุกความเคลื่อนไหวของใบสมัครแบบเรียลไทม์
+                {t('timelineDesc')}
               </p>
             </div>
 
@@ -428,10 +427,10 @@ export default function JobseekerSystemGuidePage() {
           <div className="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm mb-12 max-w-4xl mx-auto">
             <div className="text-center mb-6">
               <h2 className="text-xl md:text-2xl font-extrabold text-[#020263] mb-1">
-                คำถามที่พบบ่อย (FAQ)
+                {t('faqTitle')}
               </h2>
               <p className="text-gray-400 text-xs md:text-sm">
-                รวบรวมข้อสงสัยที่ผู้สมัครงานสอบถามเข้ามาบ่อยที่สุดเกี่ยวกับการใช้งานระบบ
+                {t('faqDesc')}
               </p>
             </div>
 
@@ -476,7 +475,7 @@ export default function JobseekerSystemGuidePage() {
               href="/"
               className="inline-flex items-center justify-center gap-2 px-8 py-3.5 bg-gradient-to-r from-[#020263] to-[#00003D] text-white font-bold rounded-xl text-sm shadow-md hover:shadow-lg transition-all hover:-translate-y-0.5 min-w-[200px]"
             >
-              เข้าใจระบบแล้ว กลับไปหน้าหลัก
+              {t('backToHomeBtn')}
             </Link>
           </div>
 
