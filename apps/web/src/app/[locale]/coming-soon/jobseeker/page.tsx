@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Navbar } from '@/components/Navbar';
 import { Footer } from '@/components/Footer';
 import { Link } from '@/i18n/routing';
@@ -10,14 +10,63 @@ import {
   HelpCircle, 
   Layers,
   User,
-  Briefcase,
-  ChevronDown
+  ChevronDown,
+  Plus,
+  Minus,
+  CheckCircle2,
+  Clock,
+  Calendar,
+  Sparkles,
+  FileText,
+  Bell
 } from 'lucide-react';
 
 export default function JobseekerSystemGuidePage() {
   const [activeStep, setActiveStep] = useState<number>(1);
+  const [openFaq, setOpenFaq] = useState<number | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
 
-  // 📋 ข้อมูลคู่มือเรียงลำดับ 1-4 จากบนลงล่างของหน้าจอจริง
+  // ⌨️ ตัวแปรสำหรับลูกเล่นพิมพ์อัตโนมัติ (Typewriter Effect)
+  const searchKeywords = ['พนักงานคลังสินค้า', 'เจ้าหน้าที่ธุรการ', 'พนักงานขายหน้าร้าน', 'ช่างเทคนิค'];
+
+  useEffect(() => {
+    let wordIndex = 0;
+    let charIndex = 0;
+    let isDeleting = false;
+    let typingTimer: NodeJS.Timeout;
+
+    const handleTyping = () => {
+      const currentWord = searchKeywords[wordIndex];
+      if (!isDeleting) {
+        setSearchTerm(currentWord.substring(0, charIndex + 1));
+        charIndex++;
+        if (charIndex === currentWord.length) {
+          isDeleting = true;
+          typingTimer = setTimeout(handleTyping, 1500);
+          return;
+        }
+      } else {
+        setSearchTerm(currentWord.substring(0, charIndex - 1));
+        charIndex--;
+        if (charIndex === 0) {
+          isDeleting = false;
+          wordIndex = (wordIndex + 1) % searchKeywords.length;
+        }
+      }
+      typingTimer = setTimeout(handleTyping, isDeleting ? 50 : 100);
+    };
+
+    typingTimer = setTimeout(handleTyping, 500);
+
+    return () => {
+      clearTimeout(typingTimer);
+    };
+  }, []);
+
+  const toggleFaq = (id: number) => {
+    setOpenFaq(openFaq === id ? null : id);
+  };
+
   const uiSteps = [
     {
       id: 1,
@@ -31,31 +80,61 @@ export default function JobseekerSystemGuidePage() {
       title: '2. แถบค้นหาอัจฉริยะ (Main Search Section)',
       desc: 'ช่องค้นหาขนาดใหญ่กลางหน้าจอ ที่ช่วยให้ระบุตำแหน่งงาน ทักษะ หรือชื่อบริษัท พร้อมเลือกจังหวัดที่ต้องการค้นหาได้ทันที',
       badge: 'ฟีเจอร์หลัก',
-      tips: 'พิมพ์คำค้นหา เช่น "งานขาย" หรือ "ธุรการ" คู่กับการเลือกจังหวัด เพื่อผลลัพธ์ที่แม่นยำที่สุด'
+      tips: 'พิมพ์คำค้นหาคู่กับการเลือกจังหวัด เพื่อผลลัพธ์ที่แม่นยำและประหยัดเวลาที่สุดในการเดินทางไปทำงาน'
     },
     {
       id: 3,
       title: '3. หมวดหมู่กลุ่มงานหลัก (Job Categories Panel)',
       desc: 'แถบแยกกลุ่มประเภทงานหลักขนาดใหญ่ เช่น "งานสาขาหน้าร้าน" หรือ "งานออฟฟิศ" เพื่อแยกกลุ่มสายอาชีพให้ชัดเจน',
       badge: 'การจัดหมวดหมู่',
-      tips: 'การคลิกดูตามกลุ่มงานจะช่วยลดเวลาในการเลื่อนหาตำแหน่งงานที่คุณสนใจลงไปได้มาก'
+      tips: 'การคลิกดูตามกลุ่มงานจะช่วยคัดกรองสายงานที่ไม่เกี่ยวข้องออกไปในคลิกเดียว'
     },
     {
       id: 4,
       title: '4. การ์ดตำแหน่งงานย่อย (Job Sub-Category Cards)',
       desc: 'การ์ดแสดงสายงานย่อยแยกตามหมวดหมู่ พร้อมตัวเลขระบุจำนวนตำแหน่งงานที่กำลังเปิดรับสมัครจริง ณ ปัจจุบัน',
       badge: 'ข้อมูลสายงานย่อย',
-      tips: 'หากสายงานไหนแสดงตัวเลขตำแหน่งงานเยอะ หมายถึงโอกาสในการได้งานและเรียกสัมภาษณ์ในสายงานนั้นจะมีสูงขึ้น'
+      tips: 'หากสายงานไหนแสดงตัวเลขตำแหน่งงานเยอะ หมายถึงโอกาสในการได้งานและเรียกสัมภาษณ์จะยิ่งสูงขึ้น'
     }
+  ];
+
+  const faqs = [
+    {
+      id: 1,
+      q: "จำเป็นต้องสมัครสมาชิกก่อนค้นหางานหรือไม่?",
+      a: "ไม่จำเป็นครับ ผู้สมัครสามารถเข้าสู่เว็บไซต์และค้นหาตำแหน่งงานว่างรวมถึงเปิดดูรายละเอียดงานได้ทันที แต่หากต้องการกดสมัครงาน (Apply) แนะนำให้ลงทะเบียนเพื่อให้ระบบส่งโปรไฟล์ไปยังผู้ประกอบการได้สมบูรณ์"
+    },
+    {
+      id: 2,
+      q: "ระบบสมัครงานด่วน (Express Apply) คืออะไร แตกต่างจากการสมัครปกติอย่างไร?",
+      a: "Express Apply เป็นระบบทางลัดที่ช่วยให้ผู้สมัครส่งประวัติย่อ (Resume) ไปยังบริษัทได้ทันทีในไม่กี่คลิก โดยไม่ต้องผ่านขั้นตอนการกรอกฟอร์มขนาดยาว เหมาะสำหรับงานเร่งด่วน"
+    }
+  ];
+
+  const timelineSteps = [
+    { status: 'ส่งใบสมัครแล้ว', icon: CheckCircle2, color: 'text-blue-600 bg-blue-50', desc: 'ข้อมูลของคุณถูกส่งตรงไปยังระบบหลังบ้านของบริษัทผู้ว่าจ้างเรียกว่าเสร็จสิ้นกระบวนการฝั่งคุณ' },
+    { status: 'บริษัทเปิดอ่าน', icon: Clock, color: 'text-amber-600 bg-amber-50', desc: 'ฝ่ายบุคคล (HR) ทำการเปิดตรวจดูเรซูเม่และคุณสมบัติเบื้องต้นของคุณแล้ว' },
+    { status: 'นัดหมายสัมภาษณ์', icon: Calendar, color: 'text-purple-600 bg-purple-50', desc: 'หากคุณสมบัติผ่านเกณฑ์ ระบบจะแจ้งเตือนวัน-เวลาสำหรับการสัมภาษณ์งาน' }
   ];
 
   return (
     <div className="min-h-screen bg-[#F5F7FA] font-sans flex flex-col justify-between">
+      {/* ใส่สไตล์ CSS Animation แบบ Custom เพื่อรองรับเอฟเฟกต์นุ่มนวลภายนอก Tailwind Config */}
+      <style jsx global>{`
+        @keyframes fadeSlideIn {
+          from { opacity: 0; transform: translateY(10px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fadeSlideIn {
+          animation: fadeSlideIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+      `}</style>
+
       <div>
         <Navbar />
 
         {/* 🌌 Hero Section */}
-        <div className="bg-[#020263] pt-16 pb-20 relative overflow-hidden">
+        <div className="bg-[#020263] pt-16 pb-24 relative overflow-hidden">
           <div className="absolute inset-0 pointer-events-none overflow-hidden">
             <div className="absolute top-0 right-0 w-96 h-96 rounded-full bg-[#00003D] mix-blend-multiply opacity-60 blur-3xl transform translate-x-1/2 -translate-y-1/2" />
             <div className="absolute bottom-0 left-0 w-80 h-80 rounded-full bg-blue-600 mix-blend-multiply opacity-15 blur-3xl transform -translate-x-1/3 translate-y-1/2" />
@@ -75,41 +154,43 @@ export default function JobseekerSystemGuidePage() {
         </div>
 
         {/* 🗂️ Main Content Layout */}
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 -mt-10 relative z-20">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 -mt-14 relative z-20">
           
-          {/* กล่องข้อมูลภาพรวมระดับสูง */}
-          <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <div className="flex items-center gap-4">
+          {/* ฟีเจอร์เด่นระบบ */}
+          <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-6 grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 text-center md:text-left">
+            <div className="flex flex-col md:flex-row items-center gap-4">
               <div className="w-12 h-12 rounded-xl bg-blue-50 text-[#020263] flex items-center justify-center shrink-0">
-                <Search className="w-6 h-6" />
+                <FileText className="w-6 h-6" />
               </div>
               <div>
-                <h4 className="text-sm font-bold text-gray-900">ค้นหางานด่วนทันใจ</h4>
-                <p className="text-xs text-gray-400 mt-0.5">กรอกคีย์เวิร์ด พร้อมเลือกจังหวัดได้ในแถบเดียว</p>
+                <h4 className="text-sm font-bold text-gray-900">สร้างเรซูแม่ออนไลน์</h4>
+                <p className="text-xs text-gray-400 mt-0.5">กรอกประวัติย่อทิ้งไว้ในระบบเพื่อใช้กดสมัครงานได้ทันทีในคลิกเดียว</p>
               </div>
             </div>
-            <div className="flex items-center gap-4 border-t md:border-t-0 md:border-x border-gray-100 pt-4 md:pt-0 md:px-6">
-              <div className="w-12 h-12 rounded-xl bg-blue-50 text-[#020263] flex items-center justify-center shrink-0">
-                <Layers className="w-6 h-6" />
+            
+            <div className="flex flex-col md:flex-row items-center gap-4 border-t md:border-t-0 md:border-x border-gray-100 pt-4 md:pt-0 md:px-6">
+              <div className="w-12 h-12 rounded-xl bg-red-50 text-red-600 flex items-center justify-center shrink-0">
+                <Bell className="w-6 h-6" />
               </div>
               <div>
-                <h4 className="text-sm font-bold text-gray-900">หมวดหมู่งานชัดเจน</h4>
-                <p className="text-xs text-gray-400 mt-0.5">แบ่งกลุ่มงานสาขาหน้าร้านและงานออฟฟิศ</p>
+                <h4 className="text-sm font-bold text-gray-900">แจ้งเตือนสถานะงาน</h4>
+                <p className="text-xs text-gray-400 mt-0.5">รับข้อความแจ้งเตือนทันทีเมื่อบริษัทเปิดอ่านหรือนัดสัมภาษณ์งาน</p>
               </div>
             </div>
-            <div className="flex items-center gap-4 border-t md:border-t-0 pt-4 md:pt-0">
+
+            <div className="flex flex-col md:flex-row items-center gap-4 border-t md:border-t-0 pt-4 md:pt-0">
               <div className="w-12 h-12 rounded-xl bg-cyan-50 text-cyan-600 flex items-center justify-center shrink-0">
-                <Briefcase className="w-6 h-6" />
+                <Sparkles className="w-6 h-6" />
               </div>
               <div>
-                <h4 className="text-sm font-bold text-gray-900">เช็กตำแหน่งว่างได้ทันที</h4>
-                <p className="text-xs text-gray-400 mt-0.5">แสดงจำนวนตำแหน่งงานที่เปิดรับจริงบนการ์ด</p>
+                <h4 className="text-sm font-bold text-gray-900">ระบบคัดกรองอัจฉริยะ</h4>
+                <p className="text-xs text-gray-400 mt-0.5">เลือกค้นหางานด่วนแยกตามพื้นที่ ฐานเงินเดือน หรือประเภทงานได้ละเอียด</p>
               </div>
             </div>
           </div>
 
           {/* ส่วนแสดงผลแบบ Interactive */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start mb-12">
             
             {/* 💻 ฝั่งซ้าย: หน้าต่างเบราว์เซอร์จำลอง */}
             <div className="lg:col-span-5 space-y-4">
@@ -119,10 +200,7 @@ export default function JobseekerSystemGuidePage() {
                   จำลองหน้าอินเตอร์เฟสระบบ (UI Interactive)
                 </h3>
                 
-                {/* กรอบหน้าต่าง Browser */}
                 <div className="relative border border-gray-200 bg-white rounded-2xl overflow-hidden flex flex-col shadow-md select-none">
-                  
-                  {/* Header ของ Browser */}
                   <div className="bg-white border-b border-gray-100 px-3 py-2 flex flex-col gap-2 shrink-0">
                     <div className="flex items-center gap-2">
                       <div className="flex gap-1">
@@ -138,12 +216,11 @@ export default function JobseekerSystemGuidePage() {
                       </div>
                     </div>
                     
-                    {/* บล็อกเมนูด้านบนสุด -> เป็นเลข 1 */}
                     <div className="relative">
                       <div 
                         onClick={() => setActiveStep(1)}
-                        className={`flex items-center justify-between px-2 py-1.5 bg-[#020263] rounded-md text-[9px] text-white/80 cursor-pointer border transition-all ${
-                          activeStep === 1 ? 'ring-2 ring-red-500 border-transparent scale-[1.01]' : 'border-transparent'
+                        className={`flex items-center justify-between px-2 py-1.5 bg-[#020263] rounded-md text-[9px] text-white/80 cursor-pointer border transition-all duration-300 ease-out ${
+                          activeStep === 1 ? 'ring-2 ring-red-500 border-transparent scale-[1.02] shadow-sm' : 'border-transparent opacity-90'
                         }`}
                       >
                         <div className="flex gap-2 font-medium scale-90 origin-left">
@@ -154,13 +231,10 @@ export default function JobseekerSystemGuidePage() {
                         <div className="text-[8px] bg-white/20 px-1.5 py-0.5 rounded text-white font-mono scale-90">WORKS DD</div>
                       </div>
 
-                      {/* 🔴 วงกลม Hotspot เลข 1 */}
                       <button
                         onClick={(e) => { e.stopPropagation(); setActiveStep(1); }}
-                        className={`absolute -bottom-3.5 left-1/2 -translate-x-1/2 w-7 h-7 rounded-full flex items-center justify-center font-bold text-xs transition-all z-20 ${
-                          activeStep === 1 
-                            ? 'bg-red-600 text-white shadow-lg ring-4 ring-red-100 scale-105' 
-                            : 'bg-white text-[#020263] shadow-md border border-blue-100'
+                        className={`absolute -bottom-3.5 left-1/2 -translate-x-1/2 w-7 h-7 rounded-full flex items-center justify-center font-bold text-xs transition-all duration-300 ${
+                          activeStep === 1 ? 'bg-red-600 text-white shadow-lg ring-4 ring-red-100 scale-110 z-20' : 'bg-white text-[#020263] shadow-md border border-blue-100 hover:scale-105'
                         }`}
                       >
                         1
@@ -168,76 +242,66 @@ export default function JobseekerSystemGuidePage() {
                     </div>
                   </div>
 
-                  {/* ส่วนเนื้อหาภายในเว็บแอป */}
                   <div className="bg-gray-50 flex flex-col">
-                    
-                    {/* บล็อกช่องค้นหาหลักถัดลงมา -> เป็นเลข 2 */}
                     <div className="bg-[#020263] p-4 pt-6 pb-10 flex flex-col items-center relative shrink-0 border-t border-blue-950">
                       <div 
                         onClick={() => setActiveStep(2)}
-                        className={`w-full bg-white rounded-xl p-2 shadow-md flex items-center gap-1 cursor-pointer border transition-all ${
-                          activeStep === 2 ? 'ring-2 ring-red-500 border-transparent scale-[1.02]' : 'border-gray-100'
+                        className={`w-full bg-white rounded-xl p-2 shadow-md flex items-center gap-1 cursor-pointer border transition-all duration-300 ease-out ${
+                          activeStep === 2 ? 'ring-2 ring-red-500 border-transparent scale-[1.03] shadow-lg' : 'border-gray-100'
                         }`}
                       >
-                        <div className="flex items-center gap-1 flex-1 px-1 border-r border-gray-100">
-                          <Search className="w-3 h-3 text-gray-400" />
-                          <div className="h-2 w-16 bg-gray-100 rounded-xs" />
+                        <div className="flex items-center gap-1 flex-1 px-1 border-r border-gray-100 min-w-0">
+                          <Search className="w-3 h-3 text-gray-400 shrink-0" />
+                          <span className="text-[10px] text-gray-800 truncate font-semibold">
+                            {searchTerm}
+                            <span className="animate-pulse font-light text-blue-500 ml-0.5">|</span>
+                          </span>
                         </div>
-                        <div className="flex items-center gap-1 flex-1 px-1 border-r border-gray-100">
+                        <div className="flex items-center gap-1 flex-1 px-1 border-r border-gray-100 shrink-0">
                           <MapPin className="w-3 h-3 text-gray-400" />
-                          <div className="h-2 w-12 bg-gray-100 rounded-xs" />
+                          <div className="h-2 w-10 bg-gray-100 rounded-xs" />
                         </div>
                         <div className="bg-red-700 text-white text-[8px] font-bold px-3 py-1 rounded-lg shrink-0">
                           ค้นหา
                         </div>
                       </div>
 
-                      {/* 🔴 วงกลม Hotspot เลข 2 */}
                       <button
                         onClick={(e) => { e.stopPropagation(); setActiveStep(2); }}
-                        className={`absolute -bottom-3.5 left-1/2 -translate-x-1/2 w-7 h-7 rounded-full flex items-center justify-center font-bold text-xs transition-all z-20 ${
-                          activeStep === 2 
-                            ? 'bg-red-600 text-white shadow-lg ring-4 ring-red-100 scale-105' 
-                            : 'bg-white text-[#020263] shadow-md border border-blue-100'
+                        className={`absolute -bottom-3.5 left-1/2 -translate-x-1/2 w-7 h-7 rounded-full flex items-center justify-center font-bold text-xs transition-all duration-300 ${
+                          activeStep === 2 ? 'bg-red-600 text-white shadow-lg ring-4 ring-red-100 scale-110 z-20' : 'bg-white text-[#020263] shadow-md border border-blue-100 hover:scale-105'
                         }`}
                       >
                         2
                       </button>
                     </div>
 
-                    {/* พื้นหลังขาวด้านล่าง */}
                     <div className="p-3 pt-6 pb-5 space-y-6 bg-white flex flex-col justify-start">
-                      
-                      {/* แถบหัวข้อกลุ่มงานหลัก -> เป็นเลข 3 */}
                       <div className="relative">
                         <div 
                           onClick={() => setActiveStep(3)}
-                          className={`w-full bg-gradient-to-r from-[#020263] to-red-600 rounded-lg p-2.5 flex items-center text-white cursor-pointer border transition-all ${
-                            activeStep === 3 ? 'ring-2 ring-red-500 border-transparent scale-[1.01]' : 'border-transparent'
+                          className={`w-full bg-gradient-to-r from-[#020263] to-red-600 rounded-lg p-2.5 flex items-center text-white cursor-pointer border transition-all duration-300 ease-out ${
+                            activeStep === 3 ? 'ring-2 ring-red-500 border-transparent scale-[1.02] shadow-sm' : 'border-transparent opacity-90'
                           }`}
                         >
                           <div className="h-2.5 w-24 bg-white/30 rounded-xs" />
                         </div>
 
-                        {/* 🔴 วงกลม Hotspot เลข 3 */}
                         <button
                           onClick={(e) => { e.stopPropagation(); setActiveStep(3); }}
-                          className={`absolute -bottom-3.5 left-1/2 -translate-x-1/2 w-7 h-7 rounded-full flex items-center justify-center font-bold text-xs transition-all z-20 ${
-                            activeStep === 3 
-                              ? 'bg-red-600 text-white shadow-lg ring-4 ring-red-100 scale-105' 
-                              : 'bg-white text-[#020263] shadow-md border border-blue-100'
-                          }`}
+                          className={`absolute -bottom-3.5 left-1/2 -translate-x-1/2 w-7 h-7 rounded-full flex items-center justify-center font-bold text-xs transition-all duration-300 ${
+                            activeStep === 3 ? 'bg-red-600 text-white shadow-lg ring-4 ring-red-100 scale-110 z-20' : 'bg-white text-[#020263] shadow-md border border-blue-100 hover:scale-105'
+                        }`}
                         >
                           3
                         </button>
                       </div>
 
-                      {/* การ์ดประเภทงานย่อยล่างสุด -> เป็นเลข 4 */}
                       <div className="relative pt-1">
                         <div 
                           onClick={() => setActiveStep(4)}
-                          className={`grid grid-cols-2 gap-2 p-1.5 cursor-pointer border rounded-xl transition-all ${
-                            activeStep === 4 ? 'ring-2 ring-red-500 border-transparent scale-[1.01] bg-gray-50/50' : 'border-transparent'
+                          className={`grid grid-cols-2 gap-2 p-1.5 cursor-pointer border rounded-xl transition-all duration-300 ease-out ${
+                            activeStep === 4 ? 'ring-2 ring-red-500 border-transparent scale-[1.02] bg-gray-50/50 shadow-xs' : 'border-transparent'
                           }`}
                         >
                           <div className="bg-white border border-gray-100 p-2 rounded-lg shadow-2xs space-y-2">
@@ -245,25 +309,22 @@ export default function JobseekerSystemGuidePage() {
                               <div className="h-2.5 w-8 bg-gray-700 rounded-xs" />
                               <div className="w-3 h-3 bg-amber-100 rounded-xs" />
                             </div>
-                            <div className="h-4 w-12 bg-red-50 text-red-600 rounded-xs font-bold text-[9px] flex items-center justify-center">0 ตำแหน่ง</div>
+                            <div className="h-4 w-12 bg-red-50 text-red-600 rounded-xs font-bold text-[9px] flex items-center justify-center">12 ตำแหน่ง</div>
                           </div>
                           <div className="bg-white border border-gray-100 p-2 rounded-lg shadow-2xs space-y-2">
                             <div className="flex justify-between items-start">
                               <div className="h-2.5 w-8 bg-gray-700 rounded-xs" />
                               <div className="w-3 h-3 bg-amber-100 rounded-xs" />
                             </div>
-                            <div className="h-4 w-12 bg-red-50 text-red-600 rounded-xs font-bold text-[9px] flex items-center justify-center">0 ตำแหน่ง</div>
+                            <div className="h-4 w-12 bg-red-50 text-red-600 rounded-xs font-bold text-[9px] flex items-center justify-center">8 ตำแหน่ง</div>
                           </div>
                         </div>
 
-                        {/* 🔴 วงกลม Hotspot เลข 4 */}
                         <button
                           onClick={(e) => { e.stopPropagation(); setActiveStep(4); }}
-                          className={`absolute -bottom-3.5 left-1/2 -translate-x-1/2 w-7 h-7 rounded-full flex items-center justify-center font-bold text-xs transition-all z-20 ${
-                            activeStep === 4 
-                              ? 'bg-red-600 text-white shadow-lg ring-4 ring-red-100 scale-105' 
-                              : 'bg-white text-[#020263] shadow-md border border-blue-100'
-                        }`}
+                          className={`absolute -bottom-3.5 left-1/2 -translate-x-1/2 w-7 h-7 rounded-full flex items-center justify-center font-bold text-xs transition-all duration-300 ${
+                            activeStep === 4 ? 'bg-red-600 text-white shadow-lg ring-4 ring-red-100 scale-110 z-20' : 'bg-white text-[#020263] shadow-md border border-blue-100 hover:scale-105'
+                          }`}
                         >
                           4
                         </button>
@@ -271,7 +332,6 @@ export default function JobseekerSystemGuidePage() {
 
                     </div>
                   </div>
-
                 </div>
 
                 <p className="text-[11px] text-center text-gray-400 italic mt-3 flex items-center justify-center gap-1">
@@ -280,7 +340,7 @@ export default function JobseekerSystemGuidePage() {
               </div>
             </div>
 
-            {/* 📋 ฝั่งขวา: รายละเอียดเนื้อหาข้อมูลสำคัญ */}
+            {/* 📋 ฝั่งขวา: รายละเอียดเนื้อหาข้อมูลสำคัญ พร้อม Smooth Animation */}
             <div className="lg:col-span-7 space-y-4">
               <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2 mb-1">
                 <span className="w-1.5 h-4 bg-[#020263] rounded-xs"></span>
@@ -294,21 +354,19 @@ export default function JobseekerSystemGuidePage() {
                     <div
                       key={step.id}
                       onClick={() => setActiveStep(step.id)}
-                      className={`p-4 rounded-xl border transition-all duration-150 cursor-pointer ${
+                      className={`p-4 rounded-xl border transition-all duration-300 ease-in-out cursor-pointer ${
                         isCurrent
-                          ? 'bg-white border-2 border-[#020263] shadow-sm'
-                          : 'bg-white border-gray-100 hover:border-gray-200'
+                          ? 'bg-white border-2 border-[#020263] shadow-md scale-[1.01]'
+                          : 'bg-white border-gray-100 hover:border-gray-300 hover:shadow-xs opacity-80 hover:opacity-100'
                       }`}
                     >
                       <div className="flex gap-4 items-start">
-                        {/* เลขลำดับหัวข้อ */}
-                        <div className={`w-6 h-6 rounded-md flex items-center justify-center font-bold text-xs shrink-0 transition-colors ${
-                          isCurrent ? 'bg-[#020263] text-white' : 'bg-gray-100 text-gray-400 border border-gray-200'
+                        <div className={`w-6 h-6 rounded-md flex items-center justify-center font-bold text-xs shrink-0 transition-all duration-300 ${
+                          isCurrent ? 'bg-[#020263] text-white scale-110 shadow-xs' : 'bg-gray-100 text-gray-400 border border-gray-200'
                         }`}>
                           {step.id}
                         </div>
 
-                        {/* ข้อมูลเนื้อหา */}
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center justify-between gap-2 flex-wrap">
                             <h3 className="font-bold text-gray-900 text-sm md:text-base">{step.title}</h3>
@@ -321,9 +379,9 @@ export default function JobseekerSystemGuidePage() {
                             {step.desc}
                           </p>
 
-                          {/* กล่องคำแนะนำเพิ่มเติม */}
+                          {/* 🔄 จุดที่แสดงเอฟเฟกต์แอนิเมชันนุ่มนวลตอนเปลี่ยนขั้นตอน */}
                           {isCurrent && (
-                            <div className="mt-3 p-3 bg-gray-50 border-l-2 border-red-600 rounded-r-lg text-xs text-gray-500 animate-fadeIn">
+                            <div className="mt-3 p-3 bg-gray-50 border-l-2 border-red-600 rounded-r-lg text-xs text-gray-500 animate-fadeSlideIn">
                               <p className="font-bold text-[#020263] flex items-center gap-1 mb-0.5">
                                 <HelpCircle className="w-3.5 h-3.5 text-red-600" /> คำแนะนำเพิ่มเติม:
                               </p>
@@ -339,8 +397,81 @@ export default function JobseekerSystemGuidePage() {
             </div>
           </div>
 
-          {/* 🔘 ปุ่มนำทางย้ายมาอยู่ตรงนี้ (ล่างสุดของพื้นที่เนื้อหาหลัก ก่อนถึง Footer) */}
-          <div className="mt-12 mb-6 flex justify-center w-full">
+          {/* 📑 ไทม์ไลน์ระบบติดตามผลงานหลังกดสมัคร */}
+          <div className="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm mb-8 max-w-4xl mx-auto">
+            <div className="text-center mb-6">
+              <h2 className="text-lg md:text-xl font-bold text-[#020263] mb-1">
+                ไทม์ไลน์ระบบติดตามผลงานหลังกดสมัคร
+              </h2>
+              <p className="text-gray-400 text-xs">
+                ช่วยให้คุณทราบทุกความเคลื่อนไหวของใบสมัครแบบเรียลไทม์
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 relative">
+              {timelineSteps.map((step, idx) => {
+                const IconComponent = step.icon;
+                return (
+                  <div key={idx} className="relative flex flex-col items-center text-center p-4 rounded-xl bg-gray-50/50 hover:bg-gray-50 transition-all duration-300 hover:scale-[1.02]">
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center mb-3 shadow-2xs ${step.color}`}>
+                      <IconComponent className="w-5 h-5" />
+                    </div>
+                    <h4 className="text-sm font-bold text-gray-900 mb-1">{step.status}</h4>
+                    <p className="text-xs text-gray-500 leading-relaxed px-2">{step.desc}</p>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* ❓ FAQ Section */}
+          <div className="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm mb-12 max-w-4xl mx-auto">
+            <div className="text-center mb-6">
+              <h2 className="text-xl md:text-2xl font-extrabold text-[#020263] mb-1">
+                คำถามที่พบบ่อย (FAQ)
+              </h2>
+              <p className="text-gray-400 text-xs md:text-sm">
+                รวบรวมข้อสงสัยที่ผู้สมัครงานสอบถามเข้ามาบ่อยที่สุดเกี่ยวกับการใช้งานระบบ
+              </p>
+            </div>
+
+            <div className="space-y-3">
+              {faqs.map((faq) => {
+                const isOpen = openFaq === faq.id;
+                return (
+                  <div 
+                    key={faq.id}
+                    className="border border-gray-100 rounded-xl overflow-hidden bg-gray-50/50 transition-colors duration-150"
+                  >
+                    <button
+                      onClick={() => toggleFaq(faq.id)}
+                      className="w-full flex items-center justify-between p-4 bg-white hover:bg-gray-50 text-left transition-colors cursor-pointer select-none"
+                    >
+                      <span className="font-bold text-gray-800 text-xs md:text-sm pr-4">
+                        {faq.q}
+                      </span>
+                      <div className="shrink-0 w-5 h-5 rounded-full bg-blue-50 text-[#020263] flex items-center justify-center">
+                        {isOpen ? <Minus className="w-3 h-3" /> : <Plus className="w-3 h-3" />}
+                      </div>
+                    </button>
+
+                    <div 
+                      className={`transition-all duration-300 ease-in-out overflow-hidden ${
+                        isOpen ? 'max-h-40 border-t border-gray-100 opacity-100 p-4 bg-gray-50' : 'max-h-0 opacity-0'
+                      }`}
+                    >
+                      <p className="text-gray-600 text-xs md:text-sm leading-relaxed">
+                        {faq.a}
+                      </p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* 🔘 ปุ่มนำทางกลับหน้าหลัก */}
+          <div className="mt-6 mb-12 flex justify-center w-full">
             <Link
               href="/"
               className="inline-flex items-center justify-center gap-2 px-8 py-3.5 bg-gradient-to-r from-[#020263] to-[#00003D] text-white font-bold rounded-xl text-sm shadow-md hover:shadow-lg transition-all hover:-translate-y-0.5 min-w-[200px]"
@@ -352,7 +483,6 @@ export default function JobseekerSystemGuidePage() {
         </div>
       </div>
 
-      {/* 🧱 Footer ของแท้จะอยู่ติดขอบล่างสุดเสมอ */}
       <Footer />
     </div>
   );
