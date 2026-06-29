@@ -1,4 +1,20 @@
 {
+  "Notifications": {
+    "title_interview": "🗓️ Interview Scheduled",
+    "msg_interview": "Company {company} has scheduled an interview for the position \"{job}\"",
+    "msg_interview_date": "Company {company} has scheduled an interview for the position \"{job}\" on {date}",
+    "title_shortlisted": "⭐ You Passed the Screening!",
+    "msg_shortlisted": "Congratulations! Company {company} selected you for the next round for the position \"{job}\"",
+    "title_reviewed": "📋 Application Reviewed",
+    "msg_reviewed": "Company {company} has reviewed your application for the position \"{job}\"",
+    "title_offered": "🎉 Job Offer!",
+    "msg_offered": "Congratulations! Company {company} offered you the position \"{job}\"",
+    "title_rejected": "❌ Application Status",
+    "msg_rejected": "Company {company} updated the status of your application for the position \"{job}\"",
+    "dear": "Dear {name},",
+    "intro_text": "WORKS DD is pleased to inform you of the schedule coordination details from the system as follows:",
+    "outro_text": "Therefore, we would like to invite you to carefully review the date, time, and location of the appointment in the card below."
+  },
   "Navbar": {
     "findJobs": "Find Jobs",
     "companies": "Top Companies",

@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { NotificationModal } from './NotificationModal';
-import { useLocale } from 'next-intl'; // 🌐 นำเข้า useLocale สำหรับระบบแปลภาษา
+import { useLocale, useTranslations } from 'next-intl'; // 🌐 นำเข้า useLocale, useTranslations สำหรับระบบแปลภาษา
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
 
@@ -66,11 +66,80 @@ function timeAgo(dateStr: string, t: any) {
   return t.timeWeeksAgo(Math.floor(days / 7));
 }
 
+export function getLocalizedNotification(notification: any, tNoti: any): { title: string; message: string } {
+  const company = notification.application?.job?.company?.name || notification.metadata?.companyName || 'Company';
+  const job = notification.application?.job?.title || notification.metadata?.position || 'Position';
+  
+  let dateText = '';
+  if (notification.metadata?.interviewDate) {
+    dateText = `${notification.metadata.interviewDate} ${notification.metadata.interviewTime || ''}`.trim();
+  } else if (notification.application?.interviewDate) {
+    dateText = new Date(notification.application.interviewDate).toLocaleDateString();
+  }
+
+  const title = notification.title || '';
+  
+  if (title.includes('คัดเลือก')) {
+    return {
+      title: tNoti('title_shortlisted'),
+      message: tNoti('msg_shortlisted', { company, job })
+    };
+  }
+  
+  if (title.includes('ตรวจสอบ')) {
+    return {
+      title: tNoti('title_reviewed'),
+      message: tNoti('msg_reviewed', { company, job })
+    };
+  }
+  
+  if (title.includes('ข้อเสนอ')) {
+    return {
+      title: tNoti('title_offered'),
+      message: tNoti('msg_offered', { company, job })
+    };
+  }
+  
+  if (title.includes('ผลการสมัคร')) {
+    return {
+      title: tNoti('title_rejected'),
+      message: tNoti('msg_rejected', { company, job })
+    };
+  }
+
+  if (title.includes('สัมภาษณ์')) {
+    if (dateText) {
+      return {
+        title: tNoti('title_interview'),
+        message: tNoti('msg_interview_date', { company, job, date: dateText })
+      };
+    }
+    const match = (notification.message || '').match(/วันที่\s+([^\n"'\s]+(?:\s+[^\n"'\s]+)*)/);
+    const msgDate = match ? match[1] : '';
+    if (msgDate) {
+      return {
+        title: tNoti('title_interview'),
+        message: tNoti('msg_interview_date', { company, job, date: msgDate })
+      };
+    }
+    return {
+      title: tNoti('title_interview'),
+      message: tNoti('msg_interview', { company, job })
+    };
+  }
+
+  return {
+    title: notification.title,
+    message: notification.message
+  };
+}
+
 export function NotificationBell() {
   const { user } = useAuth();
   
   const locale = useLocale() as 'th' | 'en'; // 🌐 ดึง Locale ปัจจุบันของระบบ
   const t = translations[locale] || translations.th;
+  const tNoti = useTranslations('Notifications');
 
   const [isOpen, setIsOpen] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -316,35 +385,37 @@ export function NotificationBell() {
                 </div>
               )}
 
-              {notifications.map((notification) => (
-                <div
-                  key={notification.id}
-                  onClick={() => markAsRead(notification)}
-                  className={`group w-full text-left px-5 py-3.5 border-b border-gray-50 last:border-0 transition-colors hover:bg-blue-50/50 flex gap-3 items-start cursor-pointer ${
-                    !notification.isRead ? 'bg-blue-50/30' : ''
-                  }`}
-                >
-                  {/* Icon */}
+              {notifications.map((notification) => {
+                const locNoti = getLocalizedNotification(notification, tNoti);
+                return (
                   <div
-                    className={`w-9 h-9 rounded-full flex items-center justify-center text-base shrink-0 mt-0.5 ${
-                      notification.type === 'INTERVIEW_SCHEDULED'
-                        ? 'bg-purple-100 text-purple-600'
-                        : 'bg-blue-100 text-blue-600'
+                    key={notification.id}
+                    onClick={() => markAsRead(notification)}
+                    className={`group w-full text-left px-5 py-3.5 border-b border-gray-50 last:border-0 transition-colors hover:bg-blue-50/50 flex gap-3 items-start cursor-pointer ${
+                      !notification.isRead ? 'bg-blue-50/30' : ''
                     }`}
                   >
-                    {notification.title.charAt(0)}
-                  </div>
-
-                  {/* Content */}
-                  <div className="flex-1 min-w-0">
-                    <p
-                      className={`text-sm leading-snug ${!notification.isRead ? 'font-semibold text-gray-900' : 'font-medium text-gray-700'}`}
+                    {/* Icon */}
+                    <div
+                      className={`w-9 h-9 rounded-full flex items-center justify-center text-base shrink-0 mt-0.5 ${
+                        notification.type === 'INTERVIEW_SCHEDULED'
+                          ? 'bg-purple-100 text-purple-600'
+                          : 'bg-blue-100 text-blue-600'
+                      }`}
                     >
-                      {notification.title}
-                    </p>
-                    <p className="text-xs text-gray-500 mt-0.5 line-clamp-2">
-                      {notification.message}
-                    </p>
+                      {locNoti.title.charAt(0)}
+                    </div>
+
+                    {/* Content */}
+                    <div className="flex-1 min-w-0">
+                      <p
+                        className={`text-sm leading-snug ${!notification.isRead ? 'font-semibold text-gray-900' : 'font-medium text-gray-700'}`}
+                      >
+                        {locNoti.title}
+                      </p>
+                      <p className="text-xs text-gray-500 mt-0.5 line-clamp-2">
+                        {locNoti.message}
+                      </p>
                     <p className="text-[11px] text-gray-400 mt-1">
                       {timeAgo(notification.createdAt, t)}
                     </p>
@@ -375,7 +446,8 @@ export function NotificationBell() {
                     )}
                   </div>
                 </div>
-              ))}
+              );
+            })}
             </div>
 
             {/* Footer View All */}

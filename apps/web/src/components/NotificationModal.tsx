@@ -5,6 +5,8 @@ import Image from 'next/image';
 import { createPortal } from 'react-dom';
 import { Bell, MailOpen, AtSign, Settings, ArrowLeft, Calendar, Tag, MapPin, Users, Building, Map, Phone, Mail, MessageSquare, Search, X, ChevronRight, CheckCircle } from 'lucide-react';
 import { useRouter } from '@/i18n/routing';
+import { useTranslations } from 'next-intl';
+import { getLocalizedNotification } from './NotificationBell';
 
 interface Notification {
   id: string;
@@ -83,6 +85,7 @@ export const NotificationModal: React.FC<NotificationModalProps> = ({
   initialSelectedNotification,
 }) => {
   const router = useRouter();
+  const tNoti = useTranslations('Notifications');
   const [activeTab, setActiveTab] = useState<FilterTab>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -371,6 +374,8 @@ export const NotificationModal: React.FC<NotificationModalProps> = ({
   const displayCompanyPhone = selectedCompany?.phone || selectedNotification?.metadata?.companyPhone || '02-123-4567';
   const displayCompanyEmail = selectedCompany?.owner?.email || selectedNotification?.metadata?.companyEmail || 'contact@novatech.com';
 
+  const locDetail = selectedNotification ? getLocalizedNotification(selectedNotification, tNoti) : null;
+
   if (!isOpen || !mounted) return null;
 
   return createPortal(
@@ -546,20 +551,20 @@ export const NotificationModal: React.FC<NotificationModalProps> = ({
                   {/* Invitation Headline */}
                   <div className="space-y-4">
                     <h2 className="text-[20px] font-bold text-[#1a1c3d] flex items-center gap-2 mb-4">
-                      <Calendar size={20} className="flex-shrink-0" /> {selectedNotification.title || 'Notification Detail'}
+                      <Calendar size={20} className="flex-shrink-0" /> {locDetail?.title || 'Notification Detail'}
                     </h2>
                     <div className="bg-white rounded-3xl p-6 border border-gray-100 space-y-4 shadow-sm text-ellipsis overflow-hidden">
-                      <p className="text-[14px] font-bold text-[#1a1c3d]">Dear {profileName},</p>
+                      <p className="text-[14px] font-bold text-[#1a1c3d]">{tNoti('dear', { name: profileName })}</p>
                       <p className="text-[14px] text-[#45464e] leading-relaxed">
-                        ทางแอปพลิเคชัน WORKS DD มีความยินดีที่จะแจ้งรายละเอียดการประสานงานนัดหมายจากทางระบบให้คุณทราบ โดยมีรายละเอียดดังต่อไปนี้:
+                        {tNoti('intro_text')}
                       </p>
                       <div className="bg-[#5b4df2]/5 border border-[#5b4df2]/15 p-5 rounded-2xl">
                         <p className="text-[14px] font-semibold text-[#5b4df2] leading-relaxed">
-                          {selectedNotification.message}
+                          {locDetail?.message}
                         </p>
                       </div>
                       <p className="text-[13px] text-[#45464e]/80 leading-relaxed">
-                        จึงใคร่ขอเรียนเชิญท่านเข้าร่วมตรวจสอบข้อมูลวัน เวลา และสถานที่นัดหมายอย่างละเอียดตามการ์ดข้อมูลด้านล่าง
+                        {tNoti('outro_text')}
                       </p>
                     </div>
                   </div>
@@ -706,30 +711,33 @@ export const NotificationModal: React.FC<NotificationModalProps> = ({
                     <div>
                       <h3 className="text-[11px] font-bold text-[#45464e] uppercase tracking-[0.2em] mb-4 ml-1">Today</h3>
                       <div className="space-y-3">
-                        {filteredNotifications.map((noti) => (
-                          <div 
-                            key={noti.id}
-                            onClick={() => handleNotificationClick(noti)}
-                            className="group relative bg-white hover:shadow-xl hover:shadow-[#1a1c3d]/5 transition-all p-4 rounded-2xl border border-gray-100 cursor-pointer flex items-center gap-4"
-                          >
-                            <div className="w-12 h-12 bg-[#1a1c3d] text-white flex items-center justify-center rounded-2xl shrink-0 shadow-lg">
-                              {noti.title.includes('สัมภาษณ์') || noti.type === 'COMPANY_RESPONSE' ? 
-                                <Calendar size={24} /> : <Bell size={24} />
-                              }
-                            </div>
-                            <div className="flex-grow min-w-0">
-                              <div className="flex items-center justify-between mb-0.5">
-                                <div className="flex items-center gap-2 min-w-0 flex-grow">
-                                  <p className="text-[14px] font-bold text-[#1a1c3d] truncate">{noti.title}</p>
-                                  {!noti.isRead && <div className="w-2 h-2 rounded-full bg-[#5b4df2] shrink-0" aria-label="Unread notification indicator"></div>}
-                                </div>
-                                <span className="text-[11px] text-[#45464e] font-medium shrink-0 ml-2">{formatRelativeTime(noti.createdAt)}</span>
+                        {filteredNotifications.map((noti) => {
+                          const locNoti = getLocalizedNotification(noti, tNoti);
+                          return (
+                            <div 
+                              key={noti.id}
+                              onClick={() => handleNotificationClick(noti)}
+                              className="group relative bg-white hover:shadow-xl hover:shadow-[#1a1c3d]/5 transition-all p-4 rounded-2xl border border-gray-100 cursor-pointer flex items-center gap-4"
+                            >
+                              <div className="w-12 h-12 bg-[#1a1c3d] text-white flex items-center justify-center rounded-2xl shrink-0 shadow-lg">
+                                {noti.title.includes('สัมภาษณ์') || noti.type === 'COMPANY_RESPONSE' ? 
+                                  <Calendar size={24} /> : <Bell size={24} />
+                                }
                               </div>
-                              <p className="text-[13px] text-[#45464e] truncate">{noti.message}</p>
+                              <div className="flex-grow min-w-0">
+                                <div className="flex items-center justify-between mb-0.5">
+                                  <div className="flex items-center gap-2 min-w-0 flex-grow">
+                                    <p className="text-[14px] font-bold text-[#1a1c3d] truncate">{locNoti.title}</p>
+                                    {!noti.isRead && <div className="w-2 h-2 rounded-full bg-[#5b4df2] shrink-0" aria-label="Unread notification indicator"></div>}
+                                  </div>
+                                  <span className="text-[11px] text-[#45464e] font-medium shrink-0 ml-2">{formatRelativeTime(noti.createdAt)}</span>
+                                </div>
+                                <p className="text-[13px] text-[#45464e] truncate">{locNoti.message}</p>
+                              </div>
+                              <ChevronRight size={20} className="text-[#45464e]/40 group-hover:text-[#5b4df2] group-hover:translate-x-1 transition-all shrink-0" />
                             </div>
-                            <ChevronRight size={20} className="text-[#45464e]/40 group-hover:text-[#5b4df2] group-hover:translate-x-1 transition-all shrink-0" />
-                          </div>
-                        ))}
+                          );
+                        })}
                       </div>
                     </div>
                   </div>
