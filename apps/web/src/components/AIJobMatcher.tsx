@@ -22,6 +22,7 @@ import {
   Wand2,
 } from 'lucide-react';
 import { useRouter } from '@/i18n/routing';
+import { CompanyLogo } from '@/components/CompanyLogo';
 import { useTranslations } from 'next-intl';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
@@ -741,13 +742,7 @@ export default function AIJobMatcher({ works, certs, languages, resume }: Props)
                               {r.job.title}
                             </h4>
                             <p className="text-[12px] text-slate-500 mt-0.5 flex items-center gap-1.5">
-                              {r.job.company?.logoUrl && (
-                                <img
-                                  src={r.job.company.logoUrl}
-                                  alt=""
-                                  className="w-4 h-4 rounded object-contain"
-                                />
-                              )}
+                              <CompanyLogo company={r.job.company} size="xs" className="inline-block align-middle mr-1.5" />
                               {r.job.company?.name}
                               {r.job.locationProvince && (
                                 <>

@@ -5,6 +5,7 @@ import { useParams, useSearchParams } from 'next/navigation';
 import { useRouter, Link } from '@/i18n/routing';
 import { Navbar } from '@/components/Navbar';
 import { Footer } from '@/components/Footer';
+import { CompanyLogo } from '@/components/CompanyLogo';
 import { HeroSearch, SearchParams } from '@/components/HeroSearch';
 import { useAuth } from '@/context/AuthContext';
 import { /*REGION_LABELS,*/ isRegionId } from '@/data/job-regions';
@@ -97,38 +98,7 @@ function isVerifiedCompany(company: Job['company']) {
   return company.isVerified || company.verificationStatus === 'VERIFIED';
 }
 
-function CompanyLogo({ company, size = 'md' }: { company: Job['company']; size?: 'md' | 'lg' }) {
-  const dim = size === 'lg' ? 'w-20 h-20 text-3xl rounded-2xl' : 'w-14 h-14 text-2xl rounded-xl';
-
-  if (company.logoUrl) {
-    return (
-      <img
-        src={company.logoUrl}
-        alt={company.name}
-        className={`${dim} object-contain border border-gray-200 bg-white shrink-0`}
-      />
-    );
-  }
-
-  const initial = company.name.charAt(0).toUpperCase();
-  const colors = [
-    'bg-blue-600',
-    'bg-green-600',
-    'bg-purple-600',
-    'bg-red-600',
-    'bg-amber-500',
-    'bg-teal-600',
-    'bg-indigo-600',
-  ];
-  const color = colors[company.name.charCodeAt(0) % colors.length];
-  return (
-    <div
-      className={`${dim} ${color} flex items-center justify-center text-white font-black shrink-0`}
-    >
-      {initial}
-    </div>
-  );
-}
+// Imported CompanyLogo at top of file
 
 function JobCard({
   job,

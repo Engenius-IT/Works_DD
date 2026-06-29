@@ -6,7 +6,8 @@ import { useAuth } from '@/context/AuthContext';
 import { useLocale } from 'next-intl'; // 🌐 นำเข้า useLocale สำหรับระบบแปลภาษา
 import { Navbar } from '@/components/Navbar';
 import { Footer } from '@/components/Footer';
-import { Building2, MapPin, Briefcase, Calendar, Clock, Ban, CheckCircle2 } from 'lucide-react';
+import { CompanyLogo } from '@/components/CompanyLogo';
+import { MapPin, Briefcase, Calendar, Clock, Ban, CheckCircle2 } from 'lucide-react';
 import { Link } from '@/i18n/routing';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
@@ -307,17 +308,7 @@ export default function ApplicationsPage() {
                   <div className="flex flex-col sm:flex-row gap-5">
                     {/* Company Logo */}
                     <div className="shrink-0 flex items-start sm:items-center">
-                      <div className="w-16 h-16 rounded-xl bg-[#F5F7FA] border border-gray-100 flex items-center justify-center overflow-hidden">
-                        {app.job.company.logoUrl ? (
-                          <img
-                            src={app.job.company.logoUrl}
-                            alt={app.job.company.name}
-                            className="w-full h-full object-contain p-2"
-                          />
-                        ) : (
-                          <Building2 className="w-8 h-8 text-gray-300" />
-                        )}
-                      </div>
+                      <CompanyLogo company={app.job.company} size="md" />
                     </div>
 
                     {/* Job Details */}

@@ -2,9 +2,11 @@
 
 import { useState, useEffect, useCallback, useRef, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
+import { useLocale } from 'next-intl';
 import { useRouter, Link } from '@/i18n/routing';
 import { Navbar } from '@/components/Navbar';
 import { Footer } from '@/components/Footer';
+import { CompanyLogo } from '@/components/CompanyLogo';
 import { HeroSearch, SearchParams } from '@/components/HeroSearch';
 import { useAuth } from '@/context/AuthContext';
 import {
@@ -121,38 +123,7 @@ function isVerifiedCompany(company: Job['company']) {
   return company.isVerified || company.verificationStatus === 'VERIFIED';
 }
 
-function CompanyLogo({ company, size = 'md' }: { company: Job['company']; size?: 'md' | 'lg' }) {
-  const dim = size === 'lg' ? 'w-20 h-20 text-3xl rounded-2xl' : 'w-14 h-14 text-2xl rounded-xl';
-
-  if (company.logoUrl) {
-    return (
-      <img
-        src={company.logoUrl}
-        alt={company.name}
-        className={`${dim} object-contain border border-gray-200 bg-white shrink-0`}
-      />
-    );
-  }
-
-  const initial = company.name.charAt(0).toUpperCase();
-  const colors = [
-    'bg-blue-600',
-    'bg-green-600',
-    'bg-purple-600',
-    'bg-red-600',
-    'bg-amber-500',
-    'bg-teal-600',
-    'bg-indigo-600',
-  ];
-  const color = colors[company.name.charCodeAt(0) % colors.length];
-  return (
-    <div
-      className={`${dim} ${color} flex items-center justify-center text-white font-black shrink-0`}
-    >
-      {initial}
-    </div>
-  );
-}
+// We will import CompanyLogo at the top of the file.
 
 function JobCard({
   job,
@@ -169,24 +140,29 @@ function JobCard({
   onSelect: (job: Job) => void;
   onToggleSave: () => void;
 }) {
+  const locale = useLocale();
   const isNew = job.isQuickApply === true;
 
   return (
     <div
       id={`job-card-${job.id}`}
-      className={`relative bg-white border-2 rounded-xl drop-shadow-md hover:drop-shadow-xl transition-all duration-300 cursor-pointer overflow-hidden ${isSelected
-        ? 'border-[#020263] ring-2 ring-[#020263]/20 drop-shadow-xl'
-        : 'border-gray-200 hover:border-[#00003D]'
+      className={`relative bg-white border-2 rounded-xl drop-shadow-md hover:drop-shadow-xl transition-all duration-300 cursor-pointer ${isSelected
+        ? 'border-[#020263] ring-2 ring-[#020263]/20 drop-shadow-xl z-10'
+        : 'border-gray-200 hover:border-[#00003D] hover:z-10'
         }`}
       onClick={() => onSelect(job)}
     >
-      {/* Urgent Badge */}
+      {/* Urgent Badge - Corner Ribbon Style */}
       {isNew && (
-        <div className="absolute -top-[19px] right-6 flex flex-col items-center z-20 pointer-events-none">
-          <div className="bg-[#E00016] text-white text-[13px] font-bold px-4 py-1.5 rounded-lg shadow-sm">
-            รับด่วน
+        <div className="absolute -top-[2px] -right-[2px] w-[96px] h-[96px] overflow-hidden pointer-events-none z-30">
+          <div 
+            className="absolute top-[20px] right-[-30px] w-[140px] bg-[#E00016] text-white text-[13px] sm:text-[14px] font-black py-2 text-center rotate-45 shadow-md leading-none"
+            style={{ textShadow: '1px 1px 2px rgba(0, 0, 0, 0.4)' }}
+          >
+            <span className={locale === 'en' ? 'tracking-widest' : 'tracking-wider'}>
+              {locale === 'en' ? 'URGENT' : 'รับด่วน'}
+            </span>
           </div>
-          <div className="w-0 h-0 border-l-[6px] border-r-[6px] border-t-[7px] border-l-transparent border-r-transparent border-t-[#E00016]"></div>
         </div>
       )}
       {/* Main row: logo | info | right panel */}
@@ -309,7 +285,7 @@ function JobCard({
         {/* Right panel: urgent + time + bookmark (top) | button (bottom) */}
         <div className="shrink-0 flex flex-row items-center justify-between w-full gap-4 sm:w-auto sm:min-w-[160px] sm:flex-col sm:items-end sm:justify-between">
           {/* Top: time + bookmark */}
-          <div className="flex items-center gap-4 text-gray-400">
+          <div className="flex items-center gap-4 text-gray-400 sm:pt-14">
             <span className="flex items-center gap-1 text-xs text-gray-400 whitespace-nowrap">
               <svg
                 className="w-3.5 h-3.5 shrink-0"

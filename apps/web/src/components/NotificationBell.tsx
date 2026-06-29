@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { useRouter } from '@/i18n/routing';
 import { useAuth } from '@/context/AuthContext';
 import { NotificationModal } from './NotificationModal';
 import { useLocale } from 'next-intl'; // 🌐 นำเข้า useLocale สำหรับระบบแปลภาษา
@@ -16,6 +15,8 @@ interface Notification {
   linkUrl?: string;
   isRead: boolean;
   createdAt: string;
+  applicationId?: string;
+  application?: any;
 }
 
 // ─── Translations Dictionary ────────────────
@@ -67,7 +68,6 @@ function timeAgo(dateStr: string, t: any) {
 
 export function NotificationBell() {
   const { user } = useAuth();
-  const router = useRouter();
   
   const locale = useLocale() as 'th' | 'en'; // 🌐 ดึง Locale ปัจจุบันของระบบ
   const t = translations[locale] || translations.th;
@@ -76,6 +76,7 @@ export function NotificationBell() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [selectedNotificationForModal, setSelectedNotificationForModal] = useState<any | null>(null);
   const [loading, setLoading] = useState(false);
   const [pendingDeletions, setPendingDeletions] = useState<string[]>([]);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -163,8 +164,9 @@ export function NotificationBell() {
     // 2. ปิด Dropdown
     setIsOpen(false);
 
-    // 3. พาไปที่หน้า /applications เสมอ
-    router.push('/applications');
+    // 3. เปิด Modal แสดงรายละเอียดของแจ้งเตือนชิ้นนี้ทันที
+    setSelectedNotificationForModal(notification);
+    setIsModalOpen(true);
   };
 
   // Mark all as read
@@ -396,8 +398,12 @@ export function NotificationBell() {
       </div>
       <NotificationModal
         isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        onClose={() => {
+          setIsModalOpen(false);
+          setSelectedNotificationForModal(null);
+        }}
         onRefreshBellCount={fetchUnreadCount}
+        initialSelectedNotification={selectedNotificationForModal}
       />
     </>
   );

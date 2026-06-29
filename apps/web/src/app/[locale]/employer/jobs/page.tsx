@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from '@/i18n/routing';
 import { useAuth } from '@/context/AuthContext';
 import { Navbar } from '@/components/Navbar';
+import { CompanyLogo } from '@/components/CompanyLogo';
 import {
   Plus,
   Eye,
@@ -654,19 +655,7 @@ export default function EmployerJobsPage() {
                       >
                         <div className="flex flex-col sm:flex-row gap-5">
                           {/* Thumbnail */}
-                          <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-xl border border-gray-100 bg-white flex items-center justify-center shrink-0 overflow-hidden shadow-sm">
-                            {job.company?.logoUrl ? (
-                              <img
-                                src={job.company.logoUrl}
-                                alt={job.company.name}
-                                className="w-full h-full object-contain p-2"
-                              />
-                            ) : (
-                              <div className="w-full h-full bg-[#020263] text-white flex items-center justify-center text-xl font-bold">
-                                {job.company?.name?.charAt(0)?.toUpperCase() || '?'}
-                              </div>
-                            )}
-                          </div>
+                          <CompanyLogo company={job.company} size="lg" className="shadow-sm" />
 
                           {/* Info */}
                           <div className="flex-1 min-w-0">

@@ -6,6 +6,7 @@ import { useParams } from 'next/navigation';
 import { useRouter, Link } from '@/i18n/routing';
 import { Navbar } from '@/components/Navbar';
 import { Footer } from '@/components/Footer';
+import { CompanyLogo } from '@/components/CompanyLogo';
 import { useAuth } from '@/context/AuthContext';
 import { useTranslator } from '@/hooks/useTranslator';
 import { Translate } from '@/components/Translate';
@@ -116,34 +117,9 @@ function isVerifiedCompany(company: Company) {
   return company.isVerified || company.verificationStatus === 'VERIFIED';
 }
 
-function CompanyAvatar({ company }: { company: Company }) {
-  const colors = [
-    'bg-blue-600',
-    'bg-green-600',
-    'bg-purple-600',
-    'bg-red-600',
-    'bg-amber-500',
-    'bg-teal-600',
-    'bg-indigo-600',
-  ];
-  const color = colors[company.name.charCodeAt(0) % colors.length];
-  if (company.logoUrl) {
-    return (
-      <img
-        src={company.logoUrl}
-        alt={company.name}
-        className="w-20 h-20 rounded-2xl object-contain border border-gray-100 bg-white shrink-0"
-      />
-    );
-  }
-  return (
-    <div
-      className={`w-20 h-20 rounded-2xl ${color} flex items-center justify-center text-white font-black text-3xl shrink-0`}
-    >
-      {company.name.charAt(0).toUpperCase()}
-    </div>
-  );
-}
+const CompanyAvatar = ({ company }: { company: any }) => (
+  <CompanyLogo company={company} size="lg" />
+);
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (

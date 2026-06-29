@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter, Link } from '@/i18n/routing';
 import { Navbar } from '@/components/Navbar';
 import { Footer } from '@/components/Footer';
+import { CompanyLogo } from '@/components/CompanyLogo';
 import { useLocale } from 'next-intl'; // 🌐 นำเข้า useLocale สำหรับระบบแปลภาษา
 import { CheckCircle2, Bookmark, ExternalLink, Trash2 } from 'lucide-react';
 
@@ -138,39 +139,7 @@ function isVerifiedCompany(company: Job['company']) {
   return company.isVerified || company.verificationStatus === 'VERIFIED';
 }
 
-function CompanyAvatar({
-  company,
-  size = 'md',
-}: {
-  company: Job['company'];
-  size?: 'sm' | 'md' | 'lg';
-}) {
-  const dims = {
-    sm: 'w-10 h-10 text-sm rounded-lg',
-    md: 'w-14 h-14 text-xl rounded-xl',
-    lg: 'w-20 h-20 text-3xl rounded-2xl',
-  };
-  const cls = dims[size];
-  if (company.logoUrl) {
-    return (
-      <img
-        src={company.logoUrl}
-        alt={company.name}
-        className={`${cls} object-contain border border-gray-100 bg-white shrink-0`}
-      />
-    );
-  }
-  const colors = [
-    'bg-blue-600', 'bg-green-600', 'bg-purple-600', 'bg-red-600',
-    'bg-amber-500', 'bg-teal-600', 'bg-indigo-600', 'bg-gray-700',
-  ];
-  const color = colors[company.name.charCodeAt(0) % colors.length];
-  return (
-    <div className={`${cls} ${color} flex items-center justify-center text-white font-bold shrink-0`}>
-      {company.name.charAt(0).toUpperCase()}
-    </div>
-  );
-}
+const CompanyAvatar = CompanyLogo;
 
 // ─── Main Component ─────────────────────
 export default function SavedJobsPage() {

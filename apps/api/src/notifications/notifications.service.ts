@@ -105,6 +105,18 @@ export class NotificationsService {
         const [notifications, total] = await Promise.all([
             this.prisma.notification.findMany({
                 where: { userId },
+                include: {
+                    application: {
+                        where: { userId },
+                        include: {
+                            job: {
+                                include: {
+                                    company: true,
+                                },
+                            },
+                        },
+                    },
+                },
                 orderBy: { createdAt: 'desc' },
                 skip,
                 take: limit,

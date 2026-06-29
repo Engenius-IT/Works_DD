@@ -2,8 +2,9 @@
 
 import React, { useEffect, useState } from 'react';
 import { Link } from '@/i18n/routing';
+import { CompanyLogo } from '@/components/CompanyLogo';
 import { CheckCircle2, Bookmark } from 'lucide-react';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
 
@@ -63,36 +64,10 @@ function isVerifiedCompany(company: Job['company']) {
   return company.isVerified || company.verificationStatus === 'VERIFIED';
 }
 
-function CompanyLogo({ company }: { company: Job['company'] }) {
-  if (company.logoUrl) {
-    return (
-      <img
-        src={company.logoUrl}
-        alt={company.name}
-        className="w-14 h-14 rounded-xl object-contain border border-gray-100 bg-white"
-      />
-    );
-  }
-  const initial = company.name.charAt(0).toUpperCase();
-  const colors = [
-    'bg-blue-600',
-    'bg-green-600',
-    'bg-purple-600',
-    'bg-red-600',
-    'bg-amber-500',
-    'bg-teal-600',
-  ];
-  const color = colors[company.name.charCodeAt(0) % colors.length];
-  return (
-    <div
-      className={`w-14 h-14 rounded-xl ${color} flex items-center justify-center text-white font-black text-2xl shrink-0`}
-    >
-      {initial}
-    </div>
-  );
-}
+// Imported CompanyLogo at top of file
 
 export function RecommendedJobs() {
+  const locale = useLocale();
   const [jobs, setJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState(true);
   const [savedSlugs, setSavedSlugs] = useState<string[]>([]);
@@ -240,20 +215,23 @@ export function RecommendedJobs() {
             const isSaved = savedSlugs.includes(job.slug);
             return (
               <div key={job.id} className="relative group">
-                {/* Urgent Badge */}
-                {job.isQuickApply && (
-                  <div className="absolute -top-[19px] right-6 flex flex-col items-center z-20 pointer-events-none">
-                    <div className="bg-[#E00016] text-white text-[13px] font-bold px-4 py-1.5 rounded-lg shadow-sm">
-                      รับด่วน
-                    </div>
-                    <div className="w-0 h-0 border-l-[6px] border-r-[6px] border-t-[7px] border-l-transparent border-r-transparent border-t-[#E00016]"></div>
-                  </div>
-                )}
-
                 <Link
                   href={`/jobs/${job.slug}`}
-                  className="border border-gray-300 rounded-3xl p-6 relative hover:shadow-lg transition-shadow bg-white flex flex-col cursor-pointer"
+                  className="border border-gray-300 rounded-3xl p-6 relative hover:shadow-lg transition-shadow bg-white flex flex-col cursor-pointer z-10 group-hover:z-20"
                 >
+                  {/* Urgent Badge - Corner Ribbon Style */}
+                  {job.isQuickApply && (
+                    <div className="absolute -top-[1px] -right-[1px] w-[96px] h-[96px] overflow-hidden pointer-events-none z-30">
+                      <div 
+                        className="absolute top-[20px] right-[-30px] w-[140px] bg-[#E00016] text-white text-[13px] sm:text-[14px] font-black py-2 text-center rotate-45 shadow-md leading-none"
+                        style={{ textShadow: '1px 1px 2px rgba(0, 0, 0, 0.4)' }}
+                      >
+                        <span className={locale === 'en' ? 'tracking-widest' : 'tracking-wider'}>
+                          {locale === 'en' ? 'URGENT' : 'รับด่วน'}
+                        </span>
+                      </div>
+                    </div>
+                  )}
                   {/* Header: Logo, Title */}
                   <div className="flex items-start gap-4 mb-4">
                     <CompanyLogo company={job.company} />

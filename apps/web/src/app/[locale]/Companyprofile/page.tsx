@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
+import { CompanyLogo } from "@/components/CompanyLogo";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/api/v1";
 
@@ -137,10 +138,7 @@ function locationText(job: CompanyJob) {
   return `${province}${district ? ` ${district}` : ""}`;
 }
 
-function companyAbbr(company?: Company | null) {
-  if (!company) return "-";
-  return (company.slug || company.name).slice(0, 3).toUpperCase();
-}
+// Removed unused companyAbbr function
 
 export default function CompanyProfile() {
   const searchParams = useSearchParams();
@@ -257,18 +255,10 @@ export default function CompanyProfile() {
   boxShadow: "0 2px 10px rgba(0,0,0,0.2)",
   overflow: "hidden"
 }}>
-  {company?.logoUrl ? (
-    <img
-      src={company.logoUrl}
-      alt={company.name}
-      style={{
-        width: "100%",
-        height: "100%",
-        objectFit: "cover"
-      }}
-    />
+  {company ? (
+    <CompanyLogo company={company} size="lg" className="w-full h-full border-none rounded-none" />
   ) : (
-    companyAbbr(company)
+    "-"
   )}
 </div>
             <div>
