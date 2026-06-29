@@ -286,10 +286,26 @@ export const NotificationModal: React.FC<NotificationModalProps> = ({
     }
   };
 
-  const filteredNotifications = notifications.filter(n =>
-    n.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    n.message.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredNotifications = notifications.filter(n => {
+    // 1. Tab Filter
+    if (activeTab === 'unread' && n.isRead) {
+      return false;
+    }
+    if (activeTab === 'company') {
+      const isCompanyType = ['STATUS_CHANGE', 'INTERVIEW_SCHEDULED', 'COMPANY_RESPONSE'].includes(n.type);
+      if (!isCompanyType) return false;
+    }
+    if (activeTab === 'system') {
+      const isCompanyType = ['STATUS_CHANGE', 'INTERVIEW_SCHEDULED', 'COMPANY_RESPONSE'].includes(n.type);
+      if (isCompanyType) return false;
+    }
+
+    // 2. Search Query Filter
+    return (
+      n.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      n.message.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  });
 
   const formatRelativeTime = (dateString: string) => {
     const date = new Date(dateString);
