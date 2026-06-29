@@ -69,9 +69,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   localStorage.removeItem('user');
   setUserState(null);
   
-  // เปลี่ยนจาก '/' เป็นพาทของหน้าล็อกอินใหม่ตรงๆ
-  router.push('/th/login'); 
-  router.refresh(); 
+  // ใช้ตัวนี้ยิงตรงเข้าหน้าใหม่ เคลียร์ State เก่าในแรมทิ้งทั้งหมด 
+  window.location.href = '/th/login'; 
 };
 
   const setUser = (userData: User | null) => {
