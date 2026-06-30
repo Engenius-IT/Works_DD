@@ -1288,7 +1288,10 @@
     "faq1A": "No, it is not required. Jobseekers can visit the website, search for openings, and view descriptions immediately. However, registration is recommended before applying so the system can seamlessly forward your profile.",
     "faq2Q": "What is Express Apply and how does it differ from regular application?",
     "faq2A": "Express Apply is a shortcut enabling jobseekers to send resumes instantly in a few clicks without long forms. Ideal for urgent roles.",
-    "backToHomeBtn": "Got it, back to home"
+    "backToHomeBtn": "Got it, back to home",
+    "title_register_success": "🎉 Registration Successful",
+    "msg_register_success_jobseeker": "Welcome {name} to WorksDD",
+    "msg_register_success_employer": "Welcome {name} to WorksDD"
   },
   "EmployerGuide": {
     "badge": "WORKSDD Employer Guide",
