@@ -12,7 +12,7 @@ import { RegisterDto } from './dto/register.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { LoginDto } from './dto/login.dto';
 import type { JwtPayload } from './types/jwt-payload.interface';
-import { VerificationStatus } from '@prisma/client';
+import { VerificationStatus, NotificationType } from '@prisma/client';
 
 @Injectable()
 export class AuthService {
@@ -48,9 +48,12 @@ export class AuthService {
         },
       });
 
+      let companyName: string | undefined = dto.companyName;
+      let companySlug: string | undefined;
+
       if (dto.role === 'EMPLOYER' && dto.companyName) {
         try {
-          await this.prisma.company.create({
+          const company = await this.prisma.company.create({
             data: {
               ownerId: user.id,
               name: dto.companyName,
@@ -60,11 +63,22 @@ export class AuthService {
               verificationStatus: VerificationStatus.UNVERIFIED,
             },
           });
+
+          companyName = company.name;
+          companySlug = company.slug;
         } catch (error: any) {
           await this.prisma.user.delete({ where: { id: user.id } });
           throw error;
         }
       }
+
+      await this.createRegisterNotification({
+        userId: user.id,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        role: user.role,
+        companyName,
+      });
 
       const token = await this.signToken(user.id, user.email ?? '', user.role);
 
@@ -77,7 +91,8 @@ export class AuthService {
           lastName: user.lastName,
           role: user.role,
           avatarUrl: user.avatarUrl,
-          companyName: dto.companyName,
+          companyName,
+          companySlug,
         },
       };
     } catch (error: any) {
@@ -85,6 +100,36 @@ export class AuthService {
       if (error?.status) throw error;
       throw new InternalServerErrorException(`Registration Failed: ${error.message}`);
     }
+  }
+
+  private async createRegisterNotification(data: {
+    userId: string;
+    firstName: string;
+    lastName: string;
+    role: string;
+    companyName?: string | null;
+  }) {
+    const fullName = `${data.firstName} ${data.lastName}`.trim();
+    const displayName = data.role === 'EMPLOYER' ? data.companyName || fullName : fullName;
+
+    await this.prisma.notification.create({
+      data: {
+        userId: data.userId,
+        type: NotificationType.GENERAL,
+        title: 'Notifications.title_register_success',
+        message: JSON.stringify({
+          key:
+            data.role === 'EMPLOYER'
+              ? 'Notifications.msg_register_success_employer'
+              : 'Notifications.msg_register_success_jobseeker',
+          params: {
+            name: displayName,
+          },
+        }),
+        linkUrl: data.role === 'EMPLOYER' ? '/employer/dashboard' : '/jobs',
+        isRead: false,
+      },
+    });
   }
 
   private generateSlug(name: string): string {
@@ -145,6 +190,7 @@ export class AuthService {
           avatarUrl: user.avatarUrl,
           companyName: user.companies?.[0]?.name,
           companyLogo: user.companies?.[0]?.logoUrl,
+          companySlug: user.companies?.[0]?.slug,
         },
       };
     } catch (error: any) {
@@ -174,7 +220,7 @@ export class AuthService {
         phone: true,
         avatarUrl: true,
         createdAt: true,
-        companies: { select: { name: true, logoUrl: true } },
+        companies: { select: { name: true, logoUrl: true, slug: true } },
       },
     });
 
@@ -188,6 +234,7 @@ export class AuthService {
       ...restUser,
       companyName: companies?.[0]?.name,
       companyLogo: companies?.[0]?.logoUrl,
+      companySlug: companies?.[0]?.slug,
     };
   }
 
@@ -307,6 +354,7 @@ export class AuthService {
         avatarUrl: user.avatarUrl,
         companyName: user.companies?.[0]?.name || null,
         companyLogo: user.companies?.[0]?.logoUrl || null,
+        companySlug: user.companies?.[0]?.slug || null,
       },
     };
   }
@@ -347,8 +395,11 @@ export class AuthService {
       });
 
       // 2. ถ้าผู้ใช้กดเลือกเป็น 'EMPLOYER' (นายจ้าง) ให้ผูกข้อมูลบริษัทให้ตามชื่อที่ส่งมาจากป๊อปอัพ
+      let finalCompanyName: string | null = null;
+
       if (role === 'EMPLOYER') {
-        const finalCompanyName = companyName || `${firstName} Company`;
+        finalCompanyName = companyName || `${firstName} Company`;
+
         await this.prisma.company.create({
           data: {
             ownerId: user.id,
@@ -366,6 +417,14 @@ export class AuthService {
         }) as any;
       }
 
+      await this.createRegisterNotification({
+        userId: user.id,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        role: user.role,
+        companyName: user.companies?.[0]?.name || finalCompanyName,
+      });
+
       // 3. เจน Access Token ปล่อยล็อกอินเข้าใช้งานทันทีหลังลงทะเบียนเสร็จ
       const token = await this.signToken(user.id, user.email ?? '', user.role);
 
@@ -380,6 +439,7 @@ export class AuthService {
           avatarUrl: user.avatarUrl,
           companyName: user.companies?.[0]?.name || null,
           companyLogo: user.companies?.[0]?.logoUrl || null,
+          companySlug: user.companies?.[0]?.slug || null,
         },
       };
 
