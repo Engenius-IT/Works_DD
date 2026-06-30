@@ -51,6 +51,12 @@ const nextConfig: NextConfig = {
                 protocol: 'https',
                 hostname: 'images.unsplash.com',
             },
+            {
+                protocol: 'http',
+                hostname: 'localhost',
+                port: '3001',
+                pathname: '/uploads/**',
+            },
         ],
     },
 
@@ -61,5 +67,3 @@ const nextConfig: NextConfig = {
 };
 
 export default withNextIntl(nextConfig);
-
-

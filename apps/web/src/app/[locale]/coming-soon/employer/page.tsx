@@ -359,7 +359,7 @@ export default function EmployerSystemGuidePage() {
         {/* 💡 คำแนะนำเพิ่มเติมแสดงคำแนะนำสำหรับผู้ประกอบการในการใช้งานระบบ */}
         <section
             aria-label="System Guidelines for Employers"
-            className="rounded-2xl border border-blue-500/20 bg-[#020263] p-6 hover:bg-[#020263]/90 transition"
+            className="mt-8 rounded-2xl border border-blue-500/20 bg-[#020263] p-6 hover:bg-[#020263]/90 transition"
         >
             {/* Header */}
             <div className="flex items-center gap-2 mb-4">
