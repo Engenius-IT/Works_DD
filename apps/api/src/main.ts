@@ -23,9 +23,17 @@ async function bootstrap() {
         credentials: true,
     });*/
     app.enableCors({
-        origin: true,
+        origin: [
+            'http://localhost:3000',
+            'http://localhost:3001',
+            'http://localhost:3002',
+            'http://localhost:3003',
+            'http://localhost:3004',
+            process.env.NEXTAUTH_URL,
+        ].filter(Boolean) as string[],
         credentials: true,
         methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
+        allowedHeaders: 'Content-Type,Accept,Authorization',
     });
 
     // Global validation pipe
