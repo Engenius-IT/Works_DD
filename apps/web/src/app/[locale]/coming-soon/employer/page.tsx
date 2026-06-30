@@ -18,41 +18,41 @@ import {
 
 export default function EmployerSystemGuidePage() {
   const [activeStep, setActiveStep] = useState<number>(1);
-  const t = useTranslations('employerGuide');
+  const t = useTranslations('EmployerGuide');
 
-  // 📋 ข้อมูลคู่มือเรียงลำดับ 1-4 ตามขั้นตอนจริงที่ผู้ประกอบการใช้งาน
+  // 📋 ข้อมูลคู่มือเรียงลำดับ 1-4 ผูก Key กับ JSON เพื่อรองรับการสลับภาษา th/en
   const uiSteps = [
     {
       id: 1,
       icon: Building2,
-      title: '1. ตั้งค่าข้อมูลบริษัท (Company Setup)',
-      desc: 'กรอกข้อมูลบริษัท โลโก้ และยืนยันตัวตนนิติบุคคล เพื่อให้ประกาศงานของคุณเผยแพร่ได้และดูน่าเชื่อถือกับผู้สมัคร',
-      badge: 'ขั้นตอนเริ่มต้น',
-      tips: 'ยืนยันตัวตนบริษัทให้เสร็จก่อน เพราะหากยังไม่ผ่านการอนุมัติ คุณจะบันทึกประกาศงานเป็น Draft ได้เท่านั้น ยังเผยแพร่ทันทีไม่ได้',
+      title: t('steps.step1.title'),
+      desc: t('steps.step1.desc'),
+      badge: t('steps.step1.badge'),
+      tips: t('steps.step1.tips'),
     },
     {
       id: 2,
       icon: FileText,
-      title: '2. สร้างและเผยแพร่ประกาศงาน (Post a Job)',
-      desc: 'กรอกรายละเอียดตำแหน่งงาน เงินเดือน คุณสมบัติ และสวัสดิการ แล้วเลือกบันทึกเป็น Draft หรือเผยแพร่ทันที',
-      badge: 'ฟีเจอร์หลัก',
-      tips: 'ใส่ทักษะที่ต้องการเป็นคีย์เวิร์ดให้ครบ ระบบ AI จะใช้ข้อมูลนี้ช่วยคัดกรองผู้สมัครที่ตรงเงื่อนไขให้คุณโดยอัตโนมัติ',
+      title: t('steps.step2.title'),
+      desc: t('steps.step2.desc'),
+      badge: t('steps.step2.badge'),
+      tips: t('steps.step2.tips'),
     },
     {
       id: 3,
       icon: Users,
-      title: '3. จัดการผู้สมัคร (Manage Applicants)',
-      desc: 'ดูรายชื่อผู้สมัครที่ส่งใบสมัครเข้ามา พร้อมเรซูเม่และข้อมูลติดต่อ สามารถกรองและจัดเรียงตามความเหมาะสมได้',
-      badge: 'การคัดกรอง',
-      tips: 'เปิดดูเรซูเม่และข้อมูลติดต่อของผู้สมัครได้ทันทีที่มีคนกดสมัคร ไม่ต้องรอให้ผู้สมัครส่งไฟล์มาทางอื่นเพิ่ม',
+      title: t('steps.step3.title'),
+      desc: t('steps.step3.desc'),
+      badge: t('steps.step3.badge'),
+      tips: t('steps.step3.tips'),
     },
     {
       id: 4,
       icon: CheckCircle2,
-      title: '4. อัปเดตสถานะและปิดรับสมัคร (Hiring)',
-      desc: 'เปลี่ยนสถานะใบสมัครแต่ละราย เช่น นัดสัมภาษณ์ ผ่าน หรือไม่ผ่าน และปิดรับสมัครเมื่อได้พนักงานที่ต้องการแล้ว',
-      badge: 'ปิดงาน',
-      tips: 'เมื่อปิดรับสมัครแล้ว ประกาศงานจะไม่แสดงผลการค้นหาฝั่งผู้สมัครอีก แต่ข้อมูลผู้สมัครเดิมยังดูย้อนหลังได้เสมอ',
+      title: t('steps.step4.title'),
+      desc: t('steps.step4.desc'),
+      badge: t('steps.step4.badge'),
+      tips: t('steps.step4.tips'),
     },
   ];
 
@@ -70,13 +70,13 @@ export default function EmployerSystemGuidePage() {
 
           <div className="max-w-6xl mx-auto px-4 sm:px-6 relative z-10 text-center">
             <span className="px-3 py-1 text-xs font-semibold bg-[#00E5FF] text-[#020263] rounded-full uppercase tracking-wider mb-3 inline-block">
-              คู่มือแนะนำผู้ประกอบการ WORKSDD
+              {t('badge')}
             </span>
             <h1 className="text-3xl md:text-5xl font-extrabold text-white mb-4 tracking-tight">
-              แนะนำหน้าตาและการใช้งานระบบ
+              {t('title')}
             </h1>
             <p className="text-[#A5CBE5] text-sm md:text-base max-w-2xl mx-auto">
-              ทำความเข้าใจขั้นตอนตั้งค่าบริษัท โพสต์ประกาศงาน และจัดการผู้สมัคร เพื่อให้คุณเริ่มรับสมัครพนักงานได้อย่างมั่นใจ
+              {t('description')}
             </p>
           </div>
         </div>
@@ -91,8 +91,8 @@ export default function EmployerSystemGuidePage() {
                 <Building2 className="w-6 h-6" />
               </div>
               <div>
-                <h4 className="text-sm font-bold text-gray-900">ยืนยันตัวตนบริษัทง่าย</h4>
-                <p className="text-xs text-gray-400 mt-0.5">กรอกข้อมูลครั้งเดียว ใช้ได้กับทุกประกาศงาน</p>
+                <h4 className="text-sm font-bold text-gray-900">{t('overview.setupTitle')}</h4>
+                <p className="text-xs text-gray-400 mt-0.5">{t('overview.setupDesc')}</p>
               </div>
             </div>
             <div className="flex items-center gap-4 border-t md:border-t-0 md:border-x border-gray-100 pt-4 md:pt-0 md:px-6">
@@ -100,8 +100,8 @@ export default function EmployerSystemGuidePage() {
                 <FileText className="w-6 h-6" />
               </div>
               <div>
-                <h4 className="text-sm font-bold text-gray-900">โพสต์งานได้ไม่จำกัด</h4>
-                <p className="text-xs text-gray-400 mt-0.5">บันทึก Draft ไว้ก่อน หรือเผยแพร่ทันทีก็ได้</p>
+                <h4 className="text-sm font-bold text-gray-900">{t('overview.postTitle')}</h4>
+                <p className="text-xs text-gray-400 mt-0.5">{t('overview.postDesc')}</p>
               </div>
             </div>
             <div className="flex items-center gap-4 border-t md:border-t-0 pt-4 md:pt-0">
@@ -109,8 +109,8 @@ export default function EmployerSystemGuidePage() {
                 <Users className="w-6 h-6" />
               </div>
               <div>
-                <h4 className="text-sm font-bold text-gray-900">ดูผู้สมัครได้ทันที</h4>
-                <p className="text-xs text-gray-400 mt-0.5">เรซูเม่และข้อมูลติดต่อพร้อมให้คุณตรวจสอบ</p>
+                <h4 className="text-sm font-bold text-gray-900">{t('overview.manageTitle')}</h4>
+                <p className="text-xs text-gray-400 mt-0.5">{t('overview.manageDesc')}</p>
               </div>
             </div>
           </div>
@@ -123,7 +123,7 @@ export default function EmployerSystemGuidePage() {
               <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
                 <h3 className="text-sm font-bold text-gray-800 mb-3 flex items-center gap-2">
                   <Layers className="w-4 h-4 text-[#020263]" />
-                  จำลองหน้าหลังบ้านผู้ประกอบการ (UI Interactive)
+                  {t('interactiveTitle')}
                 </h3>
 
                 {/* กรอบหน้าต่าง Browser */}
@@ -157,9 +157,9 @@ export default function EmployerSystemGuidePage() {
                           <span className="w-3 h-3 rounded-full bg-white/20 flex items-center justify-center">
                             <Building2 className="w-2 h-2 text-white" />
                           </span>
-                          <span className="text-white font-bold">บริษัท จำกัด</span>
+                          <span className="text-white font-bold">{t('ui.company')}</span>
                           <span className="flex items-center gap-0.5 text-[8px] bg-emerald-400/20 text-emerald-300 px-1 rounded">
-                            ยืนยันแล้ว
+                            {t('ui.verified')}
                           </span>
                         </div>
                         <div className="text-[8px] bg-white/20 px-1.5 py-0.5 rounded text-white font-mono scale-90">EMPLOYER</div>
@@ -195,7 +195,7 @@ export default function EmployerSystemGuidePage() {
                           <div className="h-2 w-20 bg-gray-100 rounded-xs" />
                         </div>
                         <div className="bg-red-700 text-white text-[8px] font-bold px-3 py-1 rounded-lg shrink-0">
-                          + สร้างประกาศงาน
+                          {t('ui.createJob')}
                         </div>
                       </div>
 
@@ -228,7 +228,7 @@ export default function EmployerSystemGuidePage() {
                             <div className="h-2.5 w-20 bg-white/30 rounded-xs" />
                           </div>
                           <div className="flex items-center gap-0.5 text-[8px]">
-                            12 คน <ChevronDown className="w-2 h-2" />
+                            {t('ui.applicantsCount')} <ChevronDown className="w-2 h-2" />
                           </div>
                         </div>
 
@@ -258,14 +258,18 @@ export default function EmployerSystemGuidePage() {
                               <div className="h-2.5 w-10 bg-gray-700 rounded-xs" />
                               <div className="w-3 h-3 bg-amber-100 rounded-xs" />
                             </div>
-                            <div className="h-4 w-16 bg-emerald-50 text-emerald-600 rounded-xs font-bold text-[9px] flex items-center justify-center">นัดสัมภาษณ์</div>
+                            <div className="h-4 w-16 bg-emerald-50 text-emerald-600 rounded-xs font-bold text-[9px] flex items-center justify-center">
+                              {t('ui.statusInterview')}
+                            </div>
                           </div>
                           <div className="bg-white border border-gray-100 p-2 rounded-lg shadow-2xs space-y-2">
                             <div className="flex justify-between items-start">
                               <div className="h-2.5 w-10 bg-gray-700 rounded-xs" />
                               <div className="w-3 h-3 bg-amber-100 rounded-xs" />
                             </div>
-                            <div className="h-4 w-16 bg-red-50 text-red-600 rounded-xs font-bold text-[9px] flex items-center justify-center">รอพิจารณา</div>
+                            <div className="h-4 w-16 bg-red-50 text-red-600 rounded-xs font-bold text-[9px] flex items-center justify-center">
+                              {t('ui.statusPending')}
+                            </div>
                           </div>
                         </div>
 
@@ -288,7 +292,7 @@ export default function EmployerSystemGuidePage() {
                 </div>
 
                 <p className="text-[11px] text-center text-gray-400 italic mt-3 flex items-center justify-center gap-1">
-                  💡 คลิกเลือกกล่องจำลอง หรือกดปุ่มตัวเลขเพื่อดูรายละเอียดแต่ละส่วน
+                  {t('interactiveHint')}
                 </p>
               </div>
             </div>
@@ -297,7 +301,7 @@ export default function EmployerSystemGuidePage() {
             <div className="lg:col-span-7 space-y-4">
               <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2 mb-1">
                 <span className="w-1.5 h-4 bg-[#020263] rounded-xs"></span>
-                อธิบายขั้นตอนการใช้งานสำหรับผู้ประกอบการ
+                {t('sectionTitle')}
               </h2>
 
               <div className="space-y-3">
@@ -355,70 +359,55 @@ export default function EmployerSystemGuidePage() {
               </div>
             </div>
           </div>
-        
-        {/* 💡 คำแนะนำเพิ่มเติมแสดงคำแนะนำสำหรับผู้ประกอบการในการใช้งานระบบ */}
-        <section
+          
+          {/* 💡 คำแนะนำเพิ่มเติมแสดงคำแนะนำสำหรับผู้ประกอบการในการใช้งานระบบ */}
+          <section
             aria-label="System Guidelines for Employers"
             className="mt-8 rounded-2xl border border-blue-500/20 bg-[#020263] p-6 hover:bg-[#020263]/90 transition"
-        >
+          >
             {/* Header */}
             <div className="flex items-center gap-2 mb-4">
-                <span className="text-lg">💡</span>
-                <h2 className="font-bold text-blue-300 text-lg">
-                    คำแนะนำเพิ่มเติม (System Guidelines)
-                </h2>
+              <span className="text-lg">💡</span>
+              <h2 className="font-bold text-blue-300 text-lg">
+                {t('guidelines.title')}
+              </h2>
             </div>
 
             {/* List */}
             <ul className="space-y-3 text-sm text-white/80 leading-relaxed">
-    
-                <li className="flex gap-2">
-                    <span className="text-blue-400 mt-1">•</span>
-                    <span>
-                        ตรวจสอบข้อมูลบริษัทและประกาศงานให้ถูกต้องก่อนเผยแพร่และให้เป็นปัจจุบันอยู่เสมอ
-                    </span>
-                </li>
-
-                <li className="flex gap-2">
-                    <span className="text-blue-400 mt-1">•</span>
-                    <span>
-                        ใช้ Dashboard เพื่อติดตามสถานะผู้สมัครอย่างสม่ำเสมอ
-                    </span>
-                </li>
-
-                <li className="flex gap-2">
-                    <span className="text-blue-400 mt-1">•</span>
-                    <span>
-                        ตอบกลับผู้สมัครให้รวดเร็วเพื่อเพิ่มโอกาสในการคัดเลือก
-                    </span>
-                </li>
-
-                <li className="flex gap-2">
-                    <span className="text-blue-400 mt-1">•</span>
-                    <span>
-                        ปิดประกาศงานเมื่อได้พนักงานแล้วเพื่อลดข้อมูลซ้ำซ้อน
-                    </span>
-                </li>
-
+              <li className="flex gap-2">
+                <span className="text-blue-400 mt-1">•</span>
+                <span>{t('guidelines.tip1')}</span>
+              </li>
+              <li className="flex gap-2">
+                <span className="text-blue-400 mt-1">•</span>
+                <span>{t('guidelines.tip2')}</span>
+              </li>
+              <li className="flex gap-2">
+                <span className="text-blue-400 mt-1">•</span>
+                <span>{t('guidelines.tip3')}</span>
+              </li>
+              <li className="flex gap-2">
+                <span className="text-blue-400 mt-1">•</span>
+                <span>{t('guidelines.tip4')}</span>
+              </li>
             </ul>
-        </section>
+          </section>
 
-          {/* 🔘 ปุ่มนำทางย้ายมาอยู่ตรงนี้ (ล่างสุดของพื้นที่เนื้อหาหลัก ก่อนถึง Footer) */}
+          {/* 🔘 ปุ่มนำทาง */}
           <div className="mt-12 mb-6 flex justify-center w-full">
             <Link
               href="/"
               className="inline-flex items-center justify-center gap-2 px-8 py-3.5 bg-gradient-to-r from-[#020263] to-[#00003D] text-white font-bold rounded-xl text-sm shadow-md hover:shadow-lg transition-all hover:-translate-y-0.5 min-w-[200px]"
             >
-              เข้าใจระบบแล้ว กลับไปหน้าหลัก
+              {t('backToHome')}
             </Link>
           </div>
 
         </div>
       </div>
 
-      
-
-      {/* 🧱 Footer จะอยู่ติดขอบล่างสุดเสมอ */}
+      {/* 🧱 Footer */}
       <Footer role="EMPLOYER" />
     </div>
   );

@@ -1289,5 +1289,63 @@
     "faq2Q": "What is Express Apply and how does it differ from regular application?",
     "faq2A": "Express Apply is a shortcut enabling jobseekers to send resumes instantly in a few clicks without long forms. Ideal for urgent roles.",
     "backToHomeBtn": "Got it, back to home"
+  },
+  "EmployerGuide": {
+    "badge": "WORKSDD Employer Guide",
+    "title": "System Interface & Usage Guide",
+    "description": "Understand the process of setting up your company profile, posting job vacancies, and managing applicants to start recruiting with confidence.",
+    "overview": {
+      "setupTitle": "Easy Company Setup",
+      "setupDesc": "Fill in information once, use it for all job postings.",
+      "postTitle": "Unlimited Job Posts",
+      "postDesc": "Save as draft or publish instantly anytime.",
+      "manageTitle": "Instant Applicant Access",
+      "manageDesc": "Resumes and contact details are ready for your review."
+    },
+    "interactiveTitle": "Employer Dashboard Simulation (Interactive UI)",
+    "interactiveHint": "💡 Click on the simulated boxes or numbers to view details for each step.",
+    "sectionTitle": "Step-by-Step Instructions for Employers",
+    "steps": {
+      "step1": {
+        "title": "1. Company Setup",
+        "desc": "Fill in company details, upload a logo, and verify your corporate identity to make your job posts publishable and trustworthy to candidates.",
+        "badge": "Getting Started",
+        "tips": "Complete company verification first. If not yet approved, your job posts can only be saved as drafts and cannot be published immediately."
+      },
+      "step2": {
+        "title": "2. Post a Job",
+        "desc": "Fill in job descriptions, salary ranges, qualifications, and benefits, then choose to save as a draft or publish immediately.",
+        "badge": "Core Feature",
+        "tips": "Include required skills as keywords. The AI system will use this data to automatically pre-screen applicants who match your criteria."
+      },
+      "step3": {
+        "title": "3. Manage Applicants",
+        "desc": "View lists of candidates who applied, along with their resumes and contact info. You can filter and sort them as appropriate.",
+        "badge": "Screening",
+        "tips": "Open and view candidate resumes and contact details instantly once they apply—no need to wait for them to send additional files."
+      },
+      "step4": {
+        "title": "4. Update Status & Close Job (Hiring)",
+        "desc": "Change application statuses (e.g., Interview, Passed, or Rejected) and close the job posting once you have hired the right person.",
+        "badge": "Hired",
+        "tips": "Once closed, the job post will no longer appear in candidate searches, but past applicant data can still be reviewed anytime."
+      }
+    },
+    "ui": {
+      "verified": "Verified",
+      "company": "Co., Ltd.",
+      "createJob": "+ Create a Job",
+      "applicantsCount": "12 applicants",
+      "statusInterview": "Interview",
+      "statusPending": "Pending"
+    },
+    "guidelines": {
+      "title": "System Guidelines & Tips",
+      "tip1": "Double-check your company information and job details before publishing, and keep them up to date.",
+      "tip2": "Regularly monitor applicant statuses using the Employer Dashboard.",
+      "tip3": "Respond to applicants quickly to improve your hiring conversion rate.",
+      "tip4": "Close job postings once positions are filled to reduce redundant data."
+    },
+    "backToHome": "Understood, Back to Home"
   }
 }
