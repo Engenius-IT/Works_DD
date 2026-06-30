@@ -156,7 +156,7 @@ const currentUrl =
         {/* Right Side: Auth & Language */}
         <div className="flex items-center gap-4">
           <div className="hidden md:flex items-center gap-3">
-            {user?.role !== 'EMPLOYER' && (
+            {user?.role !== 'EMPLOYER' && user?.role !== 'ADMIN' && (
               <Link
                 href="/ai-job-matcher"
                 className="inline-flex items-center gap-2 rounded-full bg-linear-to-r from-violet-600 to-fuchsia-600 px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-violet-500/30 transition-all hover:-translate-y-0.5 hover:shadow-xl hover:shadow-violet-500/40 hover:from-violet-500 hover:to-fuchsia-500 active:scale-95"
@@ -180,7 +180,7 @@ const currentUrl =
             {user ? (
               // Logged In State
               <>
-                {user.role === 'EMPLOYER' && (
+                {(user.role === 'EMPLOYER' || user.role === 'ADMIN') && (
                   <Link
                     href="/employer/dashboard"
                     className="flex items-center gap-2 bg-amber-400 hover:bg-amber-300 text-gray-900 font-bold text-sm px-4 py-2 rounded-xl shadow shadow-amber-300/40 transition-all hover:scale-105 active:scale-95"
@@ -285,7 +285,7 @@ const currentUrl =
               </button>
             </div>
           </div>
-          {user?.role !== 'EMPLOYER' && (
+          {user?.role !== 'EMPLOYER' && user?.role !== 'ADMIN' && (
             <Link
               href="/ai-job-matcher"
               className="flex items-center justify-center gap-2 mx-4 py-3 bg-linear-to-r from-violet-600 to-fuchsia-600 text-white rounded-xl font-bold shadow-lg shadow-violet-500/30 active:scale-95 transition-all"
@@ -310,7 +310,7 @@ const currentUrl =
 
           {/* Mobile Main Navigation Links */}
           <div className="py-2 space-y-1">
-            {user?.role === 'EMPLOYER' ? (
+            {user?.role === 'EMPLOYER' || user?.role === 'ADMIN' ? (
               <>
                 <Link
                   href="/"
@@ -387,7 +387,7 @@ const currentUrl =
                 {t('hello')}{' '}
                 {user.role === 'EMPLOYER' && user.companyName ? user.companyName : user.firstName}
               </div>
-              {user.role === 'EMPLOYER' && (
+              {(user.role === 'EMPLOYER' || user.role === 'ADMIN') && (
                 <Link
                   href="/employer/dashboard"
                   className="flex items-center gap-2 mx-2 px-4 py-2 bg-amber-400 text-gray-900 font-bold text-sm rounded-xl"
