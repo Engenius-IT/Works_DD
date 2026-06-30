@@ -5,6 +5,7 @@ import { ConfigService } from '@nestjs/config';
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
+import { ChangePasswordDto } from './dto/change-password.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import type { JwtPayload } from './types/jwt-payload.interface';
@@ -98,5 +99,14 @@ export class AuthController {
     ) {
         // 🟢 แก้ไข 3: เพิ่มเส้นทาง POST นี้ขึ้นมา เพื่อให้ป๊อปอัพยืนยันจากหน้าบ้านยิงกลับมาบันทึกลงฐานข้อมูลจริง
         return this.authService.registerGoogleUser(body);
+    }
+
+    @Post('change-password')
+    @UseGuards(JwtAuthGuard)
+    @ApiBearerAuth()
+    @ApiOperation({ summary: 'เปลี่ยนรหัสผ่าน (ต้อง login)' })
+    @HttpCode(HttpStatus.OK)
+    async changePassword(@CurrentUser() user: JwtPayload, @Body() dto: ChangePasswordDto) {
+        return this.authService.changePassword(user.sub, dto);
     }
 }

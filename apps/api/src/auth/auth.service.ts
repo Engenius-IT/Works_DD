@@ -9,6 +9,7 @@ import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcryptjs';
 import { PrismaService } from '../prisma/prisma.service';
 import { RegisterDto } from './dto/register.dto';
+import { ChangePasswordDto } from './dto/change-password.dto';
 import { LoginDto } from './dto/login.dto';
 import type { JwtPayload } from './types/jwt-payload.interface';
 import { VerificationStatus } from '@prisma/client';
@@ -401,5 +402,32 @@ export class AuthService {
       role,
     };
     return this.jwtService.signAsync(payload);
+  }
+
+  /**
+   * Change user password
+   */
+  async changePassword(userId: string, dto: ChangePasswordDto) {
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+
+    if (!user || !user.passwordHash) {
+      throw new UnauthorizedException(
+        'ไม่พบผู้ใช้หรือบัญชีนี้ไม่ได้ลงทะเบียนด้วยรหัสผ่าน (อาจลงทะเบียนผ่าน Google/Line)',
+      );
+    }
+
+    const isPasswordValid = await bcrypt.compare(dto.oldPassword, user.passwordHash);
+    if (!isPasswordValid) {
+      throw new UnauthorizedException('รหัสผ่านเดิมไม่ถูกต้อง');
+    }
+
+    const newPasswordHash = await bcrypt.hash(dto.newPassword, 12);
+
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { passwordHash: newPasswordHash },
+    });
+
+    return { message: 'เปลี่ยนรหัสผ่านสำเร็จ' };
   }
 }
