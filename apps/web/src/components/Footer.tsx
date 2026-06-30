@@ -80,19 +80,19 @@ export const Footer: React.FC<FooterProps> = ({ role }) => {
                 {role === 'EMPLOYER' || role === 'ADMIN' ? (
                     <>
                         <div>
-                            <h3 className="text-white font-semibold text-base mb-6">จัดการงาน & ค้นหา</h3>
+                            <h3 className="text-white font-semibold text-base mb-6">{t('management')}</h3>
                             <ul className="space-y-4 text-sm text-gray-400">
                                 <li><Link href="/resumes" className="hover:text-blue-400 transition-colors duration-200 block">{t('searchResumes')}</Link></li>
-                                <li><Link href="/employer/dashboard" className="hover:text-blue-400 transition-colors duration-200 block">แดชบอร์ดผู้ประกอบการ</Link></li>
-                                <li><Link href="/employer/packages" className="hover:text-blue-400 transition-colors duration-200 block">แพ็กเกจของฉัน</Link></li>
+                                <li><Link href="/employer/dashboard" className="hover:text-blue-400 transition-colors duration-200 block">{t('dashboard')}</Link></li>
+                                <li><Link href="/employer/packages" className="hover:text-blue-400 transition-colors duration-200 block">{t('packages')}</Link></li>
                             </ul>
                         </div>
 
                         <div>
-                            <h3 className="text-white font-semibold text-base mb-6">สำหรับผู้ประกอบการ</h3>
+                            <h3 className="text-white font-semibold text-base mb-6">{t('section')}</h3>
                             <ul className="space-y-4 text-sm text-gray-400">
-                                <li><Link href="/employer/jobs/create" className="hover:text-blue-400 transition-colors duration-200 block">ลงประกาศงานใหม่</Link></li>
-                                <li><Link href="/employer/jobs" className="hover:text-blue-400 transition-colors duration-200 block">จัดการการประกาศงาน</Link></li>
+                                <li><Link href="/employer/jobs/create" className="hover:text-blue-400 transition-colors duration-200 block">{t('postJob')}</Link></li>
+                                <li><Link href="/employer/jobs" className="hover:text-blue-400 transition-colors duration-200 block">{t('manageJobs')}</Link></li>
                             </ul>
                         </div>
                     </>

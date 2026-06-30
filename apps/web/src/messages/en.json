@@ -273,7 +273,13 @@
     "terms": "Terms & Conditions",
     "faq": "FAQ",
     "copyright": "© 2026 WorksDD. All rights reserved.",
-    "cookiePolicy": "Cookie Policy"
+    "cookiePolicy": "Cookie Policy",
+    "management": "Job Management & Search",
+    "section": "For Employers",
+    "dashboard": "Employer Dashboard",
+    "packages": "My Packages",
+    "postJob": "Post a Job",
+    "manageJobs": "Manage Job Posts"
   },
   "LoginBanner": {
     "title": "Find the right job, in your own style",
