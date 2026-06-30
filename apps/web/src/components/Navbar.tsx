@@ -137,7 +137,7 @@ const currentUrl =
               <img
                 src="/images/logo_jobdd_main.png"
                 alt="JobDD Logo"
-                className="h-20 w-auto object-contain"
+                className="h-14 w-auto object-contain"
                 onError={() => setLogoError(true)}
               />
             ) : (

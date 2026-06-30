@@ -156,9 +156,43 @@ html {
       left: 100%;
     }
   }
+
+  /* Luxury Flowing Gradient for SubNavbar */
+  @keyframes luxury-flow {
+    0% {
+      background-position: 0% 50%;
+    }
+    50% {
+      background-position: 100% 50%;
+    }
+    100% {
+      background-position: 0% 50%;
+    }
+  }
 }
 
 /* สร้าง Utility Class ไว้เรียกใช้ */
 @utility animate-sweep-swing {
   animation: sweepSwing 3s ease-in-out infinite;
+}
+
+/* Luxury Flowing Gradient Utility */
+@utility animate-luxury-flow {
+  background: linear-gradient(
+    90deg,
+    #020263,   /* Original deep navy */
+    #1a1a6e,   /* Royal blue */
+    #2d1b69,   /* Rich indigo */
+    #1e1245,   /* Dark platinum-purple */
+    #0f0a3e,   /* Deep midnight */
+    #1a1a6e,   /* Royal blue */
+    #020263    /* Original deep navy */
+  );
+  background-size: 300% 100%;
+  animation: luxury-flow 24s ease-in-out infinite;
+}
+
+/* SubNavbar Active Item Glow */
+@utility text-glow-blue {
+  text-shadow: 0 0 8px rgba(147, 197, 253, 0.4);
 }

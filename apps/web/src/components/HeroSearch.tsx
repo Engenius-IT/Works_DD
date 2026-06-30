@@ -362,18 +362,21 @@ export function HeroSearch({ onSearch, initialValues }: HeroSearchProps = {}) {
 
   return (
     <section className="relative bg-[#020263] py-5 lg:py-5 font-sans z-30">
+      {/* Frosted Filter Overlay — สว่างขึ้นแบบใส่ฟิลเตอร์ */}
+      <div className="absolute inset-0 bg-white/[0.04] backdrop-blur-[2px] pointer-events-none z-[1]"></div>
+
       {/* Decorative Dark Blue Glows */}
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
-        <div className="absolute top-[10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-blue-600/10 blur-[150px]"></div>
-        <div className="absolute bottom-[-10%] right-[10%] w-[40%] h-[40%] rounded-full bg-blue-500/10 blur-[120px]"></div>
-        <div className="absolute top-[30%] right-[30%] w-[20%] h-[20%] rounded-full bg-indigo-500/10 blur-[100px]"></div>
+        <div className="absolute top-[10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-blue-500/[0.07] blur-[180px]"></div>
+        <div className="absolute bottom-[-10%] right-[10%] w-[40%] h-[40%] rounded-full bg-indigo-400/[0.05] blur-[150px]"></div>
+        <div className="absolute top-[30%] right-[30%] w-[20%] h-[20%] rounded-full bg-violet-400/[0.04] blur-[120px]"></div>
       </div>
 
       <div className="relative max-w-5xl mx-auto px-4 z-10 text-center">
 
 
         {/* Search Form Container */}
-        <div className="bg-[#ffffff10] border border-white/10 rounded-[28px] p-4 md:p-5 backdrop-blur-md mx-auto max-w-4xl shadow-2xl relative z-40">
+        <div className="bg-white/[0.03] border border-white/[0.05] rounded-[28px] p-4 md:p-5 backdrop-blur-2xl backdrop-saturate-150 mx-auto max-w-4xl shadow-[0_8px_32px_rgba(0,0,0,0.3)] relative z-40">
           {/* Top Search Bar (White Box) */}
           <div className="flex flex-col md:flex-row bg-white rounded-2xl md:rounded-xl p-1.5 md:p-2 gap-2 md:gap-0 relative z-50">
             {/* Keyword Input */}
@@ -540,7 +543,7 @@ export function HeroSearch({ onSearch, initialValues }: HeroSearchProps = {}) {
               <button
                 type="button"
                 onClick={() => setIsJobTypeOpen(!isJobTypeOpen)}
-                className="pl-10 pr-6 py-2 bg-[#ffffff15] hover:bg-[#ffffff25] text-blue-50/90 text-sm font-medium rounded-full cursor-pointer transition-colors outline-none flex items-center"
+                className="pl-10 pr-6 py-2 bg-white/[0.08] hover:bg-white/[0.15] backdrop-blur-sm text-blue-50/90 text-sm font-medium rounded-full cursor-pointer transition-colors outline-none flex items-center"
               >
                 <svg
                   className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-blue-100/70"
@@ -612,7 +615,7 @@ export function HeroSearch({ onSearch, initialValues }: HeroSearchProps = {}) {
               <button
                 type="button"
                 onClick={() => setIsSalaryOpen(!isSalaryOpen)}
-                className="pl-10 pr-6 py-2 bg-[#ffffff15] hover:bg-[#ffffff25] text-blue-50/90 text-sm font-medium rounded-full cursor-pointer transition-colors outline-none flex items-center"
+                className="pl-10 pr-6 py-2 bg-white/[0.08] hover:bg-white/[0.15] backdrop-blur-sm text-blue-50/90 text-sm font-medium rounded-full cursor-pointer transition-colors outline-none flex items-center"
               >
                 <svg
                   className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-blue-100/70"
@@ -688,7 +691,7 @@ export function HeroSearch({ onSearch, initialValues }: HeroSearchProps = {}) {
               <button
                 type="button"
                 onClick={() => setIsEducationOpen(!isEducationOpen)}
-                className="pl-10 pr-6 py-2 bg-[#ffffff15] hover:bg-[#ffffff25] text-blue-50/90 text-sm font-medium rounded-full cursor-pointer transition-colors outline-none flex items-center"
+                className="pl-10 pr-6 py-2 bg-white/[0.08] hover:bg-white/[0.15] backdrop-blur-sm text-blue-50/90 text-sm font-medium rounded-full cursor-pointer transition-colors outline-none flex items-center"
               >
                 <svg
                   className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-blue-100/70"
@@ -762,7 +765,7 @@ export function HeroSearch({ onSearch, initialValues }: HeroSearchProps = {}) {
               <button
                 type="button"
                 onClick={() => setIsCategoryOpen(!isCategoryOpen)}
-                className="pl-10 pr-6 py-2 bg-[#ffffff15] hover:bg-[#ffffff25] text-blue-50/90 text-sm font-medium rounded-full cursor-pointer transition-colors outline-none flex items-center"
+                className="pl-10 pr-6 py-2 bg-white/[0.08] hover:bg-white/[0.15] backdrop-blur-sm text-blue-50/90 text-sm font-medium rounded-full cursor-pointer transition-colors outline-none flex items-center"
               >
                 <svg
                   className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-blue-100/70"
