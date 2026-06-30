@@ -11,7 +11,7 @@ import { getLocalizedNotification } from './NotificationBell';
 interface Notification {
   id: string;
   type: string;
-  companyId?: string; 
+  companyId?: string;
   title: string;
   message: string;
   linkUrl?: string;
@@ -92,7 +92,7 @@ export const NotificationModal: React.FC<NotificationModalProps> = ({
   const [loading, setLoading] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const [mounted, setMounted] = useState(false);
-  
+
   // 🌟 State ควบคุมการเปิดแสดงมุมมองรายละเอียด 100% ตามที่ออกแบบไว้
   const [selectedNotification, setSelectedNotification] = useState<Notification | null>(null);
 
@@ -167,7 +167,7 @@ export const NotificationModal: React.FC<NotificationModalProps> = ({
       if (!token) return;
 
       const res = await fetch(url, {
-        headers: { 
+        headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         },
@@ -204,7 +204,7 @@ export const NotificationModal: React.FC<NotificationModalProps> = ({
     if (isOpen) {
       fetchNotifications();
       fetchUnreadCount();
-      
+
       const currentId = initialSelectedNotification?.id || null;
       if (currentId !== lastInitialIdRef.current) {
         lastInitialIdRef.current = currentId;
@@ -244,10 +244,10 @@ export const NotificationModal: React.FC<NotificationModalProps> = ({
           method: 'PATCH',
           headers: { 'Authorization': `Bearer ${token}` },
         });
-        
+
         if (onRefreshBellCount) onRefreshBellCount();
         fetchUnreadCount();
-        
+
         setNotifications(prev =>
           prev.map(n => n.id === notification.id ? { ...n, isRead: true } : n)
         );
@@ -256,7 +256,9 @@ export const NotificationModal: React.FC<NotificationModalProps> = ({
       }
     }
 
-    if (notification.metadata || notification.title.includes('สัมภาษณ์')) {
+    const locNoti = getLocalizedNotification(notification, tNoti);
+
+    if (notification.metadata || notification.title.includes('สัมภาษณ์') || locNoti.title.includes('สัมภาษณ์') || notification.type === 'GENERAL') {
       setSelectedNotification(notification);
     } else if (notification.linkUrl) {
       onClose();
@@ -304,9 +306,10 @@ export const NotificationModal: React.FC<NotificationModalProps> = ({
     }
 
     // 2. Search Query Filter
+    const locNoti = getLocalizedNotification(n, tNoti);
     return (
-      n.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      n.message.toLowerCase().includes(searchQuery.toLowerCase())
+      locNoti.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      locNoti.message.toLowerCase().includes(searchQuery.toLowerCase())
     );
   });
 
@@ -352,14 +355,14 @@ export const NotificationModal: React.FC<NotificationModalProps> = ({
   }
 
   const displayPosition = selectedJob?.title || selectedNotification?.metadata?.position || 'UX/UI Designer';
-  
+
   const displayEmploymentType = selectedJob?.jobType ? (
-    selectedJob.jobType === 'FULL_TIME' ? 'งานประจำ (Full Time)' : 
-    selectedJob.jobType === 'PART_TIME' ? 'งานพาร์ทไทม์ (Part Time)' :
-    selectedJob.jobType === 'CONTRACT' ? 'งานสัญญาจ้าง (Contract)' :
-    selectedJob.jobType === 'INTERNSHIP' ? 'ฝึกงาน (Internship)' :
-    selectedJob.jobType === 'FREELANCE' ? 'ฟรีแลนซ์ (Freelance)' :
-    selectedJob.jobType
+    selectedJob.jobType === 'FULL_TIME' ? 'งานประจำ (Full Time)' :
+      selectedJob.jobType === 'PART_TIME' ? 'งานพาร์ทไทม์ (Part Time)' :
+        selectedJob.jobType === 'CONTRACT' ? 'งานสัญญาจ้าง (Contract)' :
+          selectedJob.jobType === 'INTERNSHIP' ? 'ฝึกงาน (Internship)' :
+            selectedJob.jobType === 'FREELANCE' ? 'ฟรีแลนซ์ (Freelance)' :
+              selectedJob.jobType
   ) : selectedNotification?.metadata?.employmentType || 'Technology';
 
   const displayLocationName = selectedCompany?.province || selectedNotification?.metadata?.locationName || 'Bangkok';
@@ -376,14 +379,42 @@ export const NotificationModal: React.FC<NotificationModalProps> = ({
 
   const locDetail = selectedNotification ? getLocalizedNotification(selectedNotification, tNoti) : null;
 
+  const getNotificationParams = (value?: string) => {
+    if (!value) return {};
+    try {
+      const parsed = JSON.parse(value);
+      return parsed?.params || {};
+    } catch {
+      return {};
+    }
+  };
+
+  const isWelcomeNotification = selectedNotification
+    ? selectedNotification.title.includes('title_register_success') ||
+    selectedNotification.message.includes('msg_register_success')
+    : false;
+
+  const welcomeParams = selectedNotification
+    ? {
+      ...getNotificationParams(selectedNotification.title),
+      ...getNotificationParams(selectedNotification.message),
+    }
+    : {};
+
+  const welcomeName =
+    typeof welcomeParams.name === 'string' && welcomeParams.name.trim()
+      ? welcomeParams.name
+      : profileName;
+
   if (!isOpen || !mounted) return null;
 
   return createPortal(
-    <div 
+    <div
       onClick={handleBackdropClick}
       className="fixed inset-0 bg-[#1a1c3d]/60 backdrop-blur-sm z-[9999] flex items-center justify-center p-4 select-none animate-in fade-in duration-200"
     >
-      <style dangerouslySetInnerHTML={{ __html: `
+      <style dangerouslySetInnerHTML={{
+        __html: `
         .custom-scrollbar::-webkit-scrollbar { width: 5px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(0, 0, 0, 0.05); border-radius: 10px; }
@@ -391,7 +422,7 @@ export const NotificationModal: React.FC<NotificationModalProps> = ({
 
       {/* Main Updated Notification Modal Frame */}
       <div className="bg-white w-full max-w-[940px] h-[85vh] shadow-2xl border border-white/30 overflow-hidden flex rounded-3xl animate-in zoom-in-95 duration-200">
-        
+
         {/* Sidebar */}
         <aside className="w-[280px] bg-[#f1f4f9] border-r border-gray-200 flex flex-col shrink-0">
           <div className="p-8">
@@ -406,7 +437,7 @@ export const NotificationModal: React.FC<NotificationModalProps> = ({
               <div>
                 <h3 className="text-[10px] font-bold text-[#45464e] uppercase tracking-[0.15em] mb-4 ml-1">Main</h3>
                 <nav className="space-y-1.5">
-                  <button 
+                  <button
                     type="button"
                     onClick={() => { setActiveTab('all'); setSelectedNotification(null); }}
                     className={`flex items-center justify-between px-5 py-3.5 w-full rounded-2xl transition-all ${activeTab === 'all' && !selectedNotification ? 'bg-[#5b4df2] text-white shadow-lg shadow-[#5b4df2]/30 font-bold' : 'text-[#45464e] hover:bg-white/60'}`}
@@ -417,7 +448,7 @@ export const NotificationModal: React.FC<NotificationModalProps> = ({
                     </div>
                   </button>
 
-                  <button 
+                  <button
                     type="button"
                     onClick={() => { setActiveTab('unread'); setSelectedNotification(null); }}
                     className={`flex items-center justify-between px-5 py-3.5 w-full rounded-2xl transition-all ${activeTab === 'unread' && !selectedNotification ? 'bg-[#5b4df2] text-white shadow-lg shadow-[#5b4df2]/30 font-bold' : 'text-[#45464e] hover:bg-white/60'}`}
@@ -431,7 +462,7 @@ export const NotificationModal: React.FC<NotificationModalProps> = ({
                     )}
                   </button>
 
-                  <button 
+                  <button
                     type="button"
                     onClick={() => { setActiveTab('company'); setSelectedNotification(null); }}
                     className={`flex items-center justify-between px-5 py-3.5 w-full rounded-2xl transition-all ${activeTab === 'company' && !selectedNotification ? 'bg-[#5b4df2] text-white shadow-lg shadow-[#5b4df2]/30 font-bold' : 'text-[#45464e] hover:bg-white/60'}`}
@@ -447,7 +478,7 @@ export const NotificationModal: React.FC<NotificationModalProps> = ({
               <div>
                 <h3 className="text-[10px] font-bold text-[#45464e] uppercase tracking-[0.15em] mb-4 ml-1">Preferences</h3>
                 <nav className="space-y-1.5">
-                  <button 
+                  <button
                     type="button"
                     onClick={() => { setActiveTab('system'); setSelectedNotification(null); }}
                     className={`flex items-center gap-3 px-5 py-3.5 w-full rounded-2xl transition-all ${activeTab === 'system' && !selectedNotification ? 'bg-[#5b4df2] text-white font-bold' : 'text-[#45464e] hover:bg-white/60'}`}
@@ -473,200 +504,324 @@ export const NotificationModal: React.FC<NotificationModalProps> = ({
 
         {/* Right Main Panel */}
         <main className="flex-grow flex flex-col bg-white min-w-0">
-          
+
           {selectedNotification ? (
-            /* ─── มุมมองหน้าต่างย่อยขยายดีเทล 100% ตามดีไซน์ (รูปที่ 3) ─── */
-            <div className="flex-grow flex flex-col h-full bg-white animate-in slide-in-from-right duration-300">
-              <header className="h-16 px-8 flex items-center justify-between border-b border-gray-100 sticky top-0 bg-white/80 backdrop-blur-md z-10 shrink-0">
-                <div className="flex items-center gap-4">
-                  <button 
-                    onClick={() => setSelectedNotification(null)}
-                    className="flex items-center gap-2 text-[#5b4df2] font-bold text-[14px] hover:bg-[#5b4df2]/5 px-3 py-2 rounded-xl transition-all"
-                  >
-                    <ArrowLeft size={20} className="flex-shrink-0" />
-                    Back to Notifications
-                  </button>
-                  <div className="h-4 w-px bg-gray-200"></div>
-                  <h2 className="text-[14px] font-bold text-[#1a1c3d]">Notification Detail</h2>
-                </div>
-                <span className="text-[11px] font-medium text-[#45464e]/60">Received {formatRelativeTime(selectedNotification.createdAt)}</span>
-              </header>
-
-              <div className="flex-grow overflow-y-auto custom-scrollbar">
-                {/* Company Hero Section Banner */}
-                <div className="relative">
-                  {displayCompanyBanner && !bannerError ? (
-                    <Image
-                      src={displayCompanyBanner}
-                      alt={`${displayCompanyName} Banner`}
-                      width={940} // Adjust based on your design's max-w
-                      height={192} // h-48 = 192px
-                      className="h-48 w-full object-cover"
-                      priority
-                      onError={() => setBannerError(true)}
-                    />
-                  ) : (
-                    <div className="h-48 w-full bg-[#000240] overflow-hidden">
-                      <div className="w-full h-full opacity-70 bg-gradient-to-r from-purple-900 to-indigo-900" />
-                    </div>
-                  )}
-                </div>
-
-                <div className="px-8 pb-4 relative z-10">
-                  <div className="flex gap-6">
-                    {/* Logo Container overlapping the banner */}
-                    <div className="w-24 h-24 rounded-3xl bg-white p-1 shadow-xl border border-white/20 -mt-12 flex-shrink-0 relative z-20">
-                      {displayCompanyLogo && !logoError ? (
-                        <Image
-                          src={displayCompanyLogo}
-                          alt={`${displayCompanyName} Logo`}
-                          width={88}
-                          height={88}
-                          className="w-full h-full rounded-[20px] object-contain flex-shrink-0"
-                          onError={() => setLogoError(true)}
-                        />
-                      ) : (
-                        <div className="w-full h-full rounded-[20px] bg-[#1a1c3d] text-white flex items-center justify-center font-bold text-2xl">
-                          {displayCompanyName.charAt(0)}
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Text content starting fully in the white space below the banner cover */}
-                    <div className="pt-2 flex-grow min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <h1 className="font-bold text-[#1a1c3d] text-[28px] truncate">{displayCompanyName}</h1>
-                        <CheckCircle size={20} className="text-[#5b4df2] flex-shrink-0" />
-                      </div>
-                      <div className="flex items-center gap-4 text-[12px] text-[#45464e] font-medium flex-wrap">
-                        <span className="flex items-center gap-1"><Tag size={16} className="flex-shrink-0" /> {displayEmploymentType}</span>
-                        <span className="flex items-center gap-1"><MapPin size={16} className="flex-shrink-0" /> {displayLocationName}</span>
-                        <span className="flex items-center gap-1"><Users size={16} className="flex-shrink-0" /> {selectedCompany?.size ? `${selectedCompany.size} Employees` : '500+ Employees'}</span>
-                      </div>
-                    </div>
+            isWelcomeNotification ? (
+              <div className="flex-grow flex flex-col h-full bg-white animate-in slide-in-from-right duration-300">
+                <header className="h-16 px-8 flex items-center justify-between border-b border-gray-100 sticky top-0 bg-white/80 backdrop-blur-md z-10 shrink-0">
+                  <div className="flex items-center gap-4">
+                    <button
+                      onClick={() => setSelectedNotification(null)}
+                      className="flex items-center gap-2 text-[#5b4df2] font-bold text-[14px] hover:bg-[#5b4df2]/5 px-3 py-2 rounded-xl transition-all"
+                    >
+                      <ArrowLeft size={20} className="flex-shrink-0" />
+                      Back to Notifications
+                    </button>
+                    <div className="h-4 w-px bg-gray-200"></div>
+                    <h2 className="text-[16px] font-bold text-[#1a1c3d]">Welcome Detail</h2>
                   </div>
-                </div>
+                  <span className="text-[11px] font-medium text-[#45464e]/60">Received {formatRelativeTime(selectedNotification.createdAt)}</span>
+                </header>
 
-                <div className="p-8 space-y-8">
-                  {/* Invitation Headline */}
-                  <div className="space-y-4">
-                    <h2 className="text-[20px] font-bold text-[#1a1c3d] flex items-center gap-2 mb-4">
-                      <Calendar size={20} className="flex-shrink-0" /> {locDetail?.title || 'Notification Detail'}
-                    </h2>
-                    <div className="bg-white rounded-3xl p-6 border border-gray-100 space-y-4 shadow-sm text-ellipsis overflow-hidden">
-                      <p className="text-[14px] font-bold text-[#1a1c3d]">{tNoti('dear', { name: profileName })}</p>
-                      <p className="text-[14px] text-[#45464e] leading-relaxed">
-                        {tNoti('intro_text')}
-                      </p>
-                      <div className="bg-[#5b4df2]/5 border border-[#5b4df2]/15 p-5 rounded-2xl">
-                        <p className="text-[14px] font-semibold text-[#5b4df2] leading-relaxed">
-                          {locDetail?.message}
+                <div className="flex-grow overflow-y-auto custom-scrollbar bg-white">
+                  <div className="relative h-64 overflow-hidden">
+                    <div
+                      className="relative h-[260px] overflow-hidden bg-cover bg-center"
+                      style={{
+                        backgroundImage: `linear-gradient(90deg, rgba(35,18,89,0.9), rgba(35,18,89,0.35)), url('/images/messageImage_1782791898599.jpg')`,
+                      }}
+                    >
+                      <div className="absolute bottom-10 left-10 right-10">
+                        <h2 className="text-4xl font-bold text-white">
+                          Welcome to WorksDD
+                        </h2>
+                        <p className="mt-2 text-white/90">
+                          Your journey to a dream career starts here.
                         </p>
                       </div>
-                      <p className="text-[13px] text-[#45464e]/80 leading-relaxed">
-                        {tNoti('outro_text')}
-                      </p>
                     </div>
                   </div>
 
-                  {/* Summary Grid Info */}
-                  <div className="grid grid-cols-2 gap-6">
-                    <div className="bg-white rounded-3xl p-6 border border-gray-100 shadow-sm space-y-3">
-                      <h3 className="text-[11px] font-bold text-[#45464e] uppercase tracking-wider mb-4">Interview Details</h3>
-                      <div className="space-y-3">
-                        <div className="flex justify-between text-[14px]"><span className="text-[#45464e]">Type</span><span className="font-bold text-[#1a1c3d] truncate">{selectedNotification.metadata?.interviewType || 'On-site'}</span></div>
-                        <div className="flex justify-between text-[14px]"><span className="text-[#45464e]">Position</span><span className="font-bold text-[#1a1c3d] truncate">{displayPosition}</span></div>
-                        <div className="flex justify-between text-[14px]"><span className="text-[#45464e]">Date</span><span className="font-bold text-[#1a1c3d] truncate">{displayInterviewDate}</span></div>
-                        <div className="flex justify-between text-[14px]"><span className="text-[#45464e]">Time</span><span className="font-bold text-[#1a1c3d] truncate">{displayInterviewTime} น.</span></div>
-                        <div className="flex justify-between text-[14px]"><span className="text-[#45464e]">Duration</span><span className="font-bold text-[#1a1c3d] truncate">{selectedNotification.metadata?.duration || '60 Min'}</span></div>
-                        <div className="flex justify-between text-[14px]"><span className="text-[#45464e]">Status</span><span className="px-2 py-0.5 bg-[#5b4df2]/10 text-[#5b4df2] rounded-md font-bold text-[11px]">Scheduled</span></div>
+                  <div className="px-10 py-10 relative z-10">
+                    <div className="space-y-8">
+                      <div>
+                        <h2 className="text-[26px] font-bold text-[#1a1c3d] mb-3">Hello {welcomeName} 👋</h2>
+                        <p className="text-[15px] text-[#45464e] leading-relaxed max-w-3xl">
+                          {locDetail?.message || 'Welcome to WorksDD. Your account has been created successfully.'}
+                        </p>
                       </div>
-                    </div>
 
-                    <div className="bg-white rounded-3xl p-6 border border-gray-100 shadow-sm">
-                      <h3 className="text-[11px] font-bold text-[#45464e] uppercase tracking-wider mb-4">Location</h3>
-                      <div className="flex gap-4">
-                        <div className="w-10 h-10 rounded-xl bg-[#5b4df2]/10 flex items-center justify-center shrink-0 flex-shrink-0">
-                          <Building size={20} className="text-[#5b4df2]" />
+                      <div className="grid grid-cols-2 gap-6">
+                        <div className="rounded-3xl border border-gray-100 shadow-sm p-6 bg-white">
+                          <div className="flex items-center justify-between mb-5">
+                            <p className="text-[11px] font-bold text-[#45464e] uppercase tracking-wider">Profile Completion</p>
+                            <span className="text-[#5b4df2] font-bold text-[14px]">25%</span>
+                          </div>
+                          <div className="h-2 w-full bg-gray-100 rounded-full overflow-hidden mb-6">
+                            <div className="h-full bg-[#5b4df2] w-1/4 rounded-full"></div>
+                          </div>
+                          <div className="space-y-4 text-[14px] text-[#1a1c3d]">
+                            <div className="flex items-center gap-3">
+                              <CheckCircle size={22} className="text-[#5b4df2]" />
+                              <span>Create Account</span>
+                            </div>
+                            <div className="flex items-center gap-3">
+                              <span className="w-[22px] h-[22px] rounded-full border-2 border-[#45464e]/60 block"></span>
+                              <span>Upload Resume</span>
+                            </div>
+                            <div className="flex items-center gap-3">
+                              <span className="w-[22px] h-[22px] rounded-full border-2 border-[#45464e]/60 block"></span>
+                              <span>Complete Profile</span>
+                            </div>
+                            <div className="flex items-center gap-3">
+                              <span className="w-[22px] h-[22px] rounded-full border-2 border-[#45464e]/60 block"></span>
+                              <span>Enable AI Matching</span>
+                            </div>
+                          </div>
                         </div>
-                        <div>
-                          <p className="text-[14px] font-bold text-[#1a1c3d] truncate">{displayLocationName}</p>
-                          <p className="text-[13px] text-[#45464e] mt-1 line-clamp-2">{displayLocationAddress}</p>
-                          {selectedJob?.mapUrl && (
-                            <a 
-                              href={selectedJob.mapUrl} 
-                              target="_blank" 
-                              rel="noopener noreferrer" 
-                              className="mt-3 text-[#5b4df2] text-[12px] font-bold inline-flex items-center gap-1 hover:underline"
-                            >
-                              <Map size={16} className="flex-shrink-0" /> Open in Maps
-                            </a>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
 
-                  {/* Recruiter & Financial Info Row */}
-                  <div className="grid grid-cols-3 gap-6">
-                    <div className="col-span-2 bg-white rounded-3xl p-6 border border-gray-100 shadow-sm flex items-center gap-6">
-                      <div className="w-16 h-16 rounded-2xl bg-gray-200 flex items-center justify-center font-bold text-[#1a1c3d] flex-shrink-0">
-                        <Building size={32} className="text-gray-600" />
-                      </div>
-                      <div className="flex-grow min-w-0">
-                        <p className="text-[14px] font-bold text-[#1a1c3d] truncate">ข้อมูลติดต่อส่วนกลางของบริษัท</p>
-                        <p className="text-[12px] text-[#45464e] truncate">{displayCompanyName}</p>
-                        <div className="flex gap-2 mt-3 flex-wrap">
-                          <a href={`tel:${displayCompanyPhone}`} className="p-2 rounded-lg bg-gray-100 text-[#45464e] hover:bg-[#5b4df2] hover:text-white transition-all" title="โทรศัพท์"><Phone size={18} /></a>
-                          <a href={`mailto:${displayCompanyEmail}`} className="p-2 rounded-lg bg-gray-100 text-[#45464e] hover:bg-[#5b4df2] hover:text-white transition-all" title="อีเมล"><Mail size={18} /></a>
-                          <button className="p-2 rounded-lg bg-gray-100 text-[#45464e] hover:bg-[#5b4df2] hover:text-white transition-all" title="แชท"><MessageSquare size={18} /></button>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="rounded-2xl bg-[#eef2ff] p-5 border border-[#5b4df2]/5">
+                            <Search size={24} className="text-[#5b4df2] mb-5" />
+                            <p className="font-bold text-[#1a1c3d] text-[15px]">Find Jobs</p>
+                            <p className="text-[12px] text-[#45464e] leading-tight">Smart search filters</p>
+                          </div>
+                          <div className="rounded-2xl bg-[#eef2ff] p-5 border border-[#5b4df2]/5">
+                            <Bell size={24} className="text-[#5b4df2] mb-5" />
+                            <p className="font-bold text-[#1a1c3d] text-[15px]">AI Matching</p>
+                            <p className="text-[12px] text-[#45464e] leading-tight">Personalized roles</p>
+                          </div>
+                          <div className="rounded-2xl bg-[#eef2ff] p-5 border border-[#5b4df2]/5">
+                            <Building size={24} className="text-[#5b4df2] mb-5" />
+                            <p className="font-bold text-[#1a1c3d] text-[15px]">Follow Companies</p>
+                            <p className="text-[12px] text-[#45464e] leading-tight">Get latest updates</p>
+                          </div>
+                          <div className="rounded-2xl bg-[#eef2ff] p-5 border border-[#5b4df2]/5">
+                            <Tag size={24} className="text-[#5b4df2] mb-5" />
+                            <p className="font-bold text-[#1a1c3d] text-[15px]">Career Insights</p>
+                            <p className="text-[12px] text-[#45464e] leading-tight">Market trends</p>
+                          </div>
                         </div>
-                      </div>
-                    </div>
-
-                    {/* Employment & Salary Info */}
-                    <div className="bg-white rounded-3xl p-6 border border-gray-100 shadow-sm space-y-3 flex-shrink-0 min-w-0">
-                      <div className="flex flex-col">
-                        <span className="text-[10px] font-bold text-[#45464e] uppercase">Employment</span>
-                        <span className="text-[14px] font-bold text-[#1a1c3d] truncate">{displayEmploymentType}</span>
-                      </div>
-                      <div className="flex flex-col">
-                        <span className="text-[10px] font-bold text-[#45464e] uppercase">Salary</span>
-                        <span className="text-[14px] font-bold text-[#1a1c3d] truncate">{displaySalaryRange}</span>
                       </div>
                     </div>
                   </div>
                 </div>
-              </div>
 
-              {/* Action Buttons Footer (Sticky) */}
-              <footer className="h-20 px-8 border-t border-gray-100 flex items-center justify-end gap-4 bg-white shrink-0">
-                <button 
-                  onClick={() => { 
-                    if (selectedJob?.slug) {
-                      router.push(`/jobs/${selectedJob.slug}`);
-                    } else if (selectedNotification.linkUrl) {
-                      router.push(selectedNotification.linkUrl);
-                    }
-                    onClose(); 
-                  }}
-                  className="px-6 py-3 rounded-2xl text-[14px] font-bold text-[#45464e] hover:bg-gray-100 transition-all"
-                >
-                  View Job Posting
-                </button>
-                <button 
-                  onClick={() => {
-                    if (selectedCompany?.slug) {
-                      router.push(`/companies/${selectedCompany.slug}`);
-                    }
-                    onClose();
-                  }}
-                  className="px-8 py-3 rounded-2xl bg-[#5b4df2] text-white text-[14px] font-bold shadow-lg shadow-[#5b4df2]/20 hover:shadow-xl transition-all"
-                >
-                  View Company Profile
-                </button>
-              </footer>
-            </div>
+                <footer className="h-20 px-8 border-t border-gray-100 flex items-center justify-end gap-4 bg-white shrink-0">
+                  <button
+                    onClick={() => {
+                      router.push('/coming-soon/jobseeker');
+                      onClose();
+                    }}
+                    className="px-6 py-3 rounded-2xl text-[14px] font-bold text-[#45464e] hover:bg-gray-100 transition-all"
+                  >
+                    Open User Guide
+                  </button>
+                  <button
+                    onClick={() => {
+                      router.push('/jobs');
+                      onClose();
+                    }}
+                    className="px-8 py-3 rounded-2xl bg-[#5b4df2] text-white text-[14px] font-bold shadow-lg shadow-[#5b4df2]/20 hover:shadow-xl transition-all"
+                  >
+                    Start Exploring Jobs
+                  </button>
+                </footer>
+              </div>
+            ) : (
+              /* ─── มุมมองหน้าต่างย่อยขยายดีเทล 100% ตามดีไซน์ (รูปที่ 3) ─── */
+              <div className="flex-grow flex flex-col h-full bg-white animate-in slide-in-from-right duration-300">
+                <header className="h-16 px-8 flex items-center justify-between border-b border-gray-100 sticky top-0 bg-white/80 backdrop-blur-md z-10 shrink-0">
+                  <div className="flex items-center gap-4">
+                    <button
+                      onClick={() => setSelectedNotification(null)}
+                      className="flex items-center gap-2 text-[#5b4df2] font-bold text-[14px] hover:bg-[#5b4df2]/5 px-3 py-2 rounded-xl transition-all"
+                    >
+                      <ArrowLeft size={20} className="flex-shrink-0" />
+                      Back to Notifications
+                    </button>
+                    <div className="h-4 w-px bg-gray-200"></div>
+                    <h2 className="text-[14px] font-bold text-[#1a1c3d]">Notification Detail</h2>
+                  </div>
+                  <span className="text-[11px] font-medium text-[#45464e]/60">Received {formatRelativeTime(selectedNotification.createdAt)}</span>
+                </header>
+
+                <div className="flex-grow overflow-y-auto custom-scrollbar">
+                  {/* Company Hero Section Banner */}
+                  <div className="relative">
+                    {displayCompanyBanner && !bannerError ? (
+                      <Image
+                        src={displayCompanyBanner}
+                        alt={`${displayCompanyName} Banner`}
+                        width={940} // Adjust based on your design's max-w
+                        height={192} // h-48 = 192px
+                        className="h-48 w-full object-cover"
+                        priority
+                        onError={() => setBannerError(true)}
+                      />
+                    ) : (
+                      <div className="h-48 w-full bg-[#000240] overflow-hidden">
+                        <div className="w-full h-full opacity-70 bg-gradient-to-r from-purple-900 to-indigo-900" />
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="px-8 pb-4 relative z-10">
+                    <div className="flex gap-6">
+                      {/* Logo Container overlapping the banner */}
+                      <div className="w-24 h-24 rounded-3xl bg-white p-1 shadow-xl border border-white/20 -mt-12 flex-shrink-0 relative z-20">
+                        {displayCompanyLogo && !logoError ? (
+                          <Image
+                            src={displayCompanyLogo}
+                            alt={`${displayCompanyName} Logo`}
+                            width={88}
+                            height={88}
+                            className="w-full h-full rounded-[20px] object-contain flex-shrink-0"
+                            onError={() => setLogoError(true)}
+                          />
+                        ) : (
+                          <div className="w-full h-full rounded-[20px] bg-[#1a1c3d] text-white flex items-center justify-center font-bold text-2xl">
+                            {displayCompanyName.charAt(0)}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Text content starting fully in the white space below the banner cover */}
+                      <div className="pt-2 flex-grow min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <h1 className="font-bold text-[#1a1c3d] text-[28px] truncate">{displayCompanyName}</h1>
+                          <CheckCircle size={20} className="text-[#5b4df2] flex-shrink-0" />
+                        </div>
+                        <div className="flex items-center gap-4 text-[12px] text-[#45464e] font-medium flex-wrap">
+                          <span className="flex items-center gap-1"><Tag size={16} className="flex-shrink-0" /> {displayEmploymentType}</span>
+                          <span className="flex items-center gap-1"><MapPin size={16} className="flex-shrink-0" /> {displayLocationName}</span>
+                          <span className="flex items-center gap-1"><Users size={16} className="flex-shrink-0" /> {selectedCompany?.size ? `${selectedCompany.size} Employees` : '500+ Employees'}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="p-8 space-y-8">
+                    {/* Invitation Headline */}
+                    <div className="space-y-4">
+                      <h2 className="text-[20px] font-bold text-[#1a1c3d] flex items-center gap-2 mb-4">
+                        <Calendar size={20} className="flex-shrink-0" /> {locDetail?.title || 'Notification Detail'}
+                      </h2>
+                      <div className="bg-white rounded-3xl p-6 border border-gray-100 space-y-4 shadow-sm text-ellipsis overflow-hidden">
+                        <p className="text-[14px] font-bold text-[#1a1c3d]">{tNoti('dear', { name: profileName })}</p>
+                        <p className="text-[14px] text-[#45464e] leading-relaxed">
+                          {tNoti('intro_text')}
+                        </p>
+                        <div className="bg-[#5b4df2]/5 border border-[#5b4df2]/15 p-5 rounded-2xl">
+                          <p className="text-[14px] font-semibold text-[#5b4df2] leading-relaxed">
+                            {locDetail?.message}
+                          </p>
+                        </div>
+                        <p className="text-[13px] text-[#45464e]/80 leading-relaxed">
+                          {tNoti('outro_text')}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Summary Grid Info */}
+                    <div className="grid grid-cols-2 gap-6">
+                      <div className="bg-white rounded-3xl p-6 border border-gray-100 shadow-sm space-y-3">
+                        <h3 className="text-[11px] font-bold text-[#45464e] uppercase tracking-wider mb-4">Interview Details</h3>
+                        <div className="space-y-3">
+                          <div className="flex justify-between text-[14px]"><span className="text-[#45464e]">Type</span><span className="font-bold text-[#1a1c3d] truncate">{selectedNotification.metadata?.interviewType || 'On-site'}</span></div>
+                          <div className="flex justify-between text-[14px]"><span className="text-[#45464e]">Position</span><span className="font-bold text-[#1a1c3d] truncate">{displayPosition}</span></div>
+                          <div className="flex justify-between text-[14px]"><span className="text-[#45464e]">Date</span><span className="font-bold text-[#1a1c3d] truncate">{displayInterviewDate}</span></div>
+                          <div className="flex justify-between text-[14px]"><span className="text-[#45464e]">Time</span><span className="font-bold text-[#1a1c3d] truncate">{displayInterviewTime} น.</span></div>
+                          <div className="flex justify-between text-[14px]"><span className="text-[#45464e]">Duration</span><span className="font-bold text-[#1a1c3d] truncate">{selectedNotification.metadata?.duration || '60 Min'}</span></div>
+                          <div className="flex justify-between text-[14px]"><span className="text-[#45464e]">Status</span><span className="px-2 py-0.5 bg-[#5b4df2]/10 text-[#5b4df2] rounded-md font-bold text-[11px]">Scheduled</span></div>
+                        </div>
+                      </div>
+
+                      <div className="bg-white rounded-3xl p-6 border border-gray-100 shadow-sm">
+                        <h3 className="text-[11px] font-bold text-[#45464e] uppercase tracking-wider mb-4">Location</h3>
+                        <div className="flex gap-4">
+                          <div className="w-10 h-10 rounded-xl bg-[#5b4df2]/10 flex items-center justify-center shrink-0 flex-shrink-0">
+                            <Building size={20} className="text-[#5b4df2]" />
+                          </div>
+                          <div>
+                            <p className="text-[14px] font-bold text-[#1a1c3d] truncate">{displayLocationName}</p>
+                            <p className="text-[13px] text-[#45464e] mt-1 line-clamp-2">{displayLocationAddress}</p>
+                            {selectedJob?.mapUrl && (
+                              <a
+                                href={selectedJob.mapUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="mt-3 text-[#5b4df2] text-[12px] font-bold inline-flex items-center gap-1 hover:underline"
+                              >
+                                <Map size={16} className="flex-shrink-0" /> Open in Maps
+                              </a>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Recruiter & Financial Info Row */}
+                    <div className="grid grid-cols-3 gap-6">
+                      <div className="col-span-2 bg-white rounded-3xl p-6 border border-gray-100 shadow-sm flex items-center gap-6">
+                        <div className="w-16 h-16 rounded-2xl bg-gray-200 flex items-center justify-center font-bold text-[#1a1c3d] flex-shrink-0">
+                          <Building size={32} className="text-gray-600" />
+                        </div>
+                        <div className="flex-grow min-w-0">
+                          <p className="text-[14px] font-bold text-[#1a1c3d] truncate">ข้อมูลติดต่อส่วนกลางของบริษัท</p>
+                          <p className="text-[12px] text-[#45464e] truncate">{displayCompanyName}</p>
+                          <div className="flex gap-2 mt-3 flex-wrap">
+                            <a href={`tel:${displayCompanyPhone}`} className="p-2 rounded-lg bg-gray-100 text-[#45464e] hover:bg-[#5b4df2] hover:text-white transition-all" title="โทรศัพท์"><Phone size={18} /></a>
+                            <a href={`mailto:${displayCompanyEmail}`} className="p-2 rounded-lg bg-gray-100 text-[#45464e] hover:bg-[#5b4df2] hover:text-white transition-all" title="อีเมล"><Mail size={18} /></a>
+                            <button className="p-2 rounded-lg bg-gray-100 text-[#45464e] hover:bg-[#5b4df2] hover:text-white transition-all" title="แชท"><MessageSquare size={18} /></button>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Employment & Salary Info */}
+                      <div className="bg-white rounded-3xl p-6 border border-gray-100 shadow-sm space-y-3 flex-shrink-0 min-w-0">
+                        <div className="flex flex-col">
+                          <span className="text-[10px] font-bold text-[#45464e] uppercase">Employment</span>
+                          <span className="text-[14px] font-bold text-[#1a1c3d] truncate">{displayEmploymentType}</span>
+                        </div>
+                        <div className="flex flex-col">
+                          <span className="text-[10px] font-bold text-[#45464e] uppercase">Salary</span>
+                          <span className="text-[14px] font-bold text-[#1a1c3d] truncate">{displaySalaryRange}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Action Buttons Footer (Sticky) */}
+                <footer className="h-20 px-8 border-t border-gray-100 flex items-center justify-end gap-4 bg-white shrink-0">
+                  <button
+                    onClick={() => {
+                      if (selectedJob?.slug) {
+                        router.push(`/jobs/${selectedJob.slug}`);
+                      } else if (selectedNotification.linkUrl) {
+                        router.push(selectedNotification.linkUrl);
+                      }
+                      onClose();
+                    }}
+                    className="px-6 py-3 rounded-2xl text-[14px] font-bold text-[#45464e] hover:bg-gray-100 transition-all"
+                  >
+                    View Job Posting
+                  </button>
+                  <button
+                    onClick={() => {
+                      if (selectedCompany?.slug) {
+                        router.push(`/companies/${selectedCompany.slug}`);
+                      }
+                      onClose();
+                    }}
+                    className="px-8 py-3 rounded-2xl bg-[#5b4df2] text-white text-[14px] font-bold shadow-lg shadow-[#5b4df2]/20 hover:shadow-xl transition-all"
+                  >
+                    View Company Profile
+                  </button>
+                </footer>
+              </div>
+            )
           ) : (
             /* ─── มุมมองรายการ Feed หลัก ─── */
             <>
@@ -674,24 +829,24 @@ export const NotificationModal: React.FC<NotificationModalProps> = ({
                 <div className="flex items-center gap-4 flex-grow max-w-md">
                   <div className="relative w-full">
                     <Search size={20} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#45464e]" />
-                    <input 
+                    <input
                       type="text"
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
                       placeholder="Search notifications..."
-                      className="w-full bg-[#f1f3f9] border-none rounded-2xl pl-10 pr-4 py-2 text-[14px] focus:ring-2 focus:ring-[#5b4df2]/20 placeholder:text-[#45464e]/60 text-[#0b1c30]" 
+                      className="w-full bg-[#f1f3f9] border-none rounded-2xl pl-10 pr-4 py-2 text-[14px] focus:ring-2 focus:ring-[#5b4df2]/20 placeholder:text-[#45464e]/60 text-[#0b1c30]"
                     />
                   </div>
                 </div>
                 <div className="flex items-center gap-6 ml-4 shrink-0">
-                  <button 
+                  <button
                     type="button"
                     onClick={handleMarkAllAsRead}
                     className="text-[14px] font-bold text-[#5b4df2] hover:text-[#5b4df2]/80 transition-colors"
                   >
                     ทำเป็นอ่านแล้วทั้งหมด
                   </button>
-                  <button 
+                  <button
                     type="button"
                     onClick={onClose}
                     className="w-10 h-10 flex items-center justify-center bg-[#f1f3f9] hover:bg-gray-200 rounded-xl transition-all border border-gray-100 shadow-sm text-[#1a1c3d]"
@@ -714,13 +869,13 @@ export const NotificationModal: React.FC<NotificationModalProps> = ({
                         {filteredNotifications.map((noti) => {
                           const locNoti = getLocalizedNotification(noti, tNoti);
                           return (
-                            <div 
+                            <div
                               key={noti.id}
                               onClick={() => handleNotificationClick(noti)}
                               className="group relative bg-white hover:shadow-xl hover:shadow-[#1a1c3d]/5 transition-all p-4 rounded-2xl border border-gray-100 cursor-pointer flex items-center gap-4"
                             >
                               <div className="w-12 h-12 bg-[#1a1c3d] text-white flex items-center justify-center rounded-2xl shrink-0 shadow-lg">
-                                {noti.title.includes('สัมภาษณ์') || noti.type === 'COMPANY_RESPONSE' ? 
+                                {noti.title.includes('สัมภาษณ์') || noti.type === 'COMPANY_RESPONSE' ?
                                   <Calendar size={24} /> : <Bell size={24} />
                                 }
                               </div>

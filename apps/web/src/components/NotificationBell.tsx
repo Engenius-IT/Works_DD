@@ -66,9 +66,69 @@ function timeAgo(dateStr: string, t: any) {
   return t.timeWeeksAgo(Math.floor(days / 7));
 }
 
-export function getLocalizedNotification(notification: any, tNoti: any): { title: string; message: string } {
+function translateNotificationValue(
+  value: any,
+  tNoti: any,
+  locale: 'th' | 'en',
+): string {
+  if (!value) return '';
+
+  const fallbackTranslate = (key: string, params?: Record<string, any>) => {
+    const name = params?.name || '';
+    const isThai = locale === 'th';
+
+    const fallback: Record<string, string> = {
+      title_register_success: isThai ? '🎉 สมัครสมาชิกสำเร็จ' : '🎉 Registration Successful',
+      msg_register_success_jobseeker: isThai
+        ? `ยินดีต้อนรับคุณ ${name} เข้าสู่ WorksDD`
+        : `Welcome ${name} to WorksDD`,
+      msg_register_success_employer: isThai
+        ? `ยินดีต้อนรับ ${name} เข้าสู่ WorksDD`
+        : `Welcome ${name} to WorksDD`,
+    };
+
+    return fallback[key] || key;
+  };
+
+  const translateByKey = (key: string, params?: Record<string, any>) => {
+    const cleanKey = key.startsWith('Notifications.') ? key.replace('Notifications.', '') : key;
+
+    try {
+      const translated = tNoti(cleanKey, params || {});
+      if (translated && translated !== cleanKey && translated !== key) {
+        return translated;
+      }
+    } catch {}
+
+    return fallbackTranslate(cleanKey, params);
+  };
+
+  if (typeof value !== 'string') return String(value);
+
+  try {
+    const parsed = JSON.parse(value);
+
+    if (parsed?.key) {
+      return translateByKey(parsed.key, parsed.params);
+    }
+  } catch {}
+
+  if (value.startsWith('Notifications.')) {
+    return translateByKey(value);
+  }
+
+  return value;
+}
+
+export function getLocalizedNotification(
+  notification: any,
+  tNoti: any,
+  locale: 'th' | 'en',
+): { title: string; message: string } {
   const company = notification.application?.job?.company?.name || notification.metadata?.companyName || 'Company';
   const job = notification.application?.job?.title || notification.metadata?.position || 'Position';
+  const translatedTitle = translateNotificationValue(notification.title, tNoti, locale as 'th' | 'en');
+  const translatedMessage = translateNotificationValue(notification.message, tNoti, locale as 'th' | 'en');
   
   let dateText = '';
   if (notification.metadata?.interviewDate) {
@@ -79,6 +139,13 @@ export function getLocalizedNotification(notification: any, tNoti: any): { title
 
   const title = notification.title || '';
   
+  if (title.startsWith('Notifications.') || title.trim().startsWith('{')) {
+    return {
+      title: translatedTitle,
+      message: translatedMessage,
+    };
+  }
+
   if (title.includes('คัดเลือก')) {
     return {
       title: tNoti('title_shortlisted'),
@@ -129,8 +196,8 @@ export function getLocalizedNotification(notification: any, tNoti: any): { title
   }
 
   return {
-    title: notification.title,
-    message: notification.message
+    title: translatedTitle,
+    message: translatedMessage
   };
 }
 
@@ -386,7 +453,7 @@ export function NotificationBell() {
               )}
 
               {notifications.map((notification) => {
-                const locNoti = getLocalizedNotification(notification, tNoti);
+                const locNoti = getLocalizedNotification(notification, tNoti, locale);
                 return (
                   <div
                     key={notification.id}
@@ -396,15 +463,16 @@ export function NotificationBell() {
                     }`}
                   >
                     {/* Icon */}
-                    <div
-                      className={`w-9 h-9 rounded-full flex items-center justify-center text-base shrink-0 mt-0.5 ${
-                        notification.type === 'INTERVIEW_SCHEDULED'
-                          ? 'bg-purple-100 text-purple-600'
-                          : 'bg-blue-100 text-blue-600'
-                      }`}
-                    >
-                      {locNoti.title.charAt(0)}
-                    </div>
+                   
+<div
+  className={`w-9 h-9 rounded-full flex items-center justify-center text-base shrink-0 mt-0.5 ${
+    notification.type === 'INTERVIEW_SCHEDULED'
+      ? 'bg-purple-100 text-purple-600'
+      : 'bg-blue-100 text-blue-600'
+  }`}
+>
+  {notification.title.includes('title_register_success') ? '🎉' : locNoti.title.charAt(0)}
+</div>
 
                     {/* Content */}
                     <div className="flex-1 min-w-0">
