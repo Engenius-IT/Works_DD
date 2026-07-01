@@ -1063,7 +1063,7 @@
       }
     }
   },
-  "AIjobmatch": {
+"AIjobmatch": {
     "aimatch": "JOBDD AI MATCHING",
     "aimatcher": "Let our AI system match you with the perfect job based on your skills, experience, and resume to find the right opportunities faster.",
     "useprofiledata": "Use data from your profile",
@@ -1106,7 +1106,27 @@
     "create": "Create",
     "salary_warning_high": "* A warning will be displayed if salary exceeds range by more than 20%",
     "expected_salary_high": "Expected salary exceeds job range by >20%",
-    "view": "View"
+    "view": "View",
+    "preparing_matcher": "Preparing AI Job Matcher...",
+    "confirm_overwrite": "You already have a resume file in the system. Do you want to generate a new one to update your profile data?",
+    "generate_success": "Resume generated and updated successfully!",
+    "generate_error": "An error occurred during resume generation:",
+    "ready_to_work": "Ready to work",
+    "negotiable": "Negotiable",
+    "thb": "THB",
+    "rule_position_weight": "Job title weight ",
+    "rule_hard_skills": "Hard Skills weight",
+    "rule_experience_weight_percent": "Experience weight {percent}",
+    "no_skills_added": "No skills added — Enter skills below and press Enter",
+    "skill_placeholder": "e.g., React, Python, Photoshop...",
+    "btn_add": "Add",
+    "salary_placeholder": "e.g., 35000",
+    "btn_analyze_matching": "Analyze Suitable Jobs",
+    "match_score": "Match Score",
+    "matched_skills": "Matched Skills",
+    "missing_skills": "Missing Skills",
+    "btn_apply": "Apply Now",
+    "view_details": "View Details"
   },
   "jobcreate": {
     "header": "Create Job Posting",
