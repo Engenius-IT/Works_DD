@@ -1110,11 +1110,11 @@ export default function ResumeDirectoryPage({}: Resumesearch = {}) {
                     className="w-full h-12 rounded-2xl border border-slate-200 bg-slate-50 pl-12 pr-4 text-sm text-black focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-300"
                   />
                 </div>
-                <div className="flex items-center gap-3">
+                <div className="grid w-full grid-cols-3 gap-2 lg:flex lg:w-auto lg:items-center lg:gap-3">
                   <button
                     type="button"
                     onClick={handleSearch}
-                    className="inline-flex items-center justify-center gap-2 h-12 px-5 rounded-2xl bg-[#020263] hover:bg-[#11117c] text-white font-semibold transition-colors"
+                    className="inline-flex min-w-0 items-center justify-center gap-1.5 h-11 px-2 rounded-2xl bg-[#020263] hover:bg-[#11117c] text-white text-[12px] font-semibold leading-tight transition-colors lg:h-12 lg:gap-2 lg:px-5 lg:text-base lg:whitespace-nowrap"
                   >
                     <Search className="w-4 h-4" />
                     {t("search.btnSearch")}
@@ -1123,7 +1123,7 @@ export default function ResumeDirectoryPage({}: Resumesearch = {}) {
                   <button
                     type="button"
                     onClick={() => setIsFilterPanelOpen((prev) => !prev)}
-                    className="inline-flex items-center justify-center gap-2 h-12 px-5 rounded-2xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-semibold transition-colors"
+                    className="inline-flex min-w-0 items-center justify-center gap-1 h-11 px-2 rounded-2xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-[12px] font-semibold leading-tight text-center transition-colors lg:h-12 lg:gap-2 lg:px-5 lg:text-base lg:whitespace-nowrap"
                   >
                     <Filter className="w-4 h-4 text-indigo-600" />
                     {t("filters.title")}
@@ -1137,7 +1137,7 @@ export default function ResumeDirectoryPage({}: Resumesearch = {}) {
                   <button
                     type="button"
                     onClick={handleClearAll}
-                    className="inline-flex items-center justify-center gap-2 h-12 px-5 rounded-2xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-semibold transition-colors"
+                    className="inline-flex min-w-0 items-center justify-center gap-1 h-11 px-2 rounded-2xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-[12px] font-semibold leading-tight text-center transition-colors lg:h-12 lg:gap-2 lg:px-5 lg:text-base lg:whitespace-nowrap"
                   >
                     <RefreshCw className="w-4 h-4" />
                     {t("search.btnClear")}
