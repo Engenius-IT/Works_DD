@@ -8,6 +8,7 @@ import { bookmarkService } from '@/services/bookmark';
 import { CandidateDetailModal } from '@/components/CandidateDetailModal';
 import { ApplicantDetailModal } from '@/components/ApplicantDetailModal';
 import axios from 'axios';
+import { useTranslations } from 'next-intl';
 import {
   Building2,
   FileText,
@@ -53,6 +54,8 @@ const VerificationStatusBanner = ({
   company: Company;
   onVerifyClick: () => void;
 }) => {
+  const t = useTranslations('DashBoard');
+
   if (company.verificationStatus === 'VERIFIED') return null;
 
   if (company.verificationStatus === 'REJECTED') {
@@ -192,6 +195,7 @@ interface RecentApplicantItem {
 }
 
 function MiniCalendar({ interviews = [] }: { interviews?: InterviewItem[] }) {
+  const t = useTranslations('DashBoard');
   const today = new Date();
   const [current, setCurrent] = useState(new Date(today.getFullYear(), today.getMonth(), 1));
   const [clickedDay, setClickedDay] = useState<number | null>(null);
@@ -349,7 +353,7 @@ function MiniCalendar({ interviews = [] }: { interviews?: InterviewItem[] }) {
 
       {interviews.length === 0 && (
         <div className="mt-4 text-center">
-          <p className="text-xs text-gray-400">ยังไม่มีนัดสัมภาษณ์</p>
+          <p className="text-xs text-gray-400">{t('noInterview')}</p>
         </div>
       )}
     </div>
@@ -771,6 +775,7 @@ interface Candidate {
 }
 
 export default function EmployerDashboard() {
+  const t = useTranslations('DashBoard');
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
   const [jobs, setJobs] = useState<Job[]>([]);
@@ -1019,7 +1024,7 @@ export default function EmployerDashboard() {
 
 
             <h1 className="text-3xl md:text-4xl font-extrabold text-gray-900 tracking-tight">
-              สวัสดี,{' '}
+              {t('greeting')}{' '},
               <span className="text-transparent bg-clip-text bg-linear-to-r from-[#020263] to-[#00003D]">
                 {user?.firstName} {user?.lastName}
               </span>{' '}
@@ -1027,14 +1032,14 @@ export default function EmployerDashboard() {
             </h1>
 
             <p className="text-sm md:text-base text-gray-500 max-w-xl leading-relaxed mt-1">
-              ยินดีต้อนรับสู่ระบบบริหารจัดการสรรหาบุคลากร คุณสามารถจัดการประกาศงาน ดูข้อมูลผู้สมัคร และเริ่มสร้างทีมงานที่มีประสิทธิภาพได้ที่นี่
+              {t('welcomeDesc')}
             </p>
           </div>
 
           <div className="hidden md:flex items-center gap-4 bg-white/60 backdrop-blur-md px-5 py-3 rounded-2xl border border-gray-100 shadow-sm">
             <div className="text-center px-4 border-r border-gray-200/60 last:border-0">
               <div className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-0.5">
-                สถานะบัญชี
+                {t('accountStatus')}
               </div>
               <div className="flex items-center gap-1.5 justify-center">
                 <CheckCircle2 className={`w-4 h-4 ${accountStatusDisplay.iconClassName}`} />
@@ -1043,7 +1048,7 @@ export default function EmployerDashboard() {
             </div>
             <div className="text-center px-4">
               <div className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-0.5">
-                วันที่ใช้งาน
+                {t('lastUsed')}
               </div>
               <div className="text-sm font-bold text-gray-800">
                 {new Date().toLocaleDateString('th-TH', {
@@ -1076,7 +1081,7 @@ export default function EmployerDashboard() {
                 <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center">
                   <Building2 className="w-5 h-5 text-blue-600" />
                 </div>
-                <span className="font-bold text-gray-800">ข้อมูลบริษัท</span>
+                <span className="font-bold text-gray-800">{t('companyInfo')}</span>
               </div>
               {company && (
                 <button
@@ -1096,7 +1101,7 @@ export default function EmployerDashboard() {
                       d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125"
                     />
                   </svg>
-                  แก้ไข
+                  {t('edit')}
                 </button>
               )}
             </div>
@@ -1200,7 +1205,7 @@ export default function EmployerDashboard() {
               <div className="w-10 h-10 rounded-xl bg-green-50 flex items-center justify-center">
                 <FileText className="w-5 h-5 text-green-600" />
               </div>
-              <span className="font-bold text-gray-800">ประกาศงานทั้งหมด</span>
+              <span className="font-bold text-gray-800">{t('allJobPosts')}</span>
             </div>
 
             {/* Stats */}
@@ -1209,19 +1214,19 @@ export default function EmployerDashboard() {
                 <div className="text-2xl font-bold text-gray-800">
                   {loadingJobs ? '—' : totalJobs}
                 </div>
-                <div className="text-xs text-gray-400 mt-0.5">ทั้งหมด</div>
+                <div className="text-xs text-gray-400 mt-0.5">{t('total')}</div>
               </div>
               <div className="text-center border-x border-gray-100">
                 <div className="text-2xl font-bold text-green-600">
                   {loadingJobs ? '—' : activeJobs}
                 </div>
-                <div className="text-xs text-gray-400 mt-0.5">เผยแพร่</div>
+                <div className="text-xs text-gray-400 mt-0.5">{t('published')}</div>
               </div>
               <div className="text-center">
                 <div className="text-2xl font-bold text-gray-400">
                   {loadingJobs ? '—' : closedJobs}
                 </div>
-                <div className="text-xs text-gray-400 mt-0.5">ปิดประกาศ</div>
+                <div className="text-xs text-gray-400 mt-0.5">{t('closed')}</div>
               </div>
             </div>
 
@@ -1229,7 +1234,7 @@ export default function EmployerDashboard() {
               onClick={() => router.push('/employer/jobs')}
               className="w-full flex items-center justify-center gap-2 bg-[#020263] hover:bg-[#00003D] text-white font-semibold py-2.5 rounded-xl transition-colors text-sm"
             >
-              เพิ่มประกาศงานและจัดการผู้สมัคร
+              {t('manageJobPosts')}
             </button>
           </div>
 
@@ -1285,7 +1290,7 @@ export default function EmployerDashboard() {
                   <div className="flex items-center">
                     {!packageInfo ? (
                       <span className={`font-bold text-sm ${packageInfo === false ? 'text-gray-800' : 'text-gray-600'}`}>
-                        {packageInfo === false ? 'ดึงข้อมูลไม่สำเร็จ' : 'กำลังโหลด...'}
+                        {packageInfo === false ? t('loadFailed') : t('loading')}
                       </span>
                     ) : packageInfo?.name === 'VIP' ? (
                       <span className="px-3 py-1 rounded-full bg-gradient-to-r from-rose-500 via-red-600 to-rose-800 border border-white/20 text-white text-[10px] font-black shadow-md tracking-widest uppercase">
@@ -1333,7 +1338,7 @@ export default function EmployerDashboard() {
                       ? (packageInfo?.name === 'VIP'
                         ? 'สิทธิพิเศษขั้นสูงสุด · Active'
                         : (packageInfo?.name === 'Premium' ? 'สิทธิพิเศษขั้นสูง · Active' : (packageInfo?.name === 'Pro' ? 'สิทธิพิเศษขั้นพื้นฐาน · Active' : 'ฟรีทดลอง · ทดลองใช้')))
-                      : 'สถานะการเชื่อมต่อ API'}
+                      : t('apiConnectionStatus')}
                   </span>
                 </div>
               </div>
@@ -1349,7 +1354,7 @@ export default function EmployerDashboard() {
                       packageInfo?.name === 'Premium' ? 'text-blue-300' :
                         packageInfo?.name === 'Pro' ? 'text-amber-700' : 'text-gray-600'
                   }>
-                    โควตา CC คงเหลือ
+                    {t('remainingQuota')}
                   </span>
                   <span className={!packageInfo ? "text-red-400" :
                     packageInfo?.name === 'VIP' ? 'text-white' :
@@ -1420,7 +1425,7 @@ export default function EmployerDashboard() {
                       packageInfo?.name === 'Premium' ? 'text-blue-300' :
                         packageInfo?.name === 'Pro' ? 'text-amber-700' : 'text-gray-600'
                   }>
-                    โควตา AC คงเหลือ
+                    {t('remainingACQuota')}
                   </span>
                   <span className={!packageInfo ? "text-red-400" :
                     packageInfo?.name === 'VIP' ? 'text-white' :
@@ -1490,12 +1495,12 @@ export default function EmployerDashboard() {
                 <div className={`flex items-center justify-between text-[11px] font-bold ${packageInfo?.name === 'VIP' || packageInfo?.name === 'Premium' ? 'text-white' : packageInfo?.name === 'Pro' ? 'text-slate-800' : 'text-gray-600'}`}>
                   <div className="flex items-center gap-1.5 opacity-80">
                     <Calendar className="w-3.5 h-3.5 text-current" />
-                    <span>ระยะเวลาแพ็คเกจ</span>
+                    <span>{t('packageDuration')}</span>
                   </div>
                   <span className={packageInfo?.name === 'VIP' ? 'text-rose-200' : packageInfo?.name === 'Premium' ? 'text-blue-300' : packageInfo?.name === 'Pro' ? 'text-amber-800' : ''}>
                     {packageInfo?.startDate && packageInfo?.endDate
                       ? `${new Date(packageInfo.startDate).toLocaleDateString('th-TH', { day: 'numeric', month: 'short' })} - ${new Date(packageInfo.endDate).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: '2-digit' })}`
-                      : 'ไม่ระบุ'}
+                      : t('notSpecified')}
                   </span>
                 </div>
                 {packageInfo?.endDate && (
@@ -1510,7 +1515,7 @@ export default function EmployerDashboard() {
             <div className="mt-auto pt-2 flex gap-2.5 items-center relative z-10">
               {!packageInfo ? (
                 <div className="flex-1 text-center py-2.5 text-xs text-gray-400 bg-gray-50 rounded-xl border border-dashed">
-                  {packageInfo === false ? 'เซิร์ฟเวอร์ขัดข้อง' : 'กำลังตรวจสอบข้อมูลบัญชี...'}
+                  {packageInfo === false ? t('serverError') : t('checkingAccountData')}
                 </div>
               ) : (
                 <>
@@ -1573,7 +1578,7 @@ export default function EmployerDashboard() {
               <div className="w-10 h-10 rounded-xl bg-purple-50 flex items-center justify-center">
                 <CalendarDays className="w-5 h-5 text-purple-500" />
               </div>
-              <span className="font-bold text-gray-800">ปฏิทินนัดสัมภาษณ์</span>
+              <span className="font-bold text-gray-800">{t('interview')}</span>
             </div>
             <MiniCalendar interviews={interviews} />
           </div>
@@ -1586,32 +1591,32 @@ export default function EmployerDashboard() {
                   <Users className="w-5 h-5 text-teal-500" />
                 </div>
                 <span className="font-bold text-gray-800">
-                  ผู้สมัครล่าสุด ({recentApplicants.length} รายการ)
+                  {t('latest')} ({recentApplicants.length} {t('items')})
                 </span>
               </div>
               <button
                 onClick={() => router.push('/employer/applicants')}
                 className="text-lg font-medium flex items-center gap-1 bg-[#020263] text-white rounded-xl px-4 py-2 drop-shadow-lg hover:bg-[#00003D] transition-colors"
               >
-                จัดการผู้สมัครและนัดสัมภาษณ์
+                {t('manage')}
 
               </button>
             </div>
 
             {/* Table header */}
             <div className="hidden md:grid md:grid-cols-4 text-xs text-gray-400 font-medium pb-2 border-b border-gray-50 px-2">
-              <span>ผู้สมัคร</span>
-              <span>ตำแหน่ง</span>
-              <span>วันที่สมัคร</span>
-              <span className="text-right">การจัดการ</span>
+              <span>{t('applicant')}</span>
+              <span>{t('position')}</span>
+              <span>{t('date')}</span>
+              <span className="text-right">{t('action')}</span>
             </div>
 
             {/* Rows */}
             <div className="divide-y divide-gray-50">
               {loadingApplicants ? (
-                <div className="py-8 text-center text-sm text-gray-400">กำลังโหลดข้อมูล...</div>
+                <div className="py-8 text-center text-sm text-gray-400">{t('loading')}</div>
               ) : recentApplicants.length === 0 ? (
-                <div className="py-8 text-center text-sm text-gray-400">ยังไม่มีผู้สมัครล่าสุด</div>
+                <div className="py-8 text-center text-sm text-gray-400">{t('noRecent')}</div>
               ) : (
                 recentApplicants.map((a) => (
                   <div
@@ -1686,10 +1691,10 @@ export default function EmployerDashboard() {
               </div>
               <div>
                 <h3 className="font-bold text-gray-800 leading-tight">
-                  ผู้สมัครที่บันทึกไว้
+                  {t('title')}
                 </h3>
                 <p className="text-[10px] text-gray-400 font-medium">
-                  {candidates.length} รายการทั้งหมด
+                  {candidates.length} {t('total')}
                 </p>
               </div>
             </div>
@@ -1697,16 +1702,16 @@ export default function EmployerDashboard() {
               onClick={() => router.push('/employer/bookmarks')}
               className="text-sm font-medium flex items-center gap-1 bg-[#020263] text-white rounded-xl px-4 py-2 hover:bg-[#00003D] transition-all shadow-md active:scale-95"
             >
-              ดูทั้งหมด
+              {t('viewAll')}
               <ChevronRight className="w-4 h-4" />
             </button>
           </div>
 
           {/* Table Header - แก้ไข: ซ่อนบนมือถือ */}
           <div className="hidden md:grid grid-cols-12 text-[11px] text-gray-400 font-bold pb-2 border-b border-gray-50 px-2 uppercase tracking-wider">
-            <div className="col-span-5">ข้อมูลผู้สมัคร / อีเมล</div>
-            <div className="col-span-5">ตำแหน่งที่สนใจ</div>
-            <div className="col-span-2 text-right">จัดการ</div>
+            <div className="col-span-5">{t('applicant')}</div>
+            <div className="col-span-5">{t('position')}</div>
+            <div className="col-span-2 text-right">{t('action')}</div>
           </div>
 
           {/* List Content */}
@@ -1714,12 +1719,12 @@ export default function EmployerDashboard() {
             {loadingBookmarks ? (
               <div className="py-10 text-center">
                 <div className="w-6 h-6 border-2 border-pink-500 border-t-transparent rounded-full animate-spin mx-auto mb-2" />
-                <p className="text-xs text-gray-400">กำลังโหลด...</p>
+                <p className="text-xs text-gray-400">{t('loading')}</p>
               </div>
             ) : candidates.length === 0 ? (
               <div className="py-10 text-center">
                 <Heart className="w-10 h-10 text-gray-100 mx-auto mb-2" />
-                <p className="text-xs text-gray-400 font-medium">ยังไม่มีรายการที่บันทึกไว้</p>
+                <p className="text-xs text-gray-400 font-medium">{t('empty')}</p>
               </div>
             ) : (
               candidates.slice(0, 5).map((candidate) => (
@@ -1762,18 +1767,18 @@ export default function EmployerDashboard() {
                     <button
                       onClick={() => setSelectedCandidateId(candidate.id)}
                       className="flex-1 md:flex-none flex items-center justify-center gap-2 px-3 py-2.5 md:py-2 bg-white border border-gray-200 rounded-xl text-gray-600 hover:border-[#020263] hover:text-[#020263] transition-all text-sm font-medium shadow-sm"
-                      title="ดูหน้าโปรไฟล์"
+                      title={t('viewProfile')}
                     >
                       <Eye className="w-4 h-4" />
-                      <span className="md:hidden">ดูโปรไฟล์</span>
+                      <span className="md:hidden">{t('viewProfile')}</span>
                     </button>
                     <button
                       onClick={() => handleUnbookmark(candidate.id)}
                       className="flex-1 md:flex-none flex items-center justify-center gap-2 px-3 py-2.5 md:py-2 bg-red-50 border border-red-100 rounded-xl text-red-600 hover:bg-red-600 hover:text-white transition-all text-sm font-medium shadow-sm"
-                      title="ลบออกจากรายการที่บันทึก"
+                      title={t('remove')}
                     >
                       <Trash2 className="w-4 h-4" />
-                      <span className="md:hidden">ลบออก</span>
+                      <span className="md:hidden">{t('remove')}</span>
                     </button>
                   </div>
                 </div>
@@ -1784,7 +1789,7 @@ export default function EmployerDashboard() {
           {/* Footer */}
           <div className="mt-4 pt-3 border-t border-gray-50 text-center">
             <p className="text-[10px] text-gray-400 font-medium">
-              แสดง {candidates.slice(0, 5).length} จากรายการล่าสุด (สูงสุด 5 รายการ)
+              {t('showing')} {candidates.slice(0, 5).length} {t('from')}
             </p>
           </div>
         </div>
