@@ -95,6 +95,7 @@ export const NotificationModal: React.FC<NotificationModalProps> = ({
 
   // 🌟 State ควบคุมการเปิดแสดงมุมมองรายละเอียด 100% ตามที่ออกแบบไว้
   const [selectedNotification, setSelectedNotification] = useState<Notification | null>(null);
+  const [welcomeMobileMenuOpen, setWelcomeMobileMenuOpen] = useState(false);
 
   const [logoError, setLogoError] = useState(false);
   const [bannerError, setBannerError] = useState(false);
@@ -420,11 +421,373 @@ export const NotificationModal: React.FC<NotificationModalProps> = ({
         .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(0, 0, 0, 0.05); border-radius: 10px; }
       `}} />
 
+
+      {/* Mobile Notification Modal */}
+      <div className="md:hidden w-full max-w-md h-[95vh] bg-white shadow-2xl border border-white/30 overflow-hidden rounded-3xl animate-in zoom-in-95 duration-200 relative">
+        {welcomeMobileMenuOpen && (
+          <div
+            className="fixed inset-0 z-[10000] bg-black/50"
+            onClick={() => setWelcomeMobileMenuOpen(false)}
+          />
+        )}
+
+        <aside
+          className={`fixed top-0 right-0 h-full z-[10001] bg-white shadow-2xl flex flex-col transition-transform duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${
+            welcomeMobileMenuOpen ? 'translate-x-0' : 'translate-x-full'
+          }`}
+          style={{ width: 300 }}
+        >
+          <div className="px-6 pt-8 pb-6 flex items-center justify-between border-b border-slate-100">
+            <h2 className="text-2xl font-bold text-[#0F172A]">Notifications</h2>
+            <button
+              onClick={() => setWelcomeMobileMenuOpen(false)}
+              className="p-2 hover:bg-slate-100 rounded-full transition-colors text-slate-400"
+              aria-label="ปิด"
+            >
+              <X size={20} />
+            </button>
+          </div>
+
+          <div className="flex-1 overflow-y-auto py-6">
+            <div className="mb-8">
+              <p className="px-6 mb-2 text-[11px] font-bold text-slate-400 uppercase tracking-widest">MAIN</p>
+              <div className="space-y-1">
+                <button
+                  type="button"
+                  onClick={() => { setActiveTab('all'); setSelectedNotification(null); setWelcomeMobileMenuOpen(false); }}
+                  className={`w-full mx-4 px-4 py-3 flex items-center gap-4 rounded-xl cursor-pointer transition-colors text-sm font-medium ${
+                    activeTab === 'all' && !selectedNotification ? 'text-white' : 'text-slate-500 hover:bg-slate-50'
+                  }`}
+                  style={{
+                    width: 'calc(100% - 2rem)',
+                    backgroundColor: activeTab === 'all' && !selectedNotification ? '#0F172A' : undefined,
+                  }}
+                >
+                  <Bell size={20} className={activeTab === 'all' && !selectedNotification ? 'text-white' : 'text-slate-400'} />
+                  ทั้งหมด
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => { setActiveTab('unread'); setSelectedNotification(null); setWelcomeMobileMenuOpen(false); }}
+                  className={`w-full mx-4 px-4 py-3 flex items-center justify-between gap-4 rounded-xl cursor-pointer transition-colors text-sm font-medium ${
+                    activeTab === 'unread' && !selectedNotification ? 'text-white' : 'text-slate-500 hover:bg-slate-50'
+                  }`}
+                  style={{
+                    width: 'calc(100% - 2rem)',
+                    backgroundColor: activeTab === 'unread' && !selectedNotification ? '#0F172A' : undefined,
+                  }}
+                >
+                  <span className="flex items-center gap-4">
+                    <MailOpen size={20} className={activeTab === 'unread' && !selectedNotification ? 'text-white' : 'text-slate-400'} />
+                    ยังไม่ได้อ่าน
+                  </span>
+                  {computedUnreadCount > 0 && (
+                    <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">
+                      {computedUnreadCount}
+                    </span>
+                  )}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => { setActiveTab('company'); setSelectedNotification(null); setWelcomeMobileMenuOpen(false); }}
+                  className={`w-full mx-4 px-4 py-3 flex items-center gap-4 rounded-xl cursor-pointer transition-colors text-sm font-medium ${
+                    activeTab === 'company' && !selectedNotification ? 'text-white' : 'text-slate-500 hover:bg-slate-50'
+                  }`}
+                  style={{
+                    width: 'calc(100% - 2rem)',
+                    backgroundColor: activeTab === 'company' && !selectedNotification ? '#0F172A' : undefined,
+                  }}
+                >
+                  <AtSign size={20} className={activeTab === 'company' && !selectedNotification ? 'text-white' : 'text-slate-400'} />
+                  การตอบรับจากบริษัท
+                </button>
+              </div>
+            </div>
+
+            <div>
+              <p className="px-6 mb-2 text-[11px] font-bold text-slate-400 uppercase tracking-widest">PREFERENCES</p>
+              <button
+                type="button"
+                onClick={() => { setActiveTab('system'); setSelectedNotification(null); setWelcomeMobileMenuOpen(false); }}
+                className={`w-full mx-4 px-4 py-3 flex items-center gap-4 rounded-xl cursor-pointer transition-colors text-sm font-medium ${
+                  activeTab === 'system' && !selectedNotification ? 'text-white' : 'text-slate-500 hover:bg-slate-50'
+                }`}
+                style={{
+                  width: 'calc(100% - 2rem)',
+                  backgroundColor: activeTab === 'system' && !selectedNotification ? '#0F172A' : undefined,
+                }}
+              >
+                <Settings size={20} className={activeTab === 'system' && !selectedNotification ? 'text-white' : 'text-slate-400'} />
+                ระบบ
+              </button>
+            </div>
+          </div>
+        </aside>
+
+        <main className="bg-white h-full relative flex flex-col">
+          <nav className="sticky top-0 z-30 bg-white border-b border-slate-100 px-4 py-3 flex items-center justify-between shrink-0">
+            <button
+              type="button"
+              onClick={() => {
+                if (selectedNotification) {
+                  onClose();
+                } else {
+                  onClose();
+                }
+              }}
+              className="flex items-center font-medium active:scale-95 transition-all"
+              style={{ color: '#635BFF' }}
+              aria-label="กลับ"
+            >
+              <ArrowLeft size={20} />
+            </button>
+
+            <h1 className="text-lg font-semibold text-[#1E1B4B]">
+              {selectedNotification
+                ? isWelcomeNotification
+                  ? 'Welcome Detail'
+                  : 'Notification Detail'
+                : activeTab === 'all'
+                  ? 'ทั้งหมด'
+                  : activeTab === 'unread'
+                    ? 'ยังไม่ได้อ่าน'
+                    : activeTab === 'company'
+                      ? 'การตอบรับจากบริษัท'
+                      : 'ระบบ'}
+            </h1>
+
+            <button
+              type="button"
+              onClick={() => setWelcomeMobileMenuOpen(true)}
+              aria-label="Menu"
+              className="p-1 active:scale-95 transition-all text-[#1E1B4B]"
+            >
+              <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path d="M4 6h16M4 12h16M4 18h16" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} />
+              </svg>
+            </button>
+          </nav>
+
+          {selectedNotification ? (
+            isWelcomeNotification ? (
+              <>
+                <div className="flex-1 overflow-y-auto bg-white">
+                  <section className="relative h-56 w-full overflow-hidden shrink-0">
+                    <img
+                      alt="Welcome Illustration"
+                      className="w-full h-full object-cover"
+                      src="/images/messageImage_1782791898599.jpg"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex flex-col justify-end p-6">
+                      <h2 className="text-white text-2xl font-bold">Welcome to WorksDD</h2>
+                      <p className="text-white/80 text-sm">Your journey to a dream career starts here.</p>
+                    </div>
+                  </section>
+
+                  <section className="p-6 space-y-6">
+                    <div className="flex justify-between items-start gap-3">
+                      <h3 className="text-xl font-bold text-slate-800 leading-tight">Hello {welcomeName} 👋</h3>
+                      <span className="text-xs shrink-0 mt-1 text-slate-500">
+                        Received {formatRelativeTime(selectedNotification.createdAt)}
+                      </span>
+                    </div>
+
+                    <div className="leading-relaxed text-sm text-slate-600">
+                      <p>{locDetail?.message || 'Welcome to WorksDD. Your account has been created successfully.'}</p>
+                    </div>
+
+                    <div className="rounded-2xl p-5 border bg-[#f7f7ff] border-[#F0F0FF]">
+                      <div className="flex justify-between items-center mb-4">
+                        <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                          Profile Completion
+                        </span>
+                        <span className="font-bold text-[#635BFF]">25%</span>
+                      </div>
+
+                      <div className="w-full bg-slate-200 h-2 rounded-full mb-6">
+                        <div className="h-2 rounded-full bg-[#635BFF] w-1/4" />
+                      </div>
+
+                      <ul className="space-y-4">
+                        <li className="flex items-center text-sm text-slate-700">
+                          <CheckCircle size={20} className="mr-3 shrink-0 text-[#635BFF]" />
+                          <span>Create Account</span>
+                        </li>
+                        {['Upload Resume', 'Complete Profile', 'Enable AI Matching'].map((label) => (
+                          <li key={label} className="flex items-center text-sm text-slate-400">
+                            <div className="h-5 w-5 rounded-full border-2 border-slate-300 mr-3 shrink-0" />
+                            <span>{label}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
+                        <Search size={24} className="mb-2 text-[#635BFF]" />
+                        <h4 className="font-bold text-sm">Find Jobs</h4>
+                        <p className="text-xs text-slate-500">Smart search filters</p>
+                      </div>
+                      <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
+                        <Bell size={24} className="mb-2 text-[#635BFF]" />
+                        <h4 className="font-bold text-sm">AI Matching</h4>
+                        <p className="text-xs text-slate-500">Personalized roles</p>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3 pt-6 pb-6">
+                      <button
+                        onClick={() => {
+                          router.push('/coming-soon/jobseeker');
+                          onClose();
+                        }}
+                        className="w-full bg-white font-bold py-3 rounded-xl transition-colors text-sm active:scale-95 border-2 border-[#635BFF] text-[#635BFF]"
+                      >
+                        Open User Guide
+                      </button>
+                      <button
+                        onClick={() => {
+                          router.push('/jobs');
+                          onClose();
+                        }}
+                        className="w-full text-white font-bold py-3 rounded-xl shadow-lg active:scale-95 transition-all text-sm hover:opacity-90 bg-[#635BFF]"
+                      >
+                        Start Exploring Jobs
+                      </button>
+                    </div>
+                  </section>
+                </div>
+              </>
+            ) : (
+              <div className="flex-1 overflow-y-auto bg-white">
+                <section className="p-6 space-y-6">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <h2 className="text-xl font-bold text-slate-900">
+                        {locDetail?.title || selectedNotification.title}
+                      </h2>
+                      <p className="mt-1 text-xs text-slate-500">
+                        Received {formatRelativeTime(selectedNotification.createdAt)}
+                      </p>
+                    </div>
+                    {!selectedNotification.isRead && (
+                      <span className="w-2 h-2 rounded-full bg-[#635BFF] shrink-0 mt-2" />
+                    )}
+                  </div>
+
+                  <div className="rounded-2xl border border-slate-100 bg-slate-50 p-5">
+                    <p className="text-sm leading-relaxed text-slate-600">
+                      {locDetail?.message || selectedNotification.message}
+                    </p>
+                  </div>
+
+                  {(selectedCompany || selectedJob || selectedNotification.metadata) && (
+                    <div className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm space-y-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 rounded-xl bg-[#1a1c3d] text-white flex items-center justify-center font-bold overflow-hidden">
+                          {selectedLogo && !logoError ? (
+                            <img
+                              src={selectedLogo}
+                              alt={displayCompanyName}
+                              className="w-full h-full object-cover"
+                              onError={() => setLogoError(true)}
+                            />
+                          ) : (
+                            displayCompanyName.charAt(0)
+                          )}
+                        </div>
+                        <div className="min-w-0">
+                          <p className="font-bold text-slate-900 truncate">{displayCompanyName}</p>
+                          <p className="text-xs text-slate-500 truncate">{displayJobTitle}</p>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 gap-3 text-sm text-slate-600">
+                        <div className="flex items-center gap-2">
+                          <MapPin size={16} className="text-slate-400" />
+                          <span>{displayLocationName}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Tag size={16} className="text-slate-400" />
+                          <span>{displaySalaryRange}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Calendar size={16} className="text-slate-400" />
+                          <span>{displayInterviewDate} {displayInterviewTime}</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {selectedNotification.linkUrl && (
+                    <button
+                      onClick={() => {
+                        onClose();
+                        router.push(selectedNotification.linkUrl || '/');
+                      }}
+                      className="w-full text-white font-bold py-3 rounded-xl shadow-lg active:scale-95 transition-all text-sm bg-[#635BFF]"
+                    >
+                      เปิดรายละเอียด
+                    </button>
+                  )}
+                </section>
+              </div>
+            )
+          ) : filteredNotifications.length > 0 ? (
+            <div className="flex-1 overflow-y-auto bg-white">
+              <section className="p-4 space-y-3">
+                {filteredNotifications.map((noti) => {
+                  const locNoti = getLocalizedNotification(noti, tNoti);
+                  return (
+                    <button
+                      key={noti.id}
+                      type="button"
+                      onClick={() => handleNotificationClick(noti)}
+                      className="w-full bg-white border border-slate-100 rounded-2xl p-4 text-left flex items-center gap-4 shadow-sm active:scale-[0.99] transition-all"
+                    >
+                      <div className={`w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 ${
+                        !noti.isRead ? 'bg-[#eef2ff] text-[#635BFF]' : 'bg-slate-100 text-slate-400'
+                      }`}>
+                        {noti.title.includes('title_register_success') || noti.message.includes('msg_register_success') ? (
+                          <span className="text-xl">🎉</span>
+                        ) : (
+                          <Bell size={20} />
+                        )}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-start gap-2">
+                          <p className="text-sm font-bold text-slate-900 truncate">{locNoti.title}</p>
+                          {!noti.isRead && <span className="w-2 h-2 rounded-full bg-[#635BFF] shrink-0 mt-1.5" />}
+                        </div>
+                        <p className="text-xs text-slate-500 line-clamp-2 mt-0.5">{locNoti.message}</p>
+                        <p className="text-xs text-slate-400 mt-1">{formatRelativeTime(noti.createdAt)}</p>
+                      </div>
+                      <ChevronRight size={18} className="text-slate-300 shrink-0" />
+                    </button>
+                  );
+                })}
+              </section>
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center px-8 text-center flex-1">
+              <Bell size={88} className="mb-6 text-slate-200" />
+              <h3 className="text-xl font-bold mb-2 text-[#0F172A]">ไม่มีการแจ้งเตือน</h3>
+              <p className="text-slate-500 text-sm leading-relaxed">
+                คุณจะได้รับการแจ้งเตือนที่นี่เมื่อมีข่าวสารใหม่ๆ
+              </p>
+            </div>
+          )}
+        </main>
+      </div>
+
+
       {/* Main Updated Notification Modal Frame */}
-      <div className="bg-white w-full max-w-[940px] h-[85vh] shadow-2xl border border-white/30 overflow-hidden flex rounded-3xl animate-in zoom-in-95 duration-200">
+      <div className="hidden md:flex bg-white w-full max-w-[940px] h-[85vh] shadow-2xl border border-white/30 overflow-hidden rounded-3xl animate-in zoom-in-95 duration-200">
 
         {/* Sidebar */}
-        <aside className="w-[280px] bg-[#f1f4f9] border-r border-gray-200 flex flex-col shrink-0">
+        <aside className={`${selectedNotification && isWelcomeNotification ? 'hidden md:flex' : 'flex'} w-[280px] bg-[#f1f4f9] border-r border-gray-200 flex-col shrink-0`}>
           <div className="p-8">
             <div className="flex items-center justify-between mb-8">
               <h2 className="text-[22px] font-bold text-[#1a1c3d] tracking-tight">Notifications</h2>
@@ -507,127 +870,338 @@ export const NotificationModal: React.FC<NotificationModalProps> = ({
 
           {selectedNotification ? (
             isWelcomeNotification ? (
-              <div className="flex-grow flex flex-col h-full bg-white animate-in slide-in-from-right duration-300">
-                <header className="h-16 px-8 flex items-center justify-between border-b border-gray-100 sticky top-0 bg-white/80 backdrop-blur-md z-10 shrink-0">
-                  <div className="flex items-center gap-4">
+              <>
+                {/* Desktop Welcome เดิม */}
+                <div className="hidden md:flex flex-grow flex-col h-full bg-white animate-in slide-in-from-right duration-300">
+                  <header className="h-16 px-8 flex items-center justify-between border-b border-gray-100 sticky top-0 bg-white/80 backdrop-blur-md z-10 shrink-0">
+                    <div className="flex items-center gap-4">
+                      <button
+                        onClick={() => setSelectedNotification(null)}
+                        className="flex items-center gap-2 text-[#5b4df2] font-bold text-[14px] hover:bg-[#5b4df2]/5 px-3 py-2 rounded-xl transition-all"
+                      >
+                        <ArrowLeft size={20} className="flex-shrink-0" />
+                        Back to Notifications
+                      </button>
+                      <div className="h-4 w-px bg-gray-200"></div>
+                      <h2 className="text-[16px] font-bold text-[#1a1c3d]">Welcome Detail</h2>
+                    </div>
+                    <span className="text-[11px] font-medium text-[#45464e]/60">Received {formatRelativeTime(selectedNotification.createdAt)}</span>
+                  </header>
+
+                  <div className="flex-grow overflow-y-auto custom-scrollbar bg-white">
+                    <div className="relative h-64 overflow-hidden">
+                      <div
+                        className="relative h-[260px] overflow-hidden bg-cover bg-center"
+                        style={{
+                          backgroundImage: `linear-gradient(90deg, rgba(35,18,89,0.9), rgba(35,18,89,0.35)), url('/images/messageImage_1782791898599.jpg')`,
+                        }}
+                      >
+                        <div className="absolute bottom-10 left-10 right-10">
+                          <h2 className="text-4xl font-bold text-white">
+                            Welcome to WorksDD
+                          </h2>
+                          <p className="mt-2 text-white/90">
+                            Your journey to a dream career starts here.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="px-10 py-10 relative z-10">
+                      <div className="space-y-8">
+                        <div>
+                          <h2 className="text-[26px] font-bold text-[#1a1c3d] mb-3">Hello {welcomeName} 👋</h2>
+                          <p className="text-[15px] text-[#45464e] leading-relaxed max-w-3xl">
+                            {locDetail?.message || 'Welcome to WorksDD. Your account has been created successfully.'}
+                          </p>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-6">
+                          <div className="rounded-3xl border border-gray-100 shadow-sm p-6 bg-white">
+                            <div className="flex items-center justify-between mb-5">
+                              <p className="text-[11px] font-bold text-[#45464e] uppercase tracking-wider">Profile Completion</p>
+                              <span className="text-[#5b4df2] font-bold text-[14px]">25%</span>
+                            </div>
+                            <div className="h-2 w-full bg-gray-100 rounded-full overflow-hidden mb-6">
+                              <div className="h-full bg-[#5b4df2] w-1/4 rounded-full"></div>
+                            </div>
+                            <div className="space-y-4 text-[14px] text-[#1a1c3d]">
+                              <div className="flex items-center gap-3">
+                                <CheckCircle size={22} className="text-[#5b4df2]" />
+                                <span>Create Account</span>
+                              </div>
+                              <div className="flex items-center gap-3">
+                                <span className="w-[22px] h-[22px] rounded-full border-2 border-[#45464e]/60 block"></span>
+                                <span>Upload Resume</span>
+                              </div>
+                              <div className="flex items-center gap-3">
+                                <span className="w-[22px] h-[22px] rounded-full border-2 border-[#45464e]/60 block"></span>
+                                <span>Complete Profile</span>
+                              </div>
+                              <div className="flex items-center gap-3">
+                                <span className="w-[22px] h-[22px] rounded-full border-2 border-[#45464e]/60 block"></span>
+                                <span>Enable AI Matching</span>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="grid grid-cols-2 gap-4">
+                            <div className="rounded-2xl bg-[#eef2ff] p-5 border border-[#5b4df2]/5">
+                              <Search size={24} className="text-[#5b4df2] mb-5" />
+                              <p className="font-bold text-[#1a1c3d] text-[15px]">Find Jobs</p>
+                              <p className="text-[12px] text-[#45464e] leading-tight">Smart search filters</p>
+                            </div>
+                            <div className="rounded-2xl bg-[#eef2ff] p-5 border border-[#5b4df2]/5">
+                              <Bell size={24} className="text-[#5b4df2] mb-5" />
+                              <p className="font-bold text-[#1a1c3d] text-[15px]">AI Matching</p>
+                              <p className="text-[12px] text-[#45464e] leading-tight">Personalized roles</p>
+                            </div>
+                            <div className="rounded-2xl bg-[#eef2ff] p-5 border border-[#5b4df2]/5">
+                              <Building size={24} className="text-[#5b4df2] mb-5" />
+                              <p className="font-bold text-[#1a1c3d] text-[15px]">Follow Companies</p>
+                              <p className="text-[12px] text-[#45464e] leading-tight">Get latest updates</p>
+                            </div>
+                            <div className="rounded-2xl bg-[#eef2ff] p-5 border border-[#5b4df2]/5">
+                              <Tag size={24} className="text-[#5b4df2] mb-5" />
+                              <p className="font-bold text-[#1a1c3d] text-[15px]">Career Insights</p>
+                              <p className="text-[12px] text-[#45464e] leading-tight">Market trends</p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <footer className="h-20 px-8 border-t border-gray-100 flex items-center justify-end gap-4 bg-white shrink-0">
                     <button
-                      onClick={() => setSelectedNotification(null)}
-                      className="flex items-center gap-2 text-[#5b4df2] font-bold text-[14px] hover:bg-[#5b4df2]/5 px-3 py-2 rounded-xl transition-all"
-                    >
-                      <ArrowLeft size={20} className="flex-shrink-0" />
-                      Back to Notifications
-                    </button>
-                    <div className="h-4 w-px bg-gray-200"></div>
-                    <h2 className="text-[16px] font-bold text-[#1a1c3d]">Welcome Detail</h2>
-                  </div>
-                  <span className="text-[11px] font-medium text-[#45464e]/60">Received {formatRelativeTime(selectedNotification.createdAt)}</span>
-                </header>
-
-                <div className="flex-grow overflow-y-auto custom-scrollbar bg-white">
-                  <div className="relative h-64 overflow-hidden">
-                    <div
-                      className="relative h-[260px] overflow-hidden bg-cover bg-center"
-                      style={{
-                        backgroundImage: `linear-gradient(90deg, rgba(35,18,89,0.9), rgba(35,18,89,0.35)), url('/images/messageImage_1782791898599.jpg')`,
+                      onClick={() => {
+                        router.push('/coming-soon/jobseeker');
+                        onClose();
                       }}
+                      className="px-6 py-3 rounded-2xl text-[14px] font-bold text-[#45464e] hover:bg-gray-100 transition-all"
                     >
-                      <div className="absolute bottom-10 left-10 right-10">
-                        <h2 className="text-4xl font-bold text-white">
-                          Welcome to WorksDD
-                        </h2>
-                        <p className="mt-2 text-white/90">
-                          Your journey to a dream career starts here.
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="px-10 py-10 relative z-10">
-                    <div className="space-y-8">
-                      <div>
-                        <h2 className="text-[26px] font-bold text-[#1a1c3d] mb-3">Hello {welcomeName} 👋</h2>
-                        <p className="text-[15px] text-[#45464e] leading-relaxed max-w-3xl">
-                          {locDetail?.message || 'Welcome to WorksDD. Your account has been created successfully.'}
-                        </p>
-                      </div>
-
-                      <div className="grid grid-cols-2 gap-6">
-                        <div className="rounded-3xl border border-gray-100 shadow-sm p-6 bg-white">
-                          <div className="flex items-center justify-between mb-5">
-                            <p className="text-[11px] font-bold text-[#45464e] uppercase tracking-wider">Profile Completion</p>
-                            <span className="text-[#5b4df2] font-bold text-[14px]">25%</span>
-                          </div>
-                          <div className="h-2 w-full bg-gray-100 rounded-full overflow-hidden mb-6">
-                            <div className="h-full bg-[#5b4df2] w-1/4 rounded-full"></div>
-                          </div>
-                          <div className="space-y-4 text-[14px] text-[#1a1c3d]">
-                            <div className="flex items-center gap-3">
-                              <CheckCircle size={22} className="text-[#5b4df2]" />
-                              <span>Create Account</span>
-                            </div>
-                            <div className="flex items-center gap-3">
-                              <span className="w-[22px] h-[22px] rounded-full border-2 border-[#45464e]/60 block"></span>
-                              <span>Upload Resume</span>
-                            </div>
-                            <div className="flex items-center gap-3">
-                              <span className="w-[22px] h-[22px] rounded-full border-2 border-[#45464e]/60 block"></span>
-                              <span>Complete Profile</span>
-                            </div>
-                            <div className="flex items-center gap-3">
-                              <span className="w-[22px] h-[22px] rounded-full border-2 border-[#45464e]/60 block"></span>
-                              <span>Enable AI Matching</span>
-                            </div>
-                          </div>
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-4">
-                          <div className="rounded-2xl bg-[#eef2ff] p-5 border border-[#5b4df2]/5">
-                            <Search size={24} className="text-[#5b4df2] mb-5" />
-                            <p className="font-bold text-[#1a1c3d] text-[15px]">Find Jobs</p>
-                            <p className="text-[12px] text-[#45464e] leading-tight">Smart search filters</p>
-                          </div>
-                          <div className="rounded-2xl bg-[#eef2ff] p-5 border border-[#5b4df2]/5">
-                            <Bell size={24} className="text-[#5b4df2] mb-5" />
-                            <p className="font-bold text-[#1a1c3d] text-[15px]">AI Matching</p>
-                            <p className="text-[12px] text-[#45464e] leading-tight">Personalized roles</p>
-                          </div>
-                          <div className="rounded-2xl bg-[#eef2ff] p-5 border border-[#5b4df2]/5">
-                            <Building size={24} className="text-[#5b4df2] mb-5" />
-                            <p className="font-bold text-[#1a1c3d] text-[15px]">Follow Companies</p>
-                            <p className="text-[12px] text-[#45464e] leading-tight">Get latest updates</p>
-                          </div>
-                          <div className="rounded-2xl bg-[#eef2ff] p-5 border border-[#5b4df2]/5">
-                            <Tag size={24} className="text-[#5b4df2] mb-5" />
-                            <p className="font-bold text-[#1a1c3d] text-[15px]">Career Insights</p>
-                            <p className="text-[12px] text-[#45464e] leading-tight">Market trends</p>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+                      Open User Guide
+                    </button>
+                    <button
+                      onClick={() => {
+                        router.push('/jobs');
+                        onClose();
+                      }}
+                      className="px-8 py-3 rounded-2xl bg-[#5b4df2] text-white text-[14px] font-bold shadow-lg shadow-[#5b4df2]/20 hover:shadow-xl transition-all"
+                    >
+                      Start Exploring Jobs
+                    </button>
+                  </footer>
                 </div>
 
-                <footer className="h-20 px-8 border-t border-gray-100 flex items-center justify-end gap-4 bg-white shrink-0">
-                  <button
-                    onClick={() => {
-                      router.push('/coming-soon/jobseeker');
-                      onClose();
-                    }}
-                    className="px-6 py-3 rounded-2xl text-[14px] font-bold text-[#45464e] hover:bg-gray-100 transition-all"
+                {/* Mobile Welcome ใหม่ */}
+                <div className="md:hidden flex-grow flex flex-col h-full bg-white">
+                  {welcomeMobileMenuOpen && (
+                    <div
+                      className="fixed inset-0 z-[10000] bg-black/40 backdrop-blur-sm"
+                      onClick={() => setWelcomeMobileMenuOpen(false)}
+                    />
+                  )}
+
+                  <aside
+                    className={`fixed top-0 right-0 h-full w-72 z-[10001] bg-white shadow-2xl flex flex-col transition-transform duration-300 ease-in-out ${
+                      welcomeMobileMenuOpen ? 'translate-x-0' : 'translate-x-full'
+                    }`}
                   >
-                    Open User Guide
-                  </button>
-                  <button
-                    onClick={() => {
-                      router.push('/jobs');
-                      onClose();
-                    }}
-                    className="px-8 py-3 rounded-2xl bg-[#5b4df2] text-white text-[14px] font-bold shadow-lg shadow-[#5b4df2]/20 hover:shadow-xl transition-all"
-                  >
-                    Start Exploring Jobs
-                  </button>
-                </footer>
-              </div>
+                    <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-slate-100">
+                      <h2 className="text-xl font-extrabold text-slate-900 tracking-tight">Notifications</h2>
+                      <button
+                        onClick={() => setWelcomeMobileMenuOpen(false)}
+                        aria-label="ปิดเมนู"
+                        className="p-1.5 rounded-lg text-slate-500 hover:bg-slate-100 active:scale-90 transition-all"
+                      >
+                        <X size={20} />
+                      </button>
+                    </div>
+
+                    <nav className="flex-1 overflow-y-auto px-4 py-5 space-y-7">
+                      <div>
+                        <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400 mb-2 px-2">
+                          Main
+                        </p>
+                        <ul className="space-y-1">
+                          <li>
+                            <button
+                              onClick={() => { setActiveTab('all'); setSelectedNotification(null); setWelcomeMobileMenuOpen(false); }}
+                              className="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-semibold text-white shadow-md active:scale-95 transition-all bg-[#635BFF]"
+                            >
+                              <Bell size={20} />
+                              ทั้งหมด
+                            </button>
+                          </li>
+                          <li>
+                            <button
+                              onClick={() => { setActiveTab('unread'); setSelectedNotification(null); setWelcomeMobileMenuOpen(false); }}
+                              className="w-full flex items-center justify-between gap-3 px-3 py-3 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-50 active:scale-95 transition-all"
+                            >
+                              <span className="flex items-center gap-3">
+                                <MailOpen size={20} className="text-slate-400" />
+                                ยังไม่ได้อ่าน
+                              </span>
+                              {computedUnreadCount > 0 && (
+                                <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">
+                                  {computedUnreadCount}
+                                </span>
+                              )}
+                            </button>
+                          </li>
+                          <li>
+                            <button
+                              onClick={() => { setActiveTab('company'); setSelectedNotification(null); setWelcomeMobileMenuOpen(false); }}
+                              className="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-50 active:scale-95 transition-all"
+                            >
+                              <AtSign size={20} className="text-slate-400" />
+                              การตอบรับจากบริษัท
+                            </button>
+                          </li>
+                        </ul>
+                      </div>
+
+                      <div>
+                        <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400 mb-2 px-2">
+                          Preferences
+                        </p>
+                        <button
+                          onClick={() => { setActiveTab('system'); setSelectedNotification(null); setWelcomeMobileMenuOpen(false); }}
+                          className="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-50 active:scale-95 transition-all"
+                        >
+                          <Settings size={20} className="text-slate-400" />
+                          ระบบ
+                        </button>
+                      </div>
+                    </nav>
+                  </aside>
+
+                  <nav className="sticky top-0 z-30 bg-white border-b border-slate-100 px-4 py-3 flex items-center justify-between shrink-0">
+                    <button
+                      type="button"
+                      onClick={onClose}
+                      className="flex items-center font-medium text-[#635BFF]"
+                      aria-label="Back to previous page"
+                    >
+                      <ArrowLeft size={20} />
+                    </button>
+
+                    <h1 className="text-lg font-semibold text-[#1E1B4B]">
+                      Welcome Detail
+                    </h1>
+
+                    <button
+                      type="button"
+                      onClick={() => setWelcomeMobileMenuOpen(true)}
+                      aria-label="Menu"
+                      className="active:scale-95 transition-all text-[#1E1B4B]"
+                    >
+                      <span className="block w-6 h-0.5 bg-current mb-1.5 rounded-full" />
+                      <span className="block w-6 h-0.5 bg-current mb-1.5 rounded-full" />
+                      <span className="block w-6 h-0.5 bg-current rounded-full" />
+                    </button>
+                  </nav>
+
+                  <div className="flex-1 overflow-y-auto bg-white">
+                    <section className="relative h-56 w-full overflow-hidden shrink-0">
+                      <div
+                        className="w-full h-full bg-cover bg-center"
+                        style={{
+                          backgroundImage: `linear-gradient(to top, rgba(0,0,0,0.65), rgba(0,0,0,0.05)), url('/images/messageImage_1782791898599.jpg')`,
+                        }}
+                      />
+                      <div className="absolute inset-0 flex flex-col justify-end p-6">
+                        <h2 className="text-white text-2xl font-bold">Welcome to WorksDD</h2>
+                        <p className="text-white/80 text-sm">Your journey to a dream career starts here.</p>
+                      </div>
+                    </section>
+
+                    <section className="p-6 space-y-6">
+                      <div className="flex justify-between items-start gap-3">
+                        <h3 className="text-xl font-bold text-slate-800 leading-tight">Hello {welcomeName} 👋</h3>
+                        <span className="text-xs shrink-0 mt-1 text-slate-500">
+                          Received {formatRelativeTime(selectedNotification.createdAt)}
+                        </span>
+                      </div>
+
+                      <div className="leading-relaxed text-sm text-slate-600">
+                        <p>{locDetail?.message || 'Welcome to WorksDD. Your account has been created successfully.'}</p>
+                      </div>
+
+                      <div className="rounded-2xl p-5 border bg-[#f7f7ff] border-[#F0F0FF]">
+                        <div className="flex justify-between items-center mb-4">
+                          <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                            Profile Completion
+                          </span>
+                          <span className="font-bold text-[#635BFF]">
+                            25%
+                          </span>
+                        </div>
+
+                        <div className="w-full bg-slate-200 h-2 rounded-full mb-6">
+                          <div className="h-2 rounded-full bg-[#635BFF] w-1/4" />
+                        </div>
+
+                        <ul className="space-y-4">
+                          <li className="flex items-center text-sm text-slate-700">
+                            <CheckCircle size={20} className="mr-3 shrink-0 text-[#635BFF]" />
+                            <span>Create Account</span>
+                          </li>
+                          <li className="flex items-center text-sm text-slate-400">
+                            <div className="h-5 w-5 rounded-full border-2 border-slate-300 mr-3 shrink-0" />
+                            <span>Upload Resume</span>
+                          </li>
+                          <li className="flex items-center text-sm text-slate-400">
+                            <div className="h-5 w-5 rounded-full border-2 border-slate-300 mr-3 shrink-0" />
+                            <span>Complete Profile</span>
+                          </li>
+                          <li className="flex items-center text-sm text-slate-400">
+                            <div className="h-5 w-5 rounded-full border-2 border-slate-300 mr-3 shrink-0" />
+                            <span>Enable AI Matching</span>
+                          </li>
+                        </ul>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
+                          <Search size={24} className="mb-2 text-[#635BFF]" />
+                          <h4 className="font-bold text-sm">Find Jobs</h4>
+                          <p className="text-xs text-slate-500">Smart search filters</p>
+                        </div>
+
+                        <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
+                          <Bell size={24} className="mb-2 text-[#635BFF]" />
+                          <h4 className="font-bold text-sm">AI Matching</h4>
+                          <p className="text-xs text-slate-500">Personalized roles</p>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-3 pt-6 pb-6">
+                        <button
+                          onClick={() => {
+                            router.push('/coming-soon/jobseeker');
+                            onClose();
+                          }}
+                          className="w-full bg-white font-bold py-3 rounded-xl transition-colors text-sm active:scale-95 border-2 border-[#635BFF] text-[#635BFF]"
+                        >
+                          Open User Guide
+                        </button>
+
+                        <button
+                          onClick={() => {
+                            router.push('/jobs');
+                            onClose();
+                          }}
+                          className="w-full text-white font-bold py-3 rounded-xl shadow-lg active:scale-95 transition-all text-sm hover:opacity-90 bg-[#635BFF]"
+                        >
+                          Start Exploring Jobs
+                        </button>
+                      </div>
+                    </section>
+                  </div>
+                </div>
+              </>
             ) : (
               /* ─── มุมมองหน้าต่างย่อยขยายดีเทล 100% ตามดีไซน์ (รูปที่ 3) ─── */
               <div className="flex-grow flex flex-col h-full bg-white animate-in slide-in-from-right duration-300">

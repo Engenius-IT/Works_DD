@@ -524,6 +524,7 @@ export function NotificationBell() {
                 <button
                   onClick={() => {
                     setIsOpen(false);      // ปิด Dropdown เล็ก
+                    setSelectedNotificationForModal(null);
                     setIsModalOpen(true);  // เปิดหน้าจอ Premium Modal ตัวเต็ม
                   }}
                   className="w-full py-2 text-center text-sm font-medium text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors"
