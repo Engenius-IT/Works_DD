@@ -500,7 +500,8 @@ export default function EmployerApplicantsPage() {
                 return (
                   <div
                     key={applicant.id}
-                    className="group hover:bg-gray-50/80 transition-colors px-4 md:px-6 py-4 md:py-5 flex flex-col md:grid md:grid-cols-12 gap-3 md:gap-4 md:items-center relative"
+                    className="group hover:bg-gray-50/80 transition-colors px-4 md:px-6 py-4 md:py-5 flex flex-col md:grid md:grid-cols-12 gap-3 md:gap-4 md:items-center relative cursor-pointer"
+                    onClick={() => setSelectedApplicantId(applicant.id)}
                   >
                     {/* Applicant Info (Col 1-4) */}
                     <div className="md:col-span-4 flex items-center gap-3">
@@ -563,7 +564,10 @@ export default function EmployerApplicantsPage() {
                     {/* Actions (Col 12) */}
                     <div className="md:col-span-1 flex items-center md:justify-end gap-1.5 mt-3 md:mt-0 pt-3 md:pt-0 border-t border-gray-100 md:border-0">
                       <button
-                        onClick={() => setSelectedApplicantId(applicant.id)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedApplicantId(applicant.id);
+                        }}
                         className="flex-1 md:flex-none flex items-center justify-center gap-1.5 px-3 py-2 md:p-2 bg-white md:bg-transparent border border-gray-200 md:border-transparent rounded-lg text-gray-600 md:text-gray-400 hover:text-[#020263] hover:bg-blue-50 hover:border-blue-200 transition-all shadow-sm md:shadow-none font-medium text-xs md:text-base"
                         title="ดูรายละเอียด/เรซูเม่"
                       >
@@ -574,7 +578,10 @@ export default function EmployerApplicantsPage() {
                       {/* Quick action: Shortlist (If pending or reviewed) */}
                       {(applicant.status === 'PENDING' || applicant.status === 'REVIEWED') && (
                         <button
-                          onClick={() => handleUpdateStatus(applicant.id, 'SHORTLISTED')}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleUpdateStatus(applicant.id, 'SHORTLISTED');
+                          }}
                           className="flex-1 md:flex-none flex items-center justify-center gap-1.5 px-3 py-2 md:p-2 bg-white md:bg-transparent border border-gray-200 md:border-transparent rounded-lg text-green-600 md:text-gray-400 hover:text-green-600 hover:bg-green-50 hover:border-green-200 transition-all shadow-sm md:shadow-none font-medium text-xs md:text-base"
                           title="ให้ผ่านเข้ารอบ"
                         >
@@ -586,7 +593,8 @@ export default function EmployerApplicantsPage() {
                       {/* Quick action: Reject (If pending or reviewed) */}
                       {(applicant.status === 'PENDING' || applicant.status === 'REVIEWED') && (
                         <button
-                          onClick={() => {
+                          onClick={(e) => {
+                            e.stopPropagation();
                             if (
                               confirm(
                                 `ยืนยันการปฏิเสธผู้สมัคร ${applicant.user?.firstName} ใช่หรือไม่?`,
@@ -606,7 +614,8 @@ export default function EmployerApplicantsPage() {
                       {/* Quick action: Schedule Interview (If SHORTLISTED) */}
                       {applicant.status === 'SHORTLISTED' && (
                         <button
-                          onClick={() => {
+                          onClick={(e) => {
+                            e.stopPropagation();
                             setInterviewApplicantId(applicant.id);
                             // Default to tomorrow
                             const tomorrow = new Date();
@@ -627,7 +636,8 @@ export default function EmployerApplicantsPage() {
                       {applicant.status === 'INTERVIEW' && (
                         <>
                           <button
-                            onClick={() => {
+                            onClick={(e) => {
+                              e.stopPropagation();
                               if (confirm(`ยืนยันการเสนอเข้าทำงานให้ ${applicant.user?.firstName} ใช่หรือไม่?`)) {
                                 handleUpdateStatus(applicant.id, 'OFFERED');
                               }
@@ -640,7 +650,8 @@ export default function EmployerApplicantsPage() {
                           </button>
                           
                           <button
-                            onClick={() => {
+                            onClick={(e) => {
+                              e.stopPropagation();
                               if (confirm(`ยืนยันการปฏิเสธผู้สมัคร ${applicant.user?.firstName} ใช่หรือไม่?`)) {
                                 handleUpdateStatus(applicant.id, 'REJECTED');
                               }
@@ -653,7 +664,10 @@ export default function EmployerApplicantsPage() {
                           </button>
 
                           <button
-                            onClick={() => handleCancelInterview(applicant.id)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleCancelInterview(applicant.id);
+                            }}
                             className="flex-1 md:flex-none flex items-center justify-center gap-1.5 px-3 py-2 md:p-2 bg-white md:bg-transparent border border-gray-200 md:border-transparent rounded-lg text-gray-500 md:text-gray-400 hover:text-gray-700 hover:bg-gray-100 hover:border-gray-300 transition-all shadow-sm md:shadow-none font-medium text-xs md:text-base"
                             title="ยกเลิกนัดสัมภาษณ์"
                           >
@@ -667,7 +681,8 @@ export default function EmployerApplicantsPage() {
                       {applicant.status === 'OFFERED' && (
                         <>
                           <button
-                            onClick={() => {
+                            onClick={(e) => {
+                              e.stopPropagation();
                               setInterviewApplicantId(applicant.id);
                               const tomorrow = new Date();
                               tomorrow.setDate(tomorrow.getDate() + 1);
@@ -683,7 +698,8 @@ export default function EmployerApplicantsPage() {
                           </button>
 
                           <button
-                            onClick={() => {
+                            onClick={(e) => {
+                              e.stopPropagation();
                               if (confirm(`ยืนยันการยกเลิกข้อเสนอของ ${applicant.user?.firstName} และกลับไประยะสัมภาษณ์ใช่หรือไม่?`)) {
                                 handleUpdateStatus(applicant.id, 'INTERVIEW');
                               }
