@@ -165,7 +165,7 @@ export function UserDropdown({ user, logout, customDropdownClass, badgeText, bad
             <>
               <div className="py-1">
                 <Link
-                  href={companySlug ? `/Companyprofile?slug=${companySlug}` : '/employer/dashboard'}
+                  href="/employer/dashboard"
                   className="block px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-(--color-primary) transition-colors"
                   onClick={() => setIsOpen(false)}
                 >

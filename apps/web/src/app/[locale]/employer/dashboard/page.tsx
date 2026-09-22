@@ -1555,10 +1555,12 @@ export default function EmployerDashboard() {
                           {t('vip')}
                         </div>
                       ) : packageInfo?.name === 'Premium' ? (
-                        <div className="w-full h-full font-black py-2.5 rounded-xl text-xs flex items-center justify-center gap-1.5 border-2 border-blue-950/40 shadow-xl bg-gradient-to-r from-blue-700 to-indigo-800 text-white tracking-wide">
-                          <Crown className="w-4 h-4 text-blue-200 fill-blue-200" />
-                          {t('premium')}
-                        </div>
+                        <button
+                          onClick={() => router.push('/employer/packages')}
+                          className="w-full h-full font-black py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white transition-all text-xs shadow-md active:scale-[0.98] flex items-center justify-center"
+                        >
+                          {t('upgradePackage')}
+                        </button>
                       ) : packageInfo?.name === 'Pro' ? (
                         <div className="w-full h-full font-black py-2.5 rounded-xl text-xs flex items-center justify-center gap-1.5 border-b-4 border-amber-800 bg-gradient-to-r from-amber-500 to-amber-600 text-white tracking-wide">
                           <Zap className="w-4 h-4 text-white fill-white" />
