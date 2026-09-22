@@ -70,7 +70,7 @@ function LoginForm() {
         } else if (userData.role === 'EMPLOYER' || userData.role === 'ADMIN') {
           window.location.href = `/${currentLocale}/employer/dashboard`;
         } else {
-          window.location.href = `/${currentLocale}/profilefull`;
+          window.location.href = `/${currentLocale}/`;
         }
 
         // 🧼 เคลียร์พารามิเตอร์บน URL ทิ้งหลังจากที่สั่งย้ายหน้าแล้ว
@@ -151,7 +151,7 @@ function LoginForm() {
         if (data.user.role === 'EMPLOYER' || data.user.role === 'ADMIN') {
           window.location.href = `/${currentLocale}/employer/dashboard`;
         } else {
-          window.location.href = `/${currentLocale}/profilefull`;
+          window.location.href = `/${currentLocale}/`;
         }
       }
     } catch {
