@@ -313,9 +313,9 @@ export default function CompanyProfile() {
         {/* Left Column */}
         <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
           {/* About */}
-          <div style={{ background: "#fff", borderRadius: 14, padding: "28px 32px", boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
+          <div style={{ background: "#fff", borderRadius: 14, padding: "28px 32px", boxShadow: "0 1px 4px rgba(0,0,0,0.06)", overflowWrap: "break-word", wordBreak: "break-word" }}>
             <h2 style={{ margin: "0 0 16px", fontSize: 18, fontWeight: 800, color: "#1a1a2e", letterSpacing: "-0.3px" }}>About the Company</h2>
-            <p style={{ margin: 0, fontSize: 14.5, lineHeight: 1.75, color: "#4a5568" }}>
+            <p style={{ margin: 0, fontSize: 14.5, lineHeight: 1.75, color: "#4a5568", overflowWrap: "break-word", wordBreak: "break-word" }}>
               {company?.description || "ยังไม่มีรายละเอียดบริษัท"}
             </p>
           </div>
@@ -337,7 +337,8 @@ export default function CompanyProfile() {
                 alignItems: "center",
                 gap: 5,
                 color: "#666",
-                fontSize: 13
+                fontSize: 13,
+                flexShrink: 0,
               }}>
                 <FilterIcon />
                 Filter
@@ -357,7 +358,9 @@ export default function CompanyProfile() {
                     justifyContent: "space-between",
                     alignItems: "center",
                     transition: "box-shadow 0.2s, border-color 0.2s",
-                    animation: `fadeInUp 0.3s ease ${i * 0.05}s both`
+                    animation: `fadeInUp 0.3s ease ${i * 0.05}s both`,
+                    maxWidth: "100%",
+                    overflow: "hidden",
                   }}
                   onMouseOver={e => {
                     (e.currentTarget as HTMLDivElement).style.boxShadow = "0 4px 16px rgba(230,57,70,0.1)";
@@ -373,6 +376,8 @@ export default function CompanyProfile() {
                       flex: 1,
                       minWidth: 0,
                       marginRight: 16,
+                      maxWidth: "100%",
+                      overflow: "hidden",
                     }}
                   >
                     <div
@@ -384,11 +389,12 @@ export default function CompanyProfile() {
                         overflow: "hidden",
                         textOverflow: "ellipsis",
                         whiteSpace: "nowrap",
+                        wordBreak: "break-all",
                       }}
                     >
                       {job.title}
                     </div>
-                    <div style={{ display: "flex", gap: 16, alignItems: "center", flexWrap: "wrap" }}>
+                    <div style={{ display: "flex", gap: 16, alignItems: "center", flexWrap: "wrap", maxWidth: "100%" }}>
                       <span
                         style={{
                           display: "flex",
@@ -397,6 +403,7 @@ export default function CompanyProfile() {
                           color: "#666",
                           fontSize: 13,
                           minWidth: 0,
+                          maxWidth: "100%",
                           overflow: "hidden",
                         }}
                       >
@@ -406,12 +413,15 @@ export default function CompanyProfile() {
                             overflow: "hidden",
                             textOverflow: "ellipsis",
                             whiteSpace: "nowrap",
+                            wordBreak: "break-all",
+                            maxWidth: "280px",
+                            display: "inline-block",
                           }}
                         >
                           {locationText(job)}
                         </span>
                       </span>
-                      <span style={{ display: "flex", alignItems: "center", gap: 4, color: "#666", fontSize: 13 }}>
+                      <span style={{ display: "flex", alignItems: "center", gap: 4, color: "#666", fontSize: 13, flexShrink: 0 }}>
                         <ClockIcon />{job.jobType || "-"}
                       </span>
                       <span style={{
@@ -420,7 +430,9 @@ export default function CompanyProfile() {
                         fontWeight: 600,
                         fontSize: 12,
                         borderRadius: 6,
-                        padding: "3px 9px"
+                        padding: "3px 9px",
+                        flexShrink: 0,
+                        whiteSpace: "nowrap",
                       }}>{salaryText(job)}</span>
                     </div>
                   </div>
@@ -436,6 +448,8 @@ export default function CompanyProfile() {
                       fontSize: 13,
                       fontWeight: 700,
                       cursor: "pointer",
+                      flexShrink: 0,
+                      whiteSpace: "nowrap",
                     }}
                   >
                     ดูรายละเอียดงาน
@@ -600,13 +614,21 @@ export default function CompanyProfile() {
     max-width: 100% !important;
     min-width: 0 !important;
     display: flex !important;
-    align-items: center !important;
-    gap: 12px !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 14px !important;
     overflow: hidden !important;
   }
 
+  .job-card > div {
+    margin-right: 0 !important;
+    width: 100% !important;
+  }
+
   .apply-btn {
+    width: 100% !important;
     flex-shrink: 0 !important;
+    text-align: center !important;
   }
 }
       `}</style>
