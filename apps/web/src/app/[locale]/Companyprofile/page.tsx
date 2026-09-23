@@ -438,7 +438,7 @@ export default function CompanyProfile() {
                   </div>
                   <button
                     className="apply-btn"
-                    onClick={() => router.push(`/${locale}/jobs/${job.slug || job.id}`)}
+                    onClick={() => router.push(`/${locale}/employer/jobs/${job.id}/edit`)}
                     style={{
                       background: "#1a1a2e",
                       color: "#fff",
