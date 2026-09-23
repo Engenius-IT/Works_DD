@@ -71,11 +71,42 @@ export class AdminUsersService {
         role: true,
         emailVerified: true,
         createdAt: true,
+        companies: {
+          select: {
+            id: true,
+            name: true,
+            slug: true,
+            logoUrl: true,
+            verificationStatus: true,
+            isVerified: true,
+            createdAt: true,
+            _count: {
+              select: { jobs: true },
+            },
+          },
+        },
       },
     });
 
     if (!user) throw new NotFoundException('ไม่พบข้อมูลผู้ใช้');
-    return user;
+
+    // CompanyPackage ไม่มี Prisma relation กับ Company ใน schema ปัจจุบัน
+    // จึงดึงแยกแล้วประกอบ response เพื่อให้หน้าแอดมินเห็นแพ็กเกจล่าสุดด้วย
+    const companyIds = user.companies.map((company) => company.id);
+    const packages = companyIds.length
+      ? await this.prisma.companyPackage.findMany({
+          where: { companyId: { in: companyIds } },
+        })
+      : [];
+    const packageByCompanyId = new Map(packages.map((pkg) => [pkg.companyId, pkg]));
+
+    return {
+      ...user,
+      companies: user.companies.map((company) => ({
+        ...company,
+        package: packageByCompanyId.get(company.id) ?? null,
+      })),
+    };
   }
 
   async updateUser(id: string, updateData: any, adminId: string) {

@@ -212,7 +212,7 @@ export default function ApplicationsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#F5F7FA] font-sans pb-12">
+    <div className="min-h-screen bg-[#F5F7FA] font-sans">
       <Navbar />
 
       {/* Hero Section */}
@@ -233,7 +233,7 @@ export default function ApplicationsPage() {
       </div>
 
       {/* Main Content */}
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 -mt-10 relative z-20">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 -mt-10 pb-12 relative z-20">
         {/* Stats Row */}
         <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-4 grid grid-cols-3 sm:divide-x sm:divide-gray-100 text-center mb-8 gap-y-2 sm:gap-y-0">
           

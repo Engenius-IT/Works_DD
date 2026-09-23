@@ -1,10 +1,19 @@
 import {
-    Controller, Post, Body, HttpCode, HttpStatus, Get, Param, Query,
-    NotFoundException, InternalServerErrorException
+    Controller, Post, Body, Get, Param, Query,
+    NotFoundException, InternalServerErrorException, Request, UseGuards,
+    UseInterceptors, UploadedFile, BadRequestException,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { memoryStorage } from 'multer';
+import { ApiBearerAuth, ApiBody, ApiConsumes, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { PaymentService } from './payment.service';
 import { PrismaService } from '../prisma/prisma.service';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { Roles } from '../auth/decorators/roles.decorator';
+import { UserRole } from '@prisma/client';
 
+@ApiTags('payments')
 @Controller('payments')
 export class PaymentController {
     constructor(
@@ -12,55 +21,154 @@ export class PaymentController {
         private readonly prisma: PrismaService
     ) { }
 
-    /**
-     * 1. หน้าบ้านเรียกตอนกดปุ่มชำระเงิน
-     */
-    @Post('create')
-    async createPayment(@Body() body: any) {
-        const { companyId, planName, amount, method, token, card } = body;
-        const creditCardToken = token || card;
-        return await this.paymentService.createPayment(companyId, planName, amount, method, creditCardToken);
-    }
+    @Post('self/create')
+    @UseGuards(JwtAuthGuard)
+    @ApiBearerAuth()
+    @ApiOperation({ summary: 'สร้าง PromptPay QR แบบไม่ผ่าน Payment Gateway' })
+    async createSelfHostedPayment(@Body() body: { planName: string }, @Request() req: any) {
+        const company = await this.prisma.company.findFirst({
+            where: { ownerId: req.user.id },
+            select: { id: true },
+        });
 
-    /**
-     * 2. รับ Webhook จาก Omise (จุดปรับปรุง: เพิ่มความปลอดภัยและการพ่น Log เช็คระบบ)
-     */
-    @Post('webhook')
-    @HttpCode(HttpStatus.OK)
-    async handleWebhook(@Body() payload: any) {
-        try {
-            console.log(`📥 Received Webhook Event: ${payload?.key}`);
-
-            // ส่งไปให้ Service ประมวลผลอัปเกรดแพ็กเกจ
-            const result = await this.paymentService.handleWebhook(payload);
-
-            // ส่งกลับสถานะสำเร็จให้ Omise รับทราบ จะได้ไม่ยิงซ้ำ
-            return { received: true, ...result };
-        } catch (error) {
-            // ถ้าระบบหลังบ้านทำงานพลาด พ่น Log ออกมาดูทันทีเพื่อเอาไว้ไล่บั๊ก
-            console.error('❌ Webhook Processing Error:', error.message);
-            // ยังคงต้องตอบกลับ OK (200) เพื่อป้องกันไม่ให้ Omise ยิงกระหน่ำซ้ำ ๆ จนเซิร์ฟเวอร์คราศ
-            return { received: true, error: error.message };
+        if (!company) {
+            throw new NotFoundException('ไม่พบบริษัทของผู้ใช้งาน');
         }
+
+        return this.paymentService.createSelfHostedPromptPayPayment(company.id, body.planName);
     }
 
-    /**
-     * 3. เช็คสถานะการชำระเงิน (Polling จากหน้าบ้าน)
-     */
+    @Post('self/:chargeId/slip')
+    @UseGuards(JwtAuthGuard)
+    @ApiBearerAuth()
+    @ApiOperation({ summary: 'อัปโหลดสลิปเพื่อตรวจสอบด้วย 1xSlip และเปิดแพ็กเกจอัตโนมัติเมื่อผ่าน' })
+    @ApiConsumes('multipart/form-data')
+    @ApiBody({ schema: { type: 'object', properties: { file: { type: 'string', format: 'binary' } } } })
+    @UseInterceptors(
+        FileInterceptor('file', {
+            storage: memoryStorage(),
+            limits: { fileSize: 5 * 1024 * 1024 },
+            fileFilter: (
+                _req: Express.Request,
+                file: Express.Multer.File,
+                cb: (error: Error | null, acceptFile: boolean) => void,
+            ) => {
+                const allowed = ['image/jpeg', 'image/png', 'image/webp'];
+                if (!allowed.includes(file.mimetype)) {
+                    return cb(new BadRequestException('รองรับเฉพาะไฟล์ JPG, PNG, WEBP เท่านั้น'), false);
+                }
+                cb(null, true);
+            },
+        }),
+    )
+    async submitSelfHostedSlip(
+        @Param('chargeId') chargeId: string,
+        @UploadedFile() file: Express.Multer.File,
+        @Request() req: any,
+    ) {
+        if (!file) {
+            throw new BadRequestException('กรุณาแนบรูปสลิป');
+        }
+
+        return this.paymentService.submitSelfHostedSlip(charIdOrThrow(chargeId), req.user.id, file);
+    }
+
+    @Get('admin/self/pending')
+    @UseGuards(JwtAuthGuard, RolesGuard)
+    @Roles(UserRole.ADMIN)
+    @ApiBearerAuth()
+    @ApiOperation({ summary: 'รายการ PromptPay ที่ยังไม่ผ่านการตรวจสอบอัตโนมัติ' })
+    async getPendingSelfHostedPayments() {
+        return this.paymentService.getPendingSelfHostedPayments();
+    }
+
+    @Get('admin/self/live')
+    @UseGuards(JwtAuthGuard, RolesGuard)
+    @Roles(UserRole.ADMIN)
+    @ApiBearerAuth()
+    @ApiOperation({ summary: 'ข้อมูล Live Monitor ของ PromptPay ใน 24 ชั่วโมงล่าสุด' })
+    async getLiveSelfHostedPayments() {
+        return this.paymentService.getLiveSelfHostedPayments();
+    }
+
+    @Get('self/live')
+    @UseGuards(JwtAuthGuard)
+    @ApiBearerAuth()
+    @ApiOperation({ summary: 'ข้อมูล Live Monitor ของ PromptPay ของบริษัทตัวเอง' })
+    async getCompanyLiveSelfHostedPayments(@Request() req: any) {
+        if (req.user.role === UserRole.ADMIN) {
+            return this.paymentService.getLiveSelfHostedPayments();
+        }
+
+        const company = await this.prisma.company.findFirst({
+            where: { ownerId: req.user.id },
+            select: { id: true },
+        });
+
+        if (!company) {
+            throw new NotFoundException('ไม่พบบริษัทของผู้ใช้งาน');
+        }
+
+        return this.paymentService.getLiveSelfHostedPayments(company.id);
+    }
+
+    @Post('admin/self/:chargeId/approve')
+    @UseGuards(JwtAuthGuard, RolesGuard)
+    @Roles(UserRole.ADMIN)
+    @ApiBearerAuth()
+    @ApiOperation({ summary: 'อนุมัติรายการ PromptPay หลังตรวจยอดเงินแล้ว' })
+    async approveSelfHostedPayment(@Param('chargeId') chargeId: string, @Request() req: any) {
+        return this.paymentService.approveSelfHostedPayment(charIdOrThrow(chargeId), req.user.id);
+    }
+
+    @Post('admin/self/:chargeId/reject')
+    @UseGuards(JwtAuthGuard, RolesGuard)
+    @Roles(UserRole.ADMIN)
+    @ApiBearerAuth()
+    @ApiOperation({ summary: 'ปฏิเสธรายการ PromptPay' })
+    async rejectSelfHostedPayment(
+        @Param('chargeId') chargeId: string,
+        @Body() body: { reason?: string },
+        @Request() req: any,
+    ) {
+        return this.paymentService.rejectSelfHostedPayment(charIdOrThrow(chargeId), req.user.id, body.reason);
+    }
+
+    @Get('admin/self/:chargeId/logs')
+    @UseGuards(JwtAuthGuard, RolesGuard)
+    @Roles(UserRole.ADMIN)
+    @ApiBearerAuth()
+    @ApiOperation({ summary: 'ดู log การสร้าง QR และตรวจสอบเงินเข้า' })
+    async getSelfHostedPaymentLogs(@Param('chargeId') chargeId: string) {
+        return this.paymentService.getSelfHostedPaymentLogs(charIdOrThrow(chargeId));
+    }
+
+    /** เช็คสถานะรายการของบริษัทตัวเอง (Polling จากหน้าบ้าน) */
     @Get('status/:chargeId')
-    async getPaymentStatus(@Param('chargeId') chargeId: string) {
+    @UseGuards(JwtAuthGuard)
+    @ApiBearerAuth()
+    async getPaymentStatus(@Param('chargeId') chargeId: string, @Request() req: any) {
         try {
             const payment = await this.prisma.paymentTransaction.findUnique({
                 where: { chargeId: chargeId },
-                select: { status: true }
+                select: { status: true, companyId: true }
             });
 
             if (!payment) {
                 throw new NotFoundException(`ไม่พบรายการชำระเงินรหัส: ${chargeId}`);
             }
 
-            // ส่งสถานะกลับไป (PENDING หรือ SUCCESS)
-            return { status: payment.status };
+            if (req.user.role !== UserRole.ADMIN) {
+                const company = await this.prisma.company.findFirst({
+                    where: { id: payment.companyId, ownerId: req.user.id },
+                    select: { id: true },
+                });
+                if (!company) {
+                    throw new NotFoundException(`ไม่พบรายการชำระเงินรหัส: ${chargeId}`);
+                }
+            }
+
+            return this.paymentService.getSelfHostedPaymentStatus(charIdOrThrow(chargeId));
         } catch (error) {
             console.error('❌ Check Status Error:', error.message);
 
@@ -77,18 +185,35 @@ export class PaymentController {
         }
     }
 
-    /**
-     * 4. ดึงข้อมูลรายการชำระเงินของบริษัท
-     */
+    /** ดึงข้อมูลรายการชำระเงินของบริษัทตัวเอง */
     @Get('company/:companyId')
+    @UseGuards(JwtAuthGuard)
+    @ApiBearerAuth()
     async getCompanyPayments(
         @Param('companyId') companyId: string,
         @Query('page') page?: string,
         @Query('limit') limit?: string,
-        @Query('status') status?: string
+        @Query('status') status?: string,
+        @Request() req?: any,
     ) {
+        if (req.user.role !== UserRole.ADMIN) {
+            const company = await this.prisma.company.findFirst({
+                where: { id: companyId, ownerId: req.user.id },
+                select: { id: true },
+            });
+            if (!company) {
+                throw new NotFoundException('ไม่พบบริษัทหรือไม่มีสิทธิ์เข้าถึง');
+            }
+        }
         const pageNum = page ? parseInt(page, 10) : 1;
         const limitNum = limit ? parseInt(limit, 10) : 5;
         return await this.paymentService.getCompanyPayments(companyId, pageNum, limitNum, status);
     }
+}
+
+function charIdOrThrow(chargeId: string): string {
+    if (!chargeId?.trim()) {
+        throw new BadRequestException('chargeId is required');
+    }
+    return chargeId.trim();
 }

@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Patch, Body, Param, Query, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Body, Param, Query, UseGuards, ForbiddenException, Request } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import { CompaniesService } from './companies.service';
 import { UpdateCompanyDto } from './dto/update-company.dto';
@@ -18,6 +18,21 @@ export class CompaniesController {
   @ApiOperation({ summary: 'ดึงข้อมูลบริษัทของ employer ที่ login อยู่' })
   async getMyCompany(@CurrentUser() user: JwtPayload) {
     return this.companiesService.getMyCompany(user.sub, user.role);
+  }
+
+  @Post('mine')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'สร้างข้อมูลบริษัทของ employer ที่ login อยู่' })
+  async createMyCompany(
+    @Body() body: { name?: string; industry?: string },
+    @CurrentUser() user: JwtPayload,
+    @Request() req: any,
+  ) {
+    if (req.user.role !== 'EMPLOYER' && req.user.role !== 'ADMIN') {
+      throw new ForbiddenException('บัญชีนี้ไม่ใช่บัญชีผู้ประกอบการ');
+    }
+    return this.companiesService.createMyCompany(user.sub, body.name || '', body.industry);
   }
 
   @Get('mine/jobs')

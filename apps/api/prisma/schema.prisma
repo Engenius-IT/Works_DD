@@ -445,16 +445,54 @@ model CompanySpending {
 }
 
 model PaymentTransaction {
-  id        String   @id @default(cuid())
-  chargeId  String   @unique
-  companyId String
-  planName  String
-  amount    Float
-  status    String   @default("PENDING")
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id                   String    @id @default(cuid())
+  chargeId             String    @unique
+  companyId            String
+  planName             String
+  amount               Float
+  status               String    @default("PENDING")
+  paymentMethod        String    @default("promptpay_self") @map("payment_method")
+  qrPayload            String?   @db.Text @map("qr_payload")
+  slipUrl              String?   @map("slip_url")
+  slipSha256           String?   @map("slip_sha256")
+  slipQrPayload        String?   @db.Text @map("slip_qr_payload")
+  slipAmount           Float?    @map("slip_amount")
+  slipReference        String?   @map("slip_reference")
+  slipRecipientName    String?   @map("slip_recipient_name")
+  slipTransactionAt    DateTime? @map("slip_transaction_at")
+  verificationChecks   Json?     @map("verification_checks")
+  verificationStatus   String    @default("NOT_SUBMITTED") @map("verification_status")
+  verificationMessage  String?   @map("verification_message")
+  reviewedBy           String?   @map("reviewed_by")
+  reviewedAt           DateTime? @map("reviewed_at")
+  expiresAt            DateTime? @map("expires_at")
+  cancelledAt          DateTime? @map("cancelled_at")
+  lastCheckedAt        DateTime? @map("last_checked_at")
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+  events               PaymentTransactionEvent[]
 
   @@index([chargeId])
+  @@index([status])
+  @@index([verificationStatus])
+  @@index([slipSha256])
+  @@index([expiresAt])
+}
+
+model PaymentTransactionEvent {
+  id                   String            @id @default(cuid())
+  paymentTransactionId String            @map("payment_transaction_id")
+  eventType            String            @map("event_type")
+  status               String?
+  amount               Float?
+  message              String?
+  metadata             Json?
+  createdAt            DateTime          @default(now()) @map("created_at")
+  paymentTransaction   PaymentTransaction @relation(fields: [paymentTransactionId], references: [id], onDelete: Cascade)
+
+  @@index([paymentTransactionId, createdAt])
+  @@index([eventType])
+  @@map("payment_transaction_events")
 }
 
 model UnlockedCandidate {

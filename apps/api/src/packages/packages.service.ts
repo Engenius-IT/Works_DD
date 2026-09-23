@@ -1,4 +1,4 @@
-import { Injectable, InternalServerErrorException, BadRequestException } from '@nestjs/common';
+import { Injectable, InternalServerErrorException, BadRequestException, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
@@ -74,7 +74,7 @@ export class PackagesService {
      * Helper ฟังก์ชันสำหรับดึง Configuration ของแพ็กเกจ
      * ✨ Pro = 10 AC, Premium = 10 AC, VIP = 10 AC
      */
-    private getPlanConfig(planName: string) {
+    getPlanConfig(planName: string) {
         const target = planName.toLowerCase();
 
         if (target.includes('vip')) {
@@ -107,6 +107,91 @@ export class PackagesService {
         }
 
         throw new BadRequestException('Invalid plan name configuration');
+    }
+
+    getPlanPrice(planName: string): number {
+        return this.getPlanConfig(planName).price;
+    }
+
+    /**
+     * Payment-only override for local testing. Package accounting keeps the
+     * real plan price, while the QR/payment transaction can use ฿1 in dev.
+     */
+    getPaymentPrice(planName: string): number {
+        const testAmount = Number(process.env.PAYMENT_TEST_AMOUNT);
+        const testModeEnabled = process.env.PAYMENT_TEST_MODE === 'true' || process.env.NODE_ENV !== 'production';
+        if (testModeEnabled && Number.isFinite(testAmount) && testAmount > 0) {
+            return testAmount;
+        }
+        return this.getPlanPrice(planName);
+    }
+
+    /**
+     * ตั้งแพ็กเกจจากหน้าแอดมินโดยตรง ไม่คิดเงินซ้ำและไม่สะสมโบนัสจากแพ็กเกจเดิม
+     * เพื่อให้การเพิ่ม/ลดแพ็กเกจเป็นค่าที่เห็นบนหน้าจอแบบตรงไปตรงมา
+     */
+    async setCompanyPackage(companyId: string, planName: string) {
+        const isFreePlan = planName.trim().toLowerCase().includes('free');
+        const config = isFreePlan
+            ? {
+                name: 'Free Plan',
+                type: 'standard',
+                cc: 3,
+                ac: 1,
+                durationDays: 100 * 365,
+            }
+            : this.getPlanConfig(planName);
+
+        try {
+            const company = await this.prisma.company.findUnique({
+                where: { id: companyId },
+                select: { id: true },
+            });
+            if (!company) throw new NotFoundException('ไม่พบบริษัทของผู้ใช้นี้');
+
+            const now = new Date();
+            const expireDate = new Date(now);
+            expireDate.setDate(expireDate.getDate() + config.durationDays);
+
+            const pkg = await this.prisma.companyPackage.upsert({
+                where: { companyId },
+                update: {
+                    name: config.name,
+                    type: config.type,
+                    ccQuotaTotal: config.cc,
+                    acQuotaTotal: config.ac,
+                    ccQuotaUsed: 0,
+                    acQuotaUsed: 0,
+                    bonusQuotaCC: 0,
+                    bonusQuotaAC: 0,
+                    bonusEndsAt: null,
+                    startDate: now,
+                    endDate: expireDate,
+                    lastReset: now,
+                    updatedAt: now,
+                },
+                create: {
+                    companyId,
+                    name: config.name,
+                    type: config.type,
+                    ccQuotaTotal: config.cc,
+                    acQuotaTotal: config.ac,
+                    ccQuotaUsed: 0,
+                    acQuotaUsed: 0,
+                    bonusQuotaCC: 0,
+                    bonusQuotaAC: 0,
+                    startDate: now,
+                    endDate: expireDate,
+                    lastReset: now,
+                },
+            });
+
+            return { success: true, data: pkg };
+        } catch (error) {
+            console.error('Set Company Package Error:', error);
+            if (error instanceof BadRequestException || error instanceof NotFoundException) throw error;
+            throw new InternalServerErrorException('Failed to set company package');
+        }
     }
 
     async upgradeCompanyPackage(companyId: string, planName: string) {

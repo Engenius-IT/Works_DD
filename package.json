@@ -6,7 +6,7 @@
     "packages/*"
   ],
   "scripts": {
-    "dev": "turbo run dev",
+    "dev": "turbo run dev --filter=@worksdd/api --filter=@worksdd/web",
     "build": "turbo run build",
     "lint": "turbo run lint",
     "start": "turbo run start",

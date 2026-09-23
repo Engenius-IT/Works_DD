@@ -60,8 +60,7 @@ export const BillingModal: React.FC<BillingModalProps> = ({
           planName: item.planName,
           description: item.planName.includes('Credit') || item.planName.includes('Boost') ? 'Ad Services' : 'Subscription',
           amount: item.amount,
-          method: 'credit_card', 
-          cardDigits: '1234',
+          method: item.paymentMethod || 'promptpay_self',
           status: item.status, 
         }));
 

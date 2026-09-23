@@ -1,4 +1,5 @@
 import { Injectable, NotFoundException, ForbiddenException, BadRequestException } from '@nestjs/common';
+import { randomUUID } from 'crypto';
 import { PrismaService } from '../prisma/prisma.service';
 import {
   VerificationStatus,
@@ -32,6 +33,35 @@ export class CompaniesService {
       throw new NotFoundException('ไม่พบข้อมูลบริษัท กรุณาตั้งค่าข้อมูลบริษัทก่อน');
     }
     return company;
+  }
+
+  async createMyCompany(userId: string, name: string, industry?: string) {
+    const normalizedName = name?.trim();
+    if (!normalizedName) {
+      throw new BadRequestException('กรุณาระบุชื่อบริษัท');
+    }
+
+    const existing = await this.prisma.company.findFirst({
+      where: { ownerId: userId },
+    });
+    if (existing) return existing;
+
+    const baseSlug = normalizedName
+      .toLowerCase()
+      .replace(/[^\w\s-]/g, '')
+      .replace(/[\s_-]+/g, '-')
+      .replace(/^-+|-+$/g, '') || 'company';
+
+    return this.prisma.company.create({
+      data: {
+        ownerId: userId,
+        name: normalizedName,
+        industry: industry?.trim() || undefined,
+        slug: `${baseSlug}-${randomUUID().slice(0, 8)}`,
+        isVerified: false,
+        verificationStatus: VerificationStatus.UNVERIFIED,
+      },
+    });
   }
 
   async update(id: string, dto: any, userId: string) {

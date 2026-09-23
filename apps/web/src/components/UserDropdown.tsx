@@ -99,7 +99,7 @@ export function UserDropdown({ user, logout, customDropdownClass, badgeText, bad
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-xl border border-gray-100 py-2 z-50 animate-in fade-in zoom-in-95 duration-200">
+        <div className="absolute right-0 mt-2 w-64 origin-top-right bg-white rounded-xl shadow-xl border border-gray-100 py-2 z-50 user-dropdown-enter will-change-transform">
           <div className="px-4 py-3 border-b border-gray-100 md:hidden">
             <p className="text-sm font-semibold text-gray-900">
               {user.firstName} {user.lastName}
