@@ -144,7 +144,7 @@ function locationText(job: CompanyJob) {
 
 export default function CompanyProfile() {
   const searchParams = useSearchParams();
-  const slug = searchParams.get("slug") || "hondy";
+  const slugParam = searchParams.get("slug");
   const router = useRouter();
   const locale = useLocale();
 
@@ -158,25 +158,53 @@ export default function CompanyProfile() {
       try {
         setLoading(true);
 
-        const [companyRes, jobsRes] = await Promise.all([
-          fetch(`${API_URL}/companies/${slug}`),
-          fetch(`${API_URL}/companies/${slug}/jobs`),
-        ]);
+        const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
+        const headers: HeadersInit = token ? { Authorization: `Bearer ${token}` } : {};
 
-        const companyData = await companyRes.json();
-        const jobsData = await jobsRes.json();
+        // 1. If slug is provided in query params, try fetching that company
+        if (slugParam) {
+          const [companyRes, jobsRes] = await Promise.all([
+            fetch(`${API_URL}/companies/${encodeURIComponent(slugParam)}`, { headers }),
+            fetch(`${API_URL}/companies/${encodeURIComponent(slugParam)}/jobs`, { headers }),
+          ]);
 
-        if (companyRes.ok) {
-          setCompany(companyData);
+          if (companyRes.ok) {
+            const companyData = await companyRes.json();
+            setCompany(companyData);
+
+            if (jobsRes.ok) {
+              const jobsData = await jobsRes.json();
+              setCompanyJobs(Array.isArray(jobsData) ? jobsData : []);
+            } else {
+              setCompanyJobs([]);
+            }
+            return;
+          }
         }
 
-        if (jobsRes.ok && Array.isArray(jobsData)) {
-          setCompanyJobs(jobsData);
-        } else {
-          setCompanyJobs([]);
+        // 2. Fallback: If no slug provided or slug not found, try fetching current logged-in employer's company
+        if (token) {
+          const companyRes = await fetch(`${API_URL}/companies/mine`, { headers });
+          if (companyRes.ok) {
+            const companyData = await companyRes.json();
+            setCompany(companyData);
+
+            const jobsRes = await fetch(`${API_URL}/companies/mine/jobs`, { headers });
+            if (jobsRes.ok) {
+              const jobsData = await jobsRes.json();
+              setCompanyJobs(Array.isArray(jobsData) ? jobsData : []);
+            } else {
+              setCompanyJobs([]);
+            }
+            return;
+          }
         }
+
+        // If no slug and no logged in user company found
+        setCompany(null);
+        setCompanyJobs([]);
       } catch (error) {
-        console.error(error);
+        console.error("Error fetching company profile:", error);
         setCompany(null);
         setCompanyJobs([]);
       } finally {
@@ -185,7 +213,7 @@ export default function CompanyProfile() {
     };
 
     fetchCompanyProfile();
-  }, [slug]);
+  }, [slugParam]);
 
   const handleApply = (id: string) => {
     setAppliedJobs((prev) => (prev.includes(id) ? prev : [...prev, id]));
