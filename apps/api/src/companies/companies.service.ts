@@ -9,10 +9,25 @@ import {
 export class CompaniesService {
   constructor(readonly prisma: PrismaService) {}
 
-  async getMyCompany(userId: string) {
-    const company = await this.prisma.company.findFirst({
+  async getMyCompany(userId: string, userRole?: string) {
+    let company = await this.prisma.company.findFirst({
       where: { ownerId: userId },
     });
+    if (!company && userRole === 'ADMIN') {
+      company = await this.prisma.company.findFirst();
+      if (!company) {
+        company = await this.prisma.company.create({
+          data: {
+            ownerId: userId,
+            name: 'บริษัท (Admin Default)',
+            industry: 'IT & Technology',
+            slug: 'admin-default-company-' + Date.now(),
+            isVerified: true,
+            verificationStatus: VerificationStatus.VERIFIED,
+          },
+        });
+      }
+    }
     if (!company) {
       throw new NotFoundException('ไม่พบข้อมูลบริษัท กรุณาตั้งค่าข้อมูลบริษัทก่อน');
     }
@@ -28,10 +43,13 @@ export class CompaniesService {
     console.log(dto);
   }
 
-  async getMyJobs(userId: string) {
-    const company = await this.prisma.company.findFirst({
+  async getMyJobs(userId: string, userRole?: string) {
+    let company = await this.prisma.company.findFirst({
       where: { ownerId: userId },
     });
+    if (!company && userRole === 'ADMIN') {
+      company = await this.prisma.company.findFirst();
+    }
     if (!company) return [];
     return this.prisma.job.findMany({
       where: { companyId: company.id },
@@ -43,18 +61,21 @@ export class CompaniesService {
     });
   }
 
-  async getMyJobById(userId: string, jobId: string) {
-    const company = await this.prisma.company.findFirst({
+  async getMyJobById(userId: string, jobId: string, userRole?: string) {
+    let company = await this.prisma.company.findFirst({
       where: { ownerId: userId },
     });
-    if (!company) {
-      throw new NotFoundException('ไม่พบข้อมูลบริษัท กรุณาตั้งค่าข้อมูลบริษัทก่อน');
+    if (!company && userRole === 'ADMIN') {
+      company = await this.prisma.company.findFirst();
     }
 
     const job = await this.prisma.job.findFirst({
       where: {
         id: jobId,
-        companyId: company.id,
+        ...(userRole === 'ADMIN' ? {} : { companyId: company?.id }),
+      },
+      include: {
+        company: true,
       },
     });
 

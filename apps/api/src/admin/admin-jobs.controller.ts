@@ -24,6 +24,12 @@ export class AdminJobsController {
     return this.adminJobsService.getAllJobs(Number(page), Number(limit), search);
   }
 
+  @Get(':id')
+  @ApiOperation({ summary: 'ดึงข้อมูลงานเดี่ยว (Admin)' })
+  async getJobById(@Param('id') id: string) {
+    return this.adminJobsService.getJobById(id);
+  }
+
   @Patch(':id/status')
   @ApiOperation({ summary: 'อัปเดตสถานะงาน (Admin)' })
   async updateStatus(
@@ -33,10 +39,21 @@ export class AdminJobsController {
     return this.adminJobsService.updateJobStatus(id, dto.status);
   }
 
+  @Patch(':id')
+  @ApiOperation({ summary: 'แก้ไขงาน (Admin)' })
+  async updateJob(
+    @Param('id') id: string,
+    @Body() dto: any,
+    @Request() req: any,
+  ) {
+    const adminId = req.user?.id || req.user?.sub;
+    return this.adminJobsService.updateJob(id, dto, adminId);
+  }
+
   @Delete(':id')
   @ApiOperation({ summary: 'ลบงาน (Admin)' })
   async deleteJob(@Param('id') id: string, @Request() req: any) {
-    const adminId = req.user.id;
+    const adminId = req.user?.id || req.user?.sub;
     return this.adminJobsService.deleteJob(id, adminId);
   }
 }

@@ -198,7 +198,7 @@ export default function CreateJobPage() {
       router.push('/employer/login');
       return;
     }
-    if (user.role !== 'EMPLOYER') {
+    if (user.role !== 'EMPLOYER' && user.role !== 'ADMIN') {
       router.push('/');
       return;
     }
@@ -228,11 +228,11 @@ export default function CreateJobPage() {
           headers: { Authorization: `Bearer ${token}` }
         });
         const companyData = await companyRes.json();
-
-        if (companyData?.id) {
-          setCompanyId(companyData.id);
-          setCompanyName(companyData.name);
-          setCompanyStatus(companyData.verificationStatus || 'UNVERIFIED');
+        const rawCompany = companyData?.data || companyData;
+        if (rawCompany?.id) {
+          setCompanyId(rawCompany.id);
+          setCompanyName(rawCompany.name);
+          setCompanyStatus(rawCompany.verificationStatus || 'UNVERIFIED');
         } else {
           setCompanyError('ไม่พบข้อมูลบริษัท กรุณาตั้งค่าข้อมูลบริษัทก่อน');
         }
@@ -361,7 +361,8 @@ export default function CreateJobPage() {
 
     // 🚀 ลอจิกสั่งดึงหน้าจอและโฟกัสด้วย ID ปรับเหลือแค่นี้:
     if (Object.keys(errors).length > 0) {
-      setError('กรุณากรอกข้อมูลในช่องที่จำเป็นให้ครบถ้วน');
+      const fieldList = Object.values(errors).map(msg => `• ${msg}`).join('\n');
+      setError(`กรุณากรอกข้อมูลในช่องต่อไปนี้ให้ครบถ้วนก่อนบันทึก:\n${fieldList}`);
 
       if (firstErrorId) {
         const element = document.getElementById(firstErrorId);
@@ -382,6 +383,7 @@ export default function CreateJobPage() {
   };
 
   const handleSubmit = async (publishNow: boolean) => {
+    setShowConfirmModal(false);
     setError('');
     if (!companyId) {
       setError('ไม่พบข้อมูลบริษัท');
@@ -458,13 +460,22 @@ export default function CreateJobPage() {
       }
 
       if (publishNow) {
-        await fetch(`${API_URL}/jobs/${data.id}/publish`, {
+        const pubRes = await fetch(`${API_URL}/jobs/${data.id}/publish`, {
           method: 'PATCH',
           headers: { Authorization: `Bearer ${token}` },
         });
+        if (!pubRes.ok) {
+          const pubData = await pubRes.json();
+          const msg = Array.isArray(pubData.message) ? pubData.message.join(', ') : pubData.message;
+          throw new Error(msg || 'ไม่สามารถเผยแพร่งานได้');
+        }
       }
 
-      router.push('/employer/jobs');
+      if (user?.role === 'ADMIN') {
+        router.push('/admin/jobs');
+      } else {
+        router.push('/employer/jobs');
+      }
     } catch (error: unknown) {
       setError(getErrorMessage(error, 'เกิดข้อผิดพลาด'));
       setSaving(false);
@@ -563,7 +574,7 @@ export default function CreateJobPage() {
 
       <div className="max-w-3xl mx-auto px-4 py-8 space-y-6">
         {error && (
-          <div className="p-4 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm">
+          <div className="p-4 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm whitespace-pre-line leading-relaxed shadow-sm">
             {error}
           </div>
         )}

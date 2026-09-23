@@ -17,7 +17,7 @@ export class CompaniesController {
   @ApiBearerAuth()
   @ApiOperation({ summary: 'ดึงข้อมูลบริษัทของ employer ที่ login อยู่' })
   async getMyCompany(@CurrentUser() user: JwtPayload) {
-    return this.companiesService.getMyCompany(user.sub);
+    return this.companiesService.getMyCompany(user.sub, user.role);
   }
 
   @Get('mine/jobs')
@@ -25,7 +25,7 @@ export class CompaniesController {
   @ApiBearerAuth()
   @ApiOperation({ summary: 'ดึงรายการงานทั้งหมดของบริษัท' })
   async getMyJobs(@CurrentUser() user: JwtPayload) {
-    return this.companiesService.getMyJobs(user.sub);
+    return this.companiesService.getMyJobs(user.sub, user.role);
   }
 
   @Get('mine/jobs/:id')
@@ -33,7 +33,7 @@ export class CompaniesController {
   @ApiBearerAuth()
   @ApiOperation({ summary: 'ดึงข้อมูลงานเดี่ยวของบริษัท (ใช้สำหรับหน้าแก้ไข)' })
   async getMyJobById(@Param('id') id: string, @CurrentUser() user: JwtPayload) {
-    return this.companiesService.getMyJobById(user.sub, id);
+    return this.companiesService.getMyJobById(user.sub, id, user.role);
   }
 
   @Post()

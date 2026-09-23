@@ -65,6 +65,42 @@ export class AdminJobsService {
     });
   }
 
+  async getJobById(id: string) {
+    const job = await this.prisma.job.findUnique({
+      where: { id },
+      include: {
+        company: true,
+      },
+    });
+    if (!job) throw new NotFoundException('ไม่พบข้อมูลงาน');
+    return job;
+  }
+
+  async updateJob(id: string, dto: any, adminId: string) {
+    const job = await this.prisma.job.findUnique({ where: { id } });
+    if (!job) throw new NotFoundException('ไม่พบข้อมูลงาน');
+
+    const updated = await this.prisma.job.update({
+      where: { id },
+      data: dto,
+    });
+
+    try {
+      await this.auditLogsService.createLog({
+        adminId: adminId,
+        action: 'แก้ไขงาน',
+        type: 'update',
+        target: job.title,
+        targetType: 'job',
+        details: `แก้ไขงาน ID: ${id}`,
+      });
+    } catch (err) {
+      console.error('Failed to create audit log:', err);
+    }
+
+    return updated;
+  }
+
   async deleteJob(id: string, adminId: string) {
     const job = await this.prisma.job.findUnique({ where: { id } });
     if (!job) throw new NotFoundException('ไม่พบข้อมูลงาน');

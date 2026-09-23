@@ -12,7 +12,7 @@ export class CreateJobDto {
 
     @ApiProperty({ example: 'รับสมัคร Senior Frontend Developer ที่มีประสบการณ์ React...' })
     @IsString()
-    @MinLength(50, { message: 'รายละเอียดงานต้องมีอย่างน้อย 50 ตัวอักษร' })
+    @MinLength(20, { message: 'รายละเอียดงานต้องมีอย่างน้อย 20 ตัวอักษร' })
     description!: string;
 
     @ApiProperty({ example: 'ประสบการณ์ React 3 ปีขึ้นไป, TypeScript, Next.js' })

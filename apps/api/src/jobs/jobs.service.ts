@@ -38,8 +38,8 @@ export class JobsService {
   /**
    * Create a new job listing
    */
-  async create(dto: CreateJobDto, userId: string) {
-    // Verify the user owns the company
+  async create(dto: CreateJobDto, userId: string, userRole?: string) {
+    // Verify the user owns the company (or is ADMIN)
     const company = await this.prisma.company.findUnique({
       where: { id: dto.companyId },
     });
@@ -48,7 +48,7 @@ export class JobsService {
       throw new NotFoundException('ไม่พบบริษัท');
     }
 
-    if (company.ownerId !== userId) {
+    if (company.ownerId !== userId && userRole !== 'ADMIN') {
       throw new ForbiddenException('คุณไม่มีสิทธิ์โพสต์งานในบริษัทนี้');
     }
 
@@ -590,7 +590,7 @@ export class JobsService {
   /**
    * Update a job (owner only)
    */
-  async update(id: string, dto: UpdateJobDto, userId: string) {
+  async update(id: string, dto: UpdateJobDto, userId: string, userRole?: string) {
     const job = await this.prisma.job.findUnique({
       where: { id },
       include: { company: true },
@@ -600,7 +600,7 @@ export class JobsService {
       throw new NotFoundException('ไม่พบตำแหน่งงานนี้');
     }
 
-    if (job.company.ownerId !== userId) {
+    if (job.company.ownerId !== userId && userRole !== 'ADMIN') {
       throw new ForbiddenException('คุณไม่มีสิทธิ์แก้ไขงานนี้');
     }
 
@@ -635,7 +635,7 @@ export class JobsService {
   /**
    * Soft delete — set status to CLOSED
    */
-  async remove(id: string, userId: string) {
+  async remove(id: string, userId: string, userRole?: string) {
     const job = await this.prisma.job.findUnique({
       where: { id },
       include: { company: true },
@@ -645,7 +645,7 @@ export class JobsService {
       throw new NotFoundException('ไม่พบตำแหน่งงานนี้');
     }
 
-    if (job.company.ownerId !== userId) {
+    if (job.company.ownerId !== userId && userRole !== 'ADMIN') {
       throw new ForbiddenException('คุณไม่มีสิทธิ์ลบงานนี้');
     }
 
@@ -658,10 +658,7 @@ export class JobsService {
   /**
    * Publish a job (เช็กสิทธิ์และหักโควตา AC รายเดือน - นับรวมงานทั้งหมดไม่สนสถานะ)
    */
-  /**
-   * Publish a job (เช็กสิทธิ์และหักโควตา AC รายเดือน - นับรวมงานทั้งหมดไม่สนสถานะ)
-   */
-  async publish(id: string, userId: string) {
+  async publish(id: string, userId: string, userRole?: string) {
     const job = await this.prisma.job.findUnique({
       where: { id },
       include: { company: true },
@@ -671,7 +668,7 @@ export class JobsService {
       throw new NotFoundException('ไม่พบตำแหน่งงานนี้');
     }
 
-    if (job.company.ownerId !== userId) {
+    if (job.company.ownerId !== userId && userRole !== 'ADMIN') {
       throw new ForbiddenException('คุณไม่มีสิทธิ์เผยแพร่งานนี้');
     }
 
@@ -680,17 +677,30 @@ export class JobsService {
       throw new BadRequestException('ไม่พบข้อมูลบริษัทของท่าน');
     }
 
-    // 1. ดึงข้อมูลแพ็กเกจปัจจุบันของบริษัทมาเช็ก
-    const pkg = await this.prisma.companyPackage.findUnique({
+    // 1. ดึงข้อมูลแพ็กเกจปัจจุบันของบริษัทมาเช็ก (สร้าง Free Plan ให้อัตโนมัติหากยังไม่มี)
+    let pkg = await this.prisma.companyPackage.findUnique({
       where: { companyId: company.id },
     });
 
-    if (!pkg || !pkg.startDate) {
-      throw new BadRequestException('ไม่พบข้อมูลแพ็กเกจการใช้งาน หรือแพ็กเกจหมดอายุแล้ว');
+    const now = new Date();
+    if (!pkg) {
+      pkg = await this.prisma.companyPackage.create({
+        data: {
+          companyId: company.id,
+          name: 'Free Plan',
+          type: 'standard',
+          ccQuotaTotal: 3,
+          acQuotaTotal: 1,
+          ccQuotaUsed: 0,
+          acQuotaUsed: 0,
+          startDate: now,
+          endDate: new Date(now.getTime() + 100 * 365 * 24 * 60 * 60 * 1000),
+          lastReset: now,
+        },
+      });
     }
 
-    const now = new Date();
-    const purchaseDate = new Date(pkg.startDate);
+    const purchaseDate = pkg.startDate ? new Date(pkg.startDate) : now;
 
     // 2. คำนวณวันตัดรอบและวันรีเซ็ตเป็น "รายเดือน"
     const currentResetPoint = new Date(purchaseDate);
@@ -708,7 +718,7 @@ export class JobsService {
     const isAlreadyActive = job.status === 'ACTIVE';
 
     // 4. ดักกรณีโควตารายเดือนเต็ม (เช็คเฉพาะงานใหม่ หรือจาก Draft เป็น Active เท่านั้น)
-    if (!isAlreadyActive && usedInCycle >= maxQuota) {
+    if (!isAlreadyActive && usedInCycle >= maxQuota && userRole !== 'ADMIN') {
       const diffMs = currentResetPoint.getTime() - now.getTime();
       const daysLeft = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
 
@@ -722,15 +732,14 @@ export class JobsService {
       );
     }
 
-    // 5. 🟢 [ตรงตามบรีฟ 100%] นับจำนวนแถวข้อมูลทั้งหมดของบริษัทนี้ในตาราง Job โดยไม่สนสถานะ
+    // 5. 🟢 นับจำนวนแถวข้อมูลทั้งหมดของบริษัทนี้ในตาราง Job โดยไม่สนสถานะ
     const totalJobsCount = await this.prisma.job.count({
       where: {
         companyId: company.id,
       },
     });
 
-    // 🚨 ดักเงื่อนไข: เปลี่ยนจาก 12 แถว เป็น 50 แถวสะสมในตารางเรียบร้อยครับ!
-    if (totalJobsCount > 10) {
+    if (totalJobsCount > 50 && userRole !== 'ADMIN') {
       throw new HttpException(
         {
           statusCode: HttpStatus.BAD_REQUEST,

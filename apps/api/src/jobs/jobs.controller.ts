@@ -95,46 +95,46 @@ export class JobsController {
     @Post()
     @UseGuards(JwtAuthGuard)
     @ApiBearerAuth()
-    @ApiOperation({ summary: 'สร้างประกาศงาน (Employer only)' })
+    @ApiOperation({ summary: 'สร้างประกาศงาน (Employer or Admin)' })
     async create(
         @Body() dto: CreateJobDto,
         @CurrentUser() user: JwtPayload,
     ) {
-        return this.jobsService.create(dto, user.sub);
+        return this.jobsService.create(dto, user.sub, user.role);
     }
 
     @Patch(':id')
     @UseGuards(JwtAuthGuard)
     @ApiBearerAuth()
-    @ApiOperation({ summary: 'แก้ไขประกาศงาน (Owner only)' })
+    @ApiOperation({ summary: 'แก้ไขประกาศงาน (Owner or Admin)' })
     async update(
         @Param('id') id: string,
         @Body() dto: UpdateJobDto,
         @CurrentUser() user: JwtPayload,
     ) {
-        return this.jobsService.update(id, dto, user.sub);
+        return this.jobsService.update(id, dto, user.sub, user.role);
     }
 
     @Patch(':id/publish')
     @UseGuards(JwtAuthGuard)
     @ApiBearerAuth()
-    @ApiOperation({ summary: 'เผยแพร่ประกาศงาน (Owner only)' })
+    @ApiOperation({ summary: 'เผยแพร่ประกาศงาน (Owner or Admin)' })
     async publish(
         @Param('id') id: string,
         @CurrentUser() user: JwtPayload,
     ) {
-        return this.jobsService.publish(id, user.sub);
+        return this.jobsService.publish(id, user.sub, user.role);
     }
 
     @Delete(':id')
     @UseGuards(JwtAuthGuard)
     @ApiBearerAuth()
-    @ApiOperation({ summary: 'ปิดประกาศงาน / soft delete (Owner only)' })
+    @ApiOperation({ summary: 'ปิดประกาศงาน / soft delete (Owner or Admin)' })
     async remove(
         @Param('id') id: string,
         @CurrentUser() user: JwtPayload,
     ) {
-        return this.jobsService.remove(id, user.sub);
+        return this.jobsService.remove(id, user.sub, user.role);
     }
 
     @Post(':id/save')

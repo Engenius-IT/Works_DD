@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { useLocale } from 'next-intl';
-import { Search, Briefcase, CheckCircle2, XCircle, Clock, Eye, Filter, Check, X, MapPin, DollarSign, Loader2, Edit } from 'lucide-react';
+import { Link } from '@/i18n/routing';
+import { Search, Briefcase, CheckCircle2, XCircle, Clock, Eye, Filter, Check, X, MapPin, DollarSign, Loader2, Edit, Plus } from 'lucide-react';
 import { ToastContainer } from '@/components/admin/Toast';
 
 interface Job {
@@ -167,7 +168,14 @@ export default function JobManagementPage() {
           <h1 className="text-3xl font-bold text-gray-900">จัดการงาน</h1>
           <p className="text-gray-500 mt-1">จำนวนงานทั้งหมด: {total} งาน</p>
         </div>
-        <div className="flex gap-4">
+        <div className="flex gap-4 items-center">
+          <Link
+            href="/employer/jobs/create"
+            className="flex items-center gap-2 bg-[#020263] hover:bg-[#00003D] text-white font-bold px-4 py-2.5 rounded-xl transition-all shadow-sm text-sm"
+          >
+            <Plus className="w-4 h-4" />
+            <span>สร้างประกาศงาน</span>
+          </Link>
           <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-200 flex gap-6">
             <div className="text-center">
               <p className="text-xs text-gray-500 uppercase font-bold tracking-wider">ร่าง</p>

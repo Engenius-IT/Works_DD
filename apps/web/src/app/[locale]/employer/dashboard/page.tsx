@@ -26,6 +26,7 @@ import {
   Star,
   Crown,
   Zap,
+  Plus,
 } from 'lucide-react';
 import { EmployerVerificationModal } from '@/components/EmployerVerificationModal';
 import { BillingModal } from '@/components/BillingModal';
@@ -1246,12 +1247,21 @@ export default function EmployerDashboard() {
               </div>
             </div>
 
-            <button
-              onClick={() => router.push('/employer/jobs')}
-              className="w-full flex items-center justify-center gap-2 bg-[#020263] hover:bg-[#00003D] text-white font-semibold py-2.5 rounded-xl transition-colors text-sm"
-            >
-              {t('manageJobPosts')}
-            </button>
+            <div className="flex flex-col sm:flex-row gap-2 mt-auto">
+              <button
+                onClick={() => router.push('/employer/jobs/create')}
+                className="flex-1 flex items-center justify-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-2.5 rounded-xl transition-colors text-xs sm:text-sm shadow-sm"
+              >
+                <Plus className="w-4 h-4" />
+                <span>สร้างประกาศงาน</span>
+              </button>
+              <button
+                onClick={() => router.push('/employer/jobs')}
+                className="flex-1 flex items-center justify-center gap-2 bg-[#020263] hover:bg-[#00003D] text-white font-semibold py-2.5 rounded-xl transition-colors text-xs sm:text-sm"
+              >
+                {t('manageJobPosts')}
+              </button>
+            </div>
           </div>
 
           {/* Card 3: Package Container - ปรับโทนสีหรูหรา ลุ่มลึก และเพิ่มมิติแสงเงาตามธีม Package ของแต่ละ Tier */}
